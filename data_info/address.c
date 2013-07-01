@@ -1,0 +1,136 @@
+#include "address.h"
+#include "../utlist.h"
+#include <string.h>
+#include <stdlib.h>
+
+static int addr_list_compare(wpan_addr_elt_t *a, wpan_addr_elt_t *b);
+
+wpan_addr_elt_t *addr_wpan_add_to_list(wpan_addr_list_t *list, addr_wpan_t address) {
+	wpan_addr_elt_t search_address;
+	wpan_addr_elt_t *addr_ref;
+
+	memset(&search_address, 0, sizeof(search_address));	//Padding in structure must be always 0
+	search_address.address = address;
+	LL_SEARCH(*list, addr_ref, &search_address, addr_list_compare);
+	if(!addr_ref) {
+		addr_ref = (wpan_addr_elt_t*) calloc(1, sizeof(wpan_addr_elt_t));
+		addr_ref->address = address;
+		LL_PREPEND(*list, addr_ref);
+	}
+	
+	return addr_ref;
+}
+
+wpan_addr_elt_t *addr_wpan_del_from_list(wpan_addr_list_t *list, addr_wpan_t address) {
+	wpan_addr_elt_t search_address;
+	wpan_addr_elt_t *addr_ref;
+
+	memset(&search_address, 0, sizeof(search_address));	//Padding in structure must be always 0
+	search_address.address = address;
+	LL_SEARCH(*list, addr_ref, &search_address, addr_list_compare);
+	if(addr_ref) {
+		LL_DELETE(*list, addr_ref);
+	}
+	
+	return addr_ref;
+}
+
+addr_wpan_t addr_get_mac64_from_ip(addr_ipv6_t address) {
+	uint64_t int_id;
+	
+	int_id = ((uint64_t)address.__in6_u.__u6_addr32[2] << 32) | address.__in6_u.__u6_addr32[3];
+	return addr_get_mac64_from_int_id(int_id);
+}
+
+addr_ipv6_t addr_get_local_ip_from_mac64(addr_wpan_t mac_address) {
+	uint64_t int_id = addr_get_int_id_from_mac64(mac_address);
+	struct in6_addr link_local_address = { .__in6_u = { .__u6_addr8 = {
+		0xFE, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		(int_id >> 56) & 0xFF, (int_id >> 48) & 0xFF, (int_id >> 40) & 0xFF, (int_id >> 32) & 0xFF,
+		(int_id >> 24) & 0xFF, (int_id >> 16) & 0xFF, (int_id >> 8) & 0xFF, int_id & 0xFF
+	}}};
+	
+	return link_local_address;
+}
+
+addr_ipv6_t addr_get_global_ip_from_mac64(di_prefix_t prefix, addr_wpan_t mac_address) {
+	uint64_t int_id = addr_get_int_id_from_mac64(mac_address);
+	int i;
+	uint64_t mask = 0;
+	uint8_t *prefix_data = prefix.prefix.__in6_u.__u6_addr8;
+	
+	if(prefix.length > 64)
+		prefix.length = 64;
+
+	for(i = 0; i < prefix.length; i++) {
+		mask = (mask >> 1) | 0x8000000000000000;
+	}
+	
+	mask = htobe64(mask);
+	
+	prefix.prefix.__in6_u.__u6_addr32[0] &= mask & 0xFFFFFFFF;
+	prefix.prefix.__in6_u.__u6_addr32[1] &= mask >> 32;
+	prefix.prefix.__in6_u.__u6_addr32[2] = prefix.prefix.__in6_u.__u6_addr32[3] = 0;
+	
+	struct in6_addr global_address = { .__in6_u = { .__u6_addr8 = {
+		prefix_data[0], prefix_data[1], prefix_data[2], prefix_data[3],
+		prefix_data[4], prefix_data[5], prefix_data[6], prefix_data[7],
+		(int_id >> 56) & 0xFF, (int_id >> 48) & 0xFF, (int_id >> 40) & 0xFF, (int_id >> 32) & 0xFF,
+		(int_id >> 24) & 0xFF, (int_id >> 16) & 0xFF, (int_id >> 8) & 0xFF, int_id & 0xFF
+	}}};
+	
+	return global_address;
+}
+
+uint64_t addr_get_int_id_from_mac64(addr_wpan_t mac_address) {
+	return mac_address ^ 0x0200000000000000;
+}
+
+addr_wpan_t addr_get_mac64_from_int_id(uint64_t int_id) {
+	return int_id ^ 0x0200000000000000;
+}
+
+int addr_compare_ip(addr_ipv6_t *a, addr_ipv6_t *b) {
+	int res;
+	
+	res = a->__in6_u.__u6_addr32[0] - a->__in6_u.__u6_addr32[0];
+	if(res) return res;
+	return a->__in6_u.__u6_addr32[1] - a->__in6_u.__u6_addr32[1];
+}
+
+int addr_compare_wpan(addr_wpan_t *a, addr_wpan_t *b) {
+	return *a - *b;
+}
+
+int addr_compare_ip_len(addr_ipv6_t *a, addr_ipv6_t *b, int bit_len) {
+	int res, i;
+	uint64_t mask;
+	
+	if(bit_len < 64) {
+		for(mask = i = 0; i < bit_len; i++) {
+			mask = (mask >> 1) | 0x8000000000000000;
+		}
+		mask = htobe64(mask);
+	} else mask = 0xFFFFFFFFFFFFFFFF;
+	
+	
+	
+	res = (a->__in6_u.__u6_addr32[0] & (mask & 0xFFFFFFFF)) - (b->__in6_u.__u6_addr32[0] & (mask & 0xFFFFFFFF));
+	if(res) return res;
+	res = (a->__in6_u.__u6_addr32[1] & (mask >> 32)) - (b->__in6_u.__u6_addr32[1] & (mask >> 32));
+	if(res) return res;
+	
+	if(bit_len > 64) {
+		for(mask = i = 0; i < bit_len - 64; i++) {
+			mask = (mask >> 1) | 0x8000000000000000;
+		}
+		mask = htobe64(mask);
+		res =  (a->__in6_u.__u6_addr32[2] & (mask & 0xFFFFFFFF)) - (b->__in6_u.__u6_addr32[2] & (mask & 0xFFFFFFFF));
+		if(res) return res;
+		return (a->__in6_u.__u6_addr32[3] & (mask >> 32)) - (b->__in6_u.__u6_addr32[3] & (mask >> 32));
+	} else return res;
+}
+
+static int addr_list_compare(wpan_addr_elt_t *a, wpan_addr_elt_t *b) {
+	return addr_compare_wpan(&a->address, &b->address);
+}
