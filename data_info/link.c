@@ -37,8 +37,10 @@ bool link_hash_del(di_link_hash_t *hash, di_node_t *child_node, di_node_t *paren
 	if(current_link) {
 		rpl_event_link_deleted(current_link->link);
 		
+		memset(current_link->link, 0, sizeof(di_link_t));
 		free(current_link->link);
 		HASH_DEL(*hash, current_link);
+		memset(current_link, 0, sizeof(di_link_el_t));
 		free(current_link);
 
 		return true;
@@ -55,8 +57,10 @@ bool link_hash_remove_all_outdated(di_link_hash_t *hash) {
 	HASH_ITER(hh, *hash, current_link, tmp) {
 		if(current_link->link->expiration_time >= current_time) {
 			rpl_event_link_deleted(current_link->link);
+			memset(current_link->link, 0, sizeof(di_link_t));
 			free(current_link->link);
 			HASH_DEL(*hash, current_link);
+			memset(current_link, 0, sizeof(di_link_el_t));
 			free(current_link);
 			found_some = true;
 		}
