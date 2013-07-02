@@ -12,6 +12,9 @@
 #include "descriptor_poll.h"
 #include "packet_parsers/parser_register.h"
 
+//Define that to use the new command line format of newer tshark versions
+//#define USE_NEW_TSHARK
+
 static bool sniffer_parser_reset_requested = false;
 
 static pcap_t* pd = NULL;
@@ -172,13 +175,14 @@ static void sniffer_parser_reset() {
 	pipe_tshark_stdin = 0;
 	pipe_tshark_stdout = 0;
 
+#ifdef USE_NEW_TSHARK
+	if(spawn_piped_process("/usr/bin/tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-2", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
+#else
 	if(spawn_piped_process("/usr/bin/tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
-	//if(spawn_piped_process("/bin/cat", (char* const[]){"cat", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
+#endif
 		perror("Can't spawn tshark process");
 		return;
 	}
-	
-	usleep(1000000);
 	
 	pcap_output = fdopen(pipe_tshark_stdin, "w");
 	if(pcap_output == NULL) {

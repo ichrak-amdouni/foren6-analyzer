@@ -22,7 +22,7 @@ di_link_t *link_hash_get(di_link_hash_t *hash, di_node_t *child_node, di_node_t 
 		rpl_event_link_created(link_el->link);
 	}
 	
-	return link_el->link;
+	return (link_el)? link_el->link : NULL;
 }
 
 bool link_hash_del(di_link_hash_t *hash, di_node_t *child_node, di_node_t *parent_node) {
