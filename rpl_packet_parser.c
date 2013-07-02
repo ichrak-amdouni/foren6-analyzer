@@ -1,6 +1,6 @@
 #include "rpl_packet_parser.h"
 #include "descriptor_poll.h"
-#include "interface_readers/interfaces_register.h"
+#include "interface_reader/interfaces_register.h"
 #include <pthread.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -20,7 +20,10 @@ void rpl_tool_set_callbacks(rpl_event_callbacks_t *callbacks) {
 void rpl_tool_init(const char *name, const char *target) {
 	desc_poll_init();
 	interface_register_all();
-	interface_init(name, target);
+	if(!interface_init(name, target)) {
+		fprintf(stderr, "FATAL: can't find the interface %s !\n", name);
+		abort();
+	}
 	sniffer_parser_init();
 }
 
