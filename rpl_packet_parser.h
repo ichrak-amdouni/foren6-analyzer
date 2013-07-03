@@ -10,6 +10,7 @@
 
 #include "data_collector/rpl_collector.h"
 #include "data_collector/rpl_event_callbacks.h"
+#include "interface_reader/interfaces_register.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -20,17 +21,9 @@ extern "C" {
      * @param name the name of a registered interface reader, or the shared object file that provide the needed interface
      * @param target a target where to read data from the sniffer like /dev/ttyUSB0 for the telos interface
      */
-	void rpl_tool_init(const char *name, const char *target);
+	void rpl_tool_init();
 	
-	/**
-	 * Start sniffing traffic
-     */
-	void rpl_tool_start();
-	
-	/**
-	 * Stop sniffing
-     */
-	void rpl_tool_stop();
+	interface_t *rpl_tool_get_interface(const char *name);
 	
 	/**
 	 * Get a pointer to collected data

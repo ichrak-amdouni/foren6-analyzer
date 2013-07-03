@@ -56,13 +56,12 @@ void interface_enumerate(interface_enum_function_t callback) {
 		callback(interface_element->interface.interface_name);
 }
 
-bool interface_init(const char *name, const char *target) {
+interface_t *interface_get(const char *name) {
 	interface_el_t *interface_element;
 	
 	LL_FOREACH(interfaces, interface_element) {
 		if(!strcmp(interface_element->interface.interface_name, name)) {
-			interface_element->interface.init(target);
-			return true;
+			return &interface_element->interface;
 		}
 	}
 	
@@ -70,10 +69,9 @@ bool interface_init(const char *name, const char *target) {
 
 	interface_element = interface_register_from_shared_obj(name);
 	if(interface_element == NULL)
-		return false;
+		return NULL;
 	
-	interface_element->interface.init(target);
-	return true;
+	return &interface_element->interface;
 }
 
 static interface_el_t *interface_register_from_shared_obj(const char* filename) {
