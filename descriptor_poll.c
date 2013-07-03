@@ -60,6 +60,12 @@ bool desc_poll_add(int fd, ready_callback callback, void* user_data) {
 			poll_number++;
 			write(poll_abort_pipe[1], "a", 1);	//write a byte (the string avoid declaring a dummy variable) to abort the select as we added a new file descriptor
 			break;
+		} else if(poll_data[i]->fd == fd) {
+			free(data);
+			data = poll_data[i];
+			data->callback = callback;
+			data->user_data = user_data;
+			break;
 		}
 	}
 	pthread_mutex_unlock(&poll_mutex);
