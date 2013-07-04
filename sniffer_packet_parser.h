@@ -12,6 +12,9 @@
 #include <stdint.h>
 #include <netinet/in.h>
 
+#include "data_info/rpl_instance.h"
+#include "data_info/dodag.h"
+
 typedef enum rpl_dio_opt_metricype_e {
 	RDOMT_ETX = 7
 } rpl_dio_opt_metric_type_e;
@@ -38,37 +41,13 @@ typedef struct rpl_route {
 	struct in6_addr route_prefix;
 } rpl_route_t;
 
-typedef enum tag_rpl_objective_function_e {
-	ROF_ETX = 1
-} rpl_objective_function_e;
-
-typedef struct rpl_dodag_config {
-	uint16_t auth_enabled;
-	uint8_t path_control_size;
-	uint8_t dio_interval_min;
-	uint8_t dio_interval_max;
-	uint8_t dio_redundancy_constant;
-	uint16_t max_rank_inc;
-	uint16_t min_hop_rank_inc;
-	uint8_t default_lifetime;
-	uint16_t lifetime_unit;
-	rpl_objective_function_e objective_function;
-} rpl_dodag_config_t;
-
 //DIO
-typedef enum tag_rpl_dio_mop_e {
-	RDMOP_NoDownwardRoute,
-	RDMOP_NonStoring,
-	RDMOP_StoringWithoutMulticast,
-	RDMOP_StoringWithMulticast
-} rpl_dio_mop_e;
-
 typedef struct rpl_dio {
 	uint8_t rpl_instance_id;
 	uint8_t	version_number;
 	uint16_t rank;
 	bool grounded;
-	rpl_dio_mop_e mode_of_operation;
+	di_rpl_mop_e mode_of_operation;
 	uint8_t dstn;
 	struct in6_addr dodagid;
 } rpl_dio_t;
@@ -77,7 +56,7 @@ typedef struct rpl_metric rpl_dio_opt_metric_t;
 
 typedef struct rpl_route rpl_dio_opt_route_t;
 
-typedef struct rpl_dodag_config rpl_dio_opt_config_t;
+typedef di_dodag_config_t rpl_dio_opt_config_t;
 
 typedef struct rpl_prefix rpl_dio_opt_prefix_t;
 

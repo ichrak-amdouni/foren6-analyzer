@@ -9,7 +9,6 @@
 #define	DODAG_H
 
 #include "node.h"
-#include "../sniffer_packet_parser.h"
 
 #include "address.h"
 #include "node.h"
@@ -18,6 +17,23 @@
 
 typedef struct di_dodag_el *di_dodag_hash_t;
 typedef struct di_node_el *di_node_hash_t;
+
+typedef enum tag_di_objective_function_e {
+	ROF_ETX = 1
+} di_objective_function_e;
+
+typedef struct di_dodag_config {
+	uint16_t auth_enabled;
+	uint8_t path_control_size;
+	uint8_t dio_interval_min;
+	uint8_t dio_interval_max;
+	uint8_t dio_redundancy_constant;
+	uint16_t max_rank_inc;
+	uint16_t min_hop_rank_inc;
+	uint8_t default_lifetime;
+	uint16_t lifetime_unit;
+	di_objective_function_e objective_function;
+} di_dodag_config_t;
 
 typedef struct di_dodag_key {
 	addr_ipv6_t dodagid;				//Via DIO, DAO
@@ -30,7 +46,7 @@ typedef struct di_dodag {
 	di_dodag_key_t dodag_key;				//Via DIO & DAO for dodagid and via DIO for version
 	
 	//Configuration
-	rpl_dodag_config_t config;				//Via DIO config option
+	di_dodag_config_t config;				//Via DIO config option
 
 	di_prefix_t prefix;						//Via DIO prefix option
 	

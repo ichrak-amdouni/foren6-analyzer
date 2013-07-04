@@ -10,16 +10,22 @@
 
 #include <stdbool.h>
 
+typedef void * ifreader_t;
+
 typedef struct interface {
 	const char *interface_name;
-	void (*init)(const char *target);
+	void (*init)();
+	ifreader_t (*open)(const char *target);
+	bool (*start)(ifreader_t handle);
+	void (*stop)(ifreader_t handle);
+	void (*close)(ifreader_t handle);
 } interface_t;
 
 typedef void (*interface_enum_function_t)(const char* interface_name);
 typedef interface_t (*interface_register_function_t)();
 
 void interface_register_all();
-bool interface_init(const char *name, const char *target);
+interface_t *interface_get(const char *name);
 
 #endif	/* INTERFACES_REGISTER_H */
 

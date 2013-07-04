@@ -30,7 +30,7 @@ static int pipe_tshark_stdout = 0;	//We will read dissected packets from here
 
 static XML_Parser dissected_packet_parser;	//parse output of tshark
 
-static void process_events(int fd);
+static void process_events(int fd, void* data);
 static void sniffer_parser_reset();
 static bool spawn_piped_process(const char* command, char* const arguments[], int *pid, int *process_input_pipe, int *process_output_pipe);
 static void tshark_exited();
@@ -81,7 +81,7 @@ void sniffer_parser_parse_data(const unsigned char* data, int len) {
 }
 
 
-static void process_events(int fd) {
+static void process_events(int fd, void* data) {
 	char buffer[512];
 	int nbread;
 	
@@ -204,7 +204,7 @@ static void sniffer_parser_reset() {
 	
 	signal(SIGPIPE, &tshark_exited);
 	
-	desc_poll_add(pipe_tshark_stdout, &process_events);
+	desc_poll_add(pipe_tshark_stdout, &process_events, NULL);
 }
 
 static bool spawn_piped_process(const char* command, char* const arguments[], int *pid, int *process_input_pipe, int *process_output_pipe) {
