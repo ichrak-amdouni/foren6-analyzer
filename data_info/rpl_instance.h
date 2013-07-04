@@ -10,14 +10,20 @@
 
 #include <stdbool.h>
 #include "../uthash.h"
-#include "../sniffer_packet_parser.h"
 
 typedef struct di_rpl_instance_el *di_rpl_instance_hash_t;
 typedef struct di_dodag_el *di_dodag_hash_t;
 
+typedef enum tag_di_rpl_mop_e {
+	RDMOP_NoDownwardRoute,
+	RDMOP_NonStoring,
+	RDMOP_StoringWithoutMulticast,
+	RDMOP_StoringWithMulticast
+} di_rpl_mop_e;
+
 typedef struct di_rpl_instance {
 	di_dodag_hash_t dodags;			//Via DIO, DAO
-	rpl_dio_mop_e mode_of_operation;	//Via DIO
+	di_rpl_mop_e mode_of_operation;	//Via DIO
 	uint16_t instance_id;				//Via DIO, DAO
 	
 	void *user_data;

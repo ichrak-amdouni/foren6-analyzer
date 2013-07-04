@@ -11,6 +11,7 @@
 #include "../data_info/node.h"
 #include "../data_info/dodag.h"
 #include "../data_info/rpl_instance.h"
+#include "../sniffer_packet_parser.h"
 
 typedef struct rpl_collector {
 	di_link_hash_t links;

@@ -1,11 +1,18 @@
 #include "rpl_collector.h"
-#include "../data_info/address.h"
 #include "rpl_event_callbacks.h"
 #include <assert.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "../utlist.h"
+
+#include "../data_info/address.h"
+#include "../data_info/node.h"
+#include "../data_info/dodag.h"
+#include "../data_info/rpl_instance.h"
+#include "../data_info/route.h"
+#include "../data_info/link.h"
+#include "../data_info/metric.h"
 
 static rpl_collector_t collected_data;
 
