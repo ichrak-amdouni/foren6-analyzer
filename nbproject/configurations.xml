@@ -11,11 +11,14 @@
       <logicalFolder name="f3" displayName="data_info" projectFiles="true">
         <itemPath>data_info/address.h</itemPath>
         <itemPath>data_info/dodag.h</itemPath>
+        <itemPath>data_info/hash_container.h</itemPath>
         <itemPath>data_info/link.h</itemPath>
         <itemPath>data_info/metric.h</itemPath>
         <itemPath>data_info/node.h</itemPath>
         <itemPath>data_info/route.h</itemPath>
+        <itemPath>data_info/rpl_data.h</itemPath>
         <itemPath>data_info/rpl_instance.h</itemPath>
+        <itemPath>data_info/versioned_data.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="interface_reader" projectFiles="true">
         <itemPath>interface_reader/interfaces_register.h</itemPath>
@@ -45,11 +48,14 @@
       <logicalFolder name="f3" displayName="data_info" projectFiles="true">
         <itemPath>data_info/address.c</itemPath>
         <itemPath>data_info/dodag.c</itemPath>
+        <itemPath>data_info/hash_container.c</itemPath>
         <itemPath>data_info/link.c</itemPath>
         <itemPath>data_info/metric.c</itemPath>
         <itemPath>data_info/node.c</itemPath>
         <itemPath>data_info/route.c</itemPath>
+        <itemPath>data_info/rpl_data.c</itemPath>
         <itemPath>data_info/rpl_instance.c</itemPath>
+        <itemPath>data_info/versioned_data.c</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="interface_reader" projectFiles="true">
         <itemPath>interface_reader/interfaces_register.c</itemPath>
@@ -104,7 +110,6 @@
       </compileType>
       <packaging>
         <packType>Tar</packType>
-        <output></output>
         <packTopDir></packTopDir>
         <packFileList>
           <packFileListElem type="File"
@@ -231,6 +236,10 @@
       </item>
       <item path="data_info/dodag.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="data_info/hash_container.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="data_info/hash_container.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="data_info/link.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="data_info/link.h" ex="false" tool="3" flavor2="0">
@@ -247,9 +256,17 @@
       </item>
       <item path="data_info/route.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="data_info/rpl_data.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="data_info/rpl_data.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="data_info/rpl_instance.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="data_info/rpl_instance.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="data_info/versioned_data.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="data_info/versioned_data.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="descriptor_poll.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -352,6 +369,10 @@
       </item>
       <item path="data_info/dodag.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="data_info/hash_container.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="data_info/hash_container.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="data_info/link.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="data_info/link.h" ex="false" tool="3" flavor2="0">
@@ -368,9 +389,17 @@
       </item>
       <item path="data_info/route.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="data_info/rpl_data.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="data_info/rpl_data.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="data_info/rpl_instance.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="data_info/rpl_instance.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="data_info/versioned_data.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="data_info/versioned_data.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="descriptor_poll.c" ex="false" tool="0" flavor2="0">
       </item>

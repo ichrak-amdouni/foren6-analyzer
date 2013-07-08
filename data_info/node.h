@@ -13,12 +13,14 @@
 #include "link.h"
 #include "route.h"
 #include "../uthash.h"
+#include "dodag.h"
 
 typedef struct di_dodag di_dodag_t;
 typedef struct di_dodag_el *di_dodag_hash_t;
 
 typedef struct di_node {
 	addr_wpan_t wpan_address;
+	uint32_t version;
 	
 	addr_ipv6_t local_address;
 	addr_ipv6_t global_address;
@@ -29,7 +31,7 @@ typedef struct di_node {
 	di_metric_t metric;		//Usually ETX, via DIO with metric
 	bool grounded;				//If true, can propagate packet to the root node.
 	
-	di_dodag_t *dodag;
+	di_dodag_key_t dodag;
 	
 	void *user_data;
 } di_node_t;
@@ -38,6 +40,11 @@ typedef struct di_node_el {
 	di_node_t *node;
     UT_hash_handle hh;
 } di_node_el_t, *di_node_hash_t;
+
+typedef struct di_node_ref {
+	addr_wpan_t node;
+	struct di_node_ref *next;
+} di_node_ref_t, *di_node_ref_list_t;
 
 /**
  * Get the node with specified address in the hashtable;

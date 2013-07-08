@@ -18,12 +18,13 @@
 typedef struct di_node di_node_t;
 
 typedef struct di_link_addr_pair {
-	di_node_t *child;
-	di_node_t *parent;
+	addr_wpan_t child;
+	addr_wpan_t parent;
 } di_link_addr_pair_t;
 
 typedef struct di_link {
 	di_link_addr_pair_t key;
+	uint32_t version;
 
 	di_metric_t metric;
 	time_t last_update;		//TX only

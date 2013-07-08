@@ -10,8 +10,8 @@ di_link_t *link_hash_get(di_link_hash_t *hash, di_node_t *child_node, di_node_t 
 	di_link_addr_pair_t link_key;
 	
 	memset(&link_key, 0, sizeof(link_key));
-	link_key.child = child_node;
-	link_key.parent = parent_node;
+	link_key.child = child_node->wpan_address;
+	link_key.parent = parent_node->wpan_address;
 	
 	HASH_FIND(hh, *hash, &link_key, sizeof(link_key), link_el);
 	if(get_or_create && !link_el) {
@@ -30,8 +30,8 @@ bool link_hash_del(di_link_hash_t *hash, di_node_t *child_node, di_node_t *paren
 	di_link_addr_pair_t link_key;
 	
 	memset(&link_key, 0, sizeof(link_key));
-	link_key.child = child_node;
-	link_key.parent = parent_node;
+	link_key.child = child_node->wpan_address;
+	link_key.parent = parent_node->wpan_address;
 
 	HASH_FIND(hh, *hash, &link_key, sizeof(di_link_addr_pair_t), current_link);
 	if(current_link) {

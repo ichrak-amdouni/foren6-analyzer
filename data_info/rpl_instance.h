@@ -10,9 +10,9 @@
 
 #include <stdbool.h>
 #include "../uthash.h"
+#include "hash_container.h"
 
-typedef struct di_rpl_instance_el *di_rpl_instance_hash_t;
-typedef struct di_dodag_el *di_dodag_hash_t;
+typedef struct di_dodag_ref *di_dodag_ref_list_t;
 
 typedef enum tag_di_rpl_mop_e {
 	RDMOP_NoDownwardRoute,
@@ -22,9 +22,11 @@ typedef enum tag_di_rpl_mop_e {
 } di_rpl_mop_e;
 
 typedef struct di_rpl_instance {
-	di_dodag_hash_t dodags;			//Via DIO, DAO
-	di_rpl_mop_e mode_of_operation;	//Via DIO
 	uint16_t instance_id;				//Via DIO, DAO
+	uint32_t version;
+
+	hash_container_ptr dodags;			//Via DIO, DAO
+	di_rpl_mop_e mode_of_operation;	//Via DIO
 	
 	void *user_data;
 } di_rpl_instance_t;

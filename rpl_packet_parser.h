@@ -8,7 +8,7 @@
 #ifndef RPL_PACKET_PARSER_H
 #define	RPL_PACKET_PARSER_H
 
-#include "data_collector/rpl_collector.h"
+#include "data_info/rpl_data.h"
 #include "data_collector/rpl_event_callbacks.h"
 #include "interface_reader/interfaces_register.h"
 
