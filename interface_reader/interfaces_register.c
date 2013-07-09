@@ -6,7 +6,6 @@
 #include "interfaces_register.h"
 
 #include <dirent.h>
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <dlfcn.h>
 

@@ -9,10 +9,8 @@
 #define	RPL_INSTANCE_H
 
 #include <stdbool.h>
-#include "../uthash.h"
+#include <stdint.h>
 #include "hash_container.h"
-
-typedef struct di_dodag_ref *di_dodag_ref_list_t;
 
 typedef enum tag_di_rpl_mop_e {
 	RDMOP_NoDownwardRoute,
@@ -30,15 +28,6 @@ typedef struct di_rpl_instance {
 	
 	void *user_data;
 } di_rpl_instance_t;
-
-typedef struct di_rpl_instance_el {
-	di_rpl_instance_t *rpl_instance;
-    UT_hash_handle hh;
-} di_rpl_instance_el_t, *di_rpl_instance_hash_t;
-
-di_rpl_instance_t *rpl_instance_get(di_rpl_instance_hash_t *hash, uint16_t instance_id, bool get_or_create);
-bool rpl_instance_add(di_rpl_instance_hash_t *hash, di_rpl_instance_t *rpl_instance, bool overwrite_existing);
-bool rpl_instance_remove(di_rpl_instance_hash_t *hash, uint16_t instance_id);
 
 #endif	/* RPL_INSTANCE_H */
 

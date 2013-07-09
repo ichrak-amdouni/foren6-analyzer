@@ -29,7 +29,7 @@ extern "C" {
 	 * Get a pointer to collected data
      * @return a pointer to collected data
      */
-	rpl_collector_t *rpl_tool_get_collected_data();
+	di_rpl_data_t *rpl_tool_get_collected_data();
 	
 	/**
 	 * Set callback to call when events are triggered (like node creation)

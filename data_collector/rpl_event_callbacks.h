@@ -11,6 +11,7 @@
 #include "../data_info/node.h"
 #include "../data_info/dodag.h"
 #include "../data_info/rpl_instance.h"
+#include "../data_info/link.h"
 
 typedef struct rpl_event_callbacks {
 	void (*onNodeCreated)(di_node_t *node);

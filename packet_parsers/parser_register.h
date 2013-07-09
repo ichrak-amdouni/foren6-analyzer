@@ -8,7 +8,6 @@
 #ifndef PARSER_REGISTER_H
 #define	PARSER_REGISTER_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 typedef struct parser {

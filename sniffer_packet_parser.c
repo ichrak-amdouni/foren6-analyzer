@@ -1,9 +1,7 @@
 #include <pcap/pcap.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <expat.h>
 #include <string.h>
 #include <signal.h>

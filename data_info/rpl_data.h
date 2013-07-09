@@ -24,11 +24,10 @@ typedef struct di_rpl_data {
 	hash_container_ptr dodags;
 	hash_container_ptr rpl_instances;
 	hash_container_ptr links;
-} di_rpl_data_t, rpl_collector_t;
+} di_rpl_data_t;
 
 void rpldata_init();
 di_rpl_data_t *rpldata_get();
-int rpldata_create_new_version();
 
 
 

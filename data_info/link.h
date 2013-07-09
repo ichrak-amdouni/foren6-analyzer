@@ -12,10 +12,6 @@
 #include <stdint.h>
 #include "metric.h"
 #include "address.h"
-#include "../uthash.h"
-
-
-typedef struct di_node di_node_t;
 
 typedef struct di_link_addr_pair {
 	addr_wpan_t child;
@@ -34,15 +30,6 @@ typedef struct di_link {
 	void *user_data;
 } di_link_t;
 
-typedef struct di_link_el {
-	di_link_t *link;
-	
-    UT_hash_handle hh;
-} di_link_el_t, *di_link_hash_t;
-
-di_link_t *link_hash_get(di_link_hash_t *hash, di_node_t *child_node, di_node_t *parent_node, bool get_or_create);
-bool link_hash_del(di_link_hash_t *hash, di_node_t *child_node, di_node_t *parent_node);
-bool link_hash_remove_all_outdated(di_link_hash_t *hash);
 bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count);
 
 #endif	/* LINK_H */

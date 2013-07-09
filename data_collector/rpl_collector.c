@@ -4,7 +4,6 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../utlist.h"
 
 #include "../data_info/address.h"
 #include "../data_info/node.h"
@@ -13,8 +12,7 @@
 #include "../data_info/route.h"
 #include "../data_info/link.h"
 #include "../data_info/metric.h"
-
-di_rpl_data_t collected_data;
+#include "../data_info/rpl_data.h"
 
 void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_address,
 		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
@@ -25,6 +23,7 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		rpl_dio_opt_route_t* route_info)
 {
 	//fprintf(stderr, "Received DIO\n");
+	di_rpl_data_t *collected_data = rpldata_get();
 	
 	di_node_t *node;
 	di_dodag_t *dodag;
@@ -34,17 +33,17 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	bool dodag_created;
 	bool rpl_instance_created;
 
-	//node = node_hash_get(&collected_data.nodes, src_wpan_address, true);
-	node = hash_value(collected_data.nodes, hash_key_make(src_wpan_address), HVM_CreateIfNonExistant, &node_created);
+	//node = node_hash_get(&collected_data->nodes, src_wpan_address, true);
+	node = hash_value(collected_data->nodes, hash_key_make(src_wpan_address), HVM_CreateIfNonExistant, &node_created);
 	node->wpan_address = src_wpan_address;
 
 	di_dodag_key_t dodag_key = {dio->dodagid, dio->version_number};
-	//dodag = dodag_hash_get(&collected_data.dodags, &dio->dodagid, dio->version_number, true);
-	dodag = hash_value(collected_data.dodags, hash_key_make(dodag_key), HVM_CreateIfNonExistant, &dodag_created);
+	//dodag = dodag_hash_get(&collected_data->dodags, &dio->dodagid, dio->version_number, true);
+	dodag = hash_value(collected_data->dodags, hash_key_make(dodag_key), HVM_CreateIfNonExistant, &dodag_created);
 	dodag->dodag_key = dodag_key;
 	
-	//rpl_instance = rpl_instance_get(&collected_data.rpl_instances, dio->rpl_instance_id, true);
-	rpl_instance = hash_value(collected_data.rpl_instances, hash_key_make(dio->rpl_instance_id), HVM_CreateIfNonExistant, &rpl_instance_created);
+	//rpl_instance = rpl_instance_get(&collected_data->rpl_instances, dio->rpl_instance_id, true);
+	rpl_instance = hash_value(collected_data->rpl_instances, hash_key_make(dio->rpl_instance_id), HVM_CreateIfNonExistant, &rpl_instance_created);
 	rpl_instance->instance_id = dio->rpl_instance_id;
 	
 	dodag->rpl_instance = rpl_instance->instance_id;
@@ -57,7 +56,7 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		//assert(node_hash_remove(&node->dodag->nodes, node->wpan_address) == node);
 		hash_iterator_ptr previous_dodag_it = hash_begin(NULL, NULL);
 		di_dodag_t *previous_dodag;
-		assert(hash_find(collected_data.dodags, hash_key_make(node->dodag), previous_dodag_it));
+		assert(hash_find(collected_data->dodags, hash_key_make(node->dodag), previous_dodag_it));
 		previous_dodag = hash_it_value(previous_dodag_it);
 		hash_delete(previous_dodag->nodes, hash_key_make(node->wpan_address));
 		hash_it_destroy(previous_dodag_it);
@@ -115,6 +114,8 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		rpl_dao_opt_target_t* target,
 		rpl_dao_opt_transit_t *transit)
 {
+	di_rpl_data_t *collected_data = rpldata_get();
+
 	di_node_t *child, *parent;
 	di_dodag_t *dodag;
 	di_rpl_instance_t *rpl_instance;
@@ -128,35 +129,35 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	
 	//fprintf(stderr, "Received DAO\n");
 
-	//child = node_hash_get(&collected_data.nodes, src_wpan_address, true);
-	child = hash_value(collected_data.nodes, hash_key_make(src_wpan_address), HVM_CreateIfNonExistant, &child_created);
+	//child = node_hash_get(&collected_data->nodes, src_wpan_address, true);
+	child = hash_value(collected_data->nodes, hash_key_make(src_wpan_address), HVM_CreateIfNonExistant, &child_created);
 	child->wpan_address = src_wpan_address;
 	child->local_address = *src_ip_address;
 
-	//parent = node_hash_get(&collected_data.nodes, dst_wpan_address, true);
-	parent = hash_value(collected_data.nodes, hash_key_make(dst_wpan_address), HVM_CreateIfNonExistant, &parent_created);
+	//parent = node_hash_get(&collected_data->nodes, dst_wpan_address, true);
+	parent = hash_value(collected_data->nodes, hash_key_make(dst_wpan_address), HVM_CreateIfNonExistant, &parent_created);
 	parent->wpan_address = dst_wpan_address;
 	parent->local_address = *dst_ip_address;
 	
 	if(transit && transit->path_lifetime > 0) {
 		//Clear parents list
-		//link_update(link_hash_get(&collected_data.links, child, parent, true), time(NULL), 1);
+		//link_update(link_hash_get(&collected_data->links, child, parent, true), time(NULL), 1);
 		di_link_addr_pair_t link_key;
 		link_key.child = child->wpan_address;
 		link_key.parent = parent->wpan_address;
-		new_link = hash_value(collected_data.links, hash_key_make(link_key), HVM_CreateIfNonExistant, &link_created);
+		new_link = hash_value(collected_data->links, hash_key_make(link_key), HVM_CreateIfNonExistant, &link_created);
 		new_link->key = link_key;
 
 		link_update(new_link, time(NULL), 1);
 	} else if(transit && transit->path_lifetime == 0) {
 		//No-Path DAO
 		if(target && !addr_compare_ip_len(&child->global_address, &target->target, target->target_bit_length)) {
-			//link_hash_del(&collected_data.links, child, parent);
+			//link_hash_del(&collected_data->links, child, parent);
 			di_link_addr_pair_t link_key;
 			link_key.child = child->wpan_address;
 			link_key.parent = parent->wpan_address;
 			hash_iterator_ptr iterator = hash_begin(NULL, NULL);
-			if(hash_find(collected_data.links, hash_key_make(link_key), iterator)) {
+			if(hash_find(collected_data->links, hash_key_make(link_key), iterator)) {
 				rpl_event_link_deleted(hash_it_value(iterator));
 				hash_it_delete_value(iterator);
 				hash_it_destroy(iterator);
@@ -181,13 +182,13 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	}
 
 	if(dao->dodagid_present && child->dodag.version >= 0) {
-		//assert((dodag = dodag_hash_get(&collected_data.dodags, &dao->dodagid, child->dodag->dodag_key.version, false)) != NULL);
-		assert((dodag = hash_value(collected_data.dodags, hash_key_make(child->dodag), HVM_FailIfNonExistant, &dodag_created)) != NULL);
+		//assert((dodag = dodag_hash_get(&collected_data->dodags, &dao->dodagid, child->dodag->dodag_key.version, false)) != NULL);
+		assert((dodag = hash_value(collected_data->dodags, hash_key_make(child->dodag), HVM_FailIfNonExistant, &dodag_created)) != NULL);
 		//dodag->dodag_key = child->dodag;
 	} else dodag = NULL;
 	
-	//rpl_instance = rpl_instance_get(&collected_data.rpl_instances, dao->rpl_instance_id, true);
-	rpl_instance =  hash_value(collected_data.rpl_instances, hash_key_make(dao->rpl_instance_id), HVM_CreateIfNonExistant, &rpl_instance_created);
+	//rpl_instance = rpl_instance_get(&collected_data->rpl_instances, dao->rpl_instance_id, true);
+	rpl_instance =  hash_value(collected_data->rpl_instances, hash_key_make(dao->rpl_instance_id), HVM_CreateIfNonExistant, &rpl_instance_created);
 	rpl_instance->instance_id = dao->rpl_instance_id;
 	
 	if(dodag) {
@@ -227,13 +228,15 @@ void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
 		rpl_dis_opt_info_req_t *request)
 {
+	di_rpl_data_t *collected_data = rpldata_get();
+
 	di_node_t *node;
 	bool node_created;
 
 	//fprintf(stderr, "Received DIS\n");
 
-	//node = node_hash_get(&collected_data.nodes, src_wpan_address, true);
-	node = hash_value(collected_data.nodes, hash_key_make(src_wpan_address), HVM_CreateIfNonExistant, &node_created);
+	//node = node_hash_get(&collected_data->nodes, src_wpan_address, true);
+	node = hash_value(collected_data->nodes, hash_key_make(src_wpan_address), HVM_CreateIfNonExistant, &node_created);
 	node->wpan_address = src_wpan_address;
 	node->local_address = *src_ip_address;
 	
@@ -247,6 +250,8 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
 		rpl_hop_by_hop_opt_t* rpl_info, int packet_id)
 {
+	di_rpl_data_t *collected_data = rpldata_get();
+
 	di_node_t *src, *dst;
 	di_link_t *new_link = NULL;
 
@@ -255,8 +260,8 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 	
 	//fprintf(stderr, "Received Data\n");
 
-	//src = node_hash_get(&collected_data.nodes, src_wpan_address, true);
-	src = hash_value(collected_data.nodes, hash_key_make(src_wpan_address), HVM_CreateIfNonExistant, &src_created);
+	//src = node_hash_get(&collected_data->nodes, src_wpan_address, true);
+	src = hash_value(collected_data->nodes, hash_key_make(src_wpan_address), HVM_CreateIfNonExistant, &src_created);
 	src->wpan_address = src_wpan_address;
 	if(!rpl_info || rpl_info->sender_rank == 0) {
 		//src->global_address = *src_ip_address;
@@ -265,19 +270,19 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 	}
 	
 	if(dst_wpan_address != 0 && dst_wpan_address != ADDR_MAC64_BROADCAST) {
-		//dst = node_hash_get(&collected_data.nodes, dst_wpan_address, true);
-		dst = hash_value(collected_data.nodes, hash_key_make(dst_wpan_address), HVM_CreateIfNonExistant, &dst_created);
+		//dst = node_hash_get(&collected_data->nodes, dst_wpan_address, true);
+		dst = hash_value(collected_data->nodes, hash_key_make(dst_wpan_address), HVM_CreateIfNonExistant, &dst_created);
 		dst->wpan_address = dst_wpan_address;
 		/* Add the parent node to the parents list of the child node if not already done */
 
 		//Bug: parent <-> child not following DAO messages
 		if(rpl_info) {
 			if(rpl_info->packet_toward_root) {
-				//link_update(link_hash_get(&collected_data.links, src, dst, true), time(NULL), 1);
+				//link_update(link_hash_get(&collected_data->links, src, dst, true), time(NULL), 1);
 				di_link_addr_pair_t link_key;
 				link_key.child = src->wpan_address;
 				link_key.parent = dst->wpan_address;
-				new_link = hash_value(collected_data.links, hash_key_make(link_key), HVM_CreateIfNonExistant, &link_created);
+				new_link = hash_value(collected_data->links, hash_key_make(link_key), HVM_CreateIfNonExistant, &link_created);
 				new_link->key = link_key;
 
 				di_prefix_t route;

@@ -2,8 +2,6 @@
 #include <sys/select.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
-#include <errno.h>
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
@@ -135,7 +133,6 @@ void desc_poll_process_events() {
 	if(retval == -1)
 		perror("select failed");
 	else if(retval > 0) {
-
 		pthread_mutex_lock(&poll_mutex);
 		for(i = 0; i < SELECT_FD_NUM; i++) {
 			if(poll_data[i] && FD_ISSET(poll_data[i]->fd, &read_set)) {

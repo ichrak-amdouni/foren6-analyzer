@@ -1,19 +1,14 @@
 #include <stddef.h>
-#include <pcap/pcap.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <expat.h>
 #include <string.h>
-#include <signal.h>
 #include <arpa/inet.h>
 
 #include "rpl_parser.h"
+#include "parser_register.h"
 #include "../data_collector/rpl_collector.h"
 #include "../descriptor_poll.h"
-#include "parser_register.h"
 
 #define ICMPV6_RPL_TYPE 155
 #define ICMPV6_RPL_CODE_DIS     0x0
