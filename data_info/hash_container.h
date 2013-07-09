@@ -39,7 +39,8 @@ typedef enum hash_value_mode {
 //hash_key_t hash_key_make(T key_value);
 #define hash_key_make(key_value) ((hash_key_t){&(key_value), sizeof(key_value)})
 
-hash_container_ptr hash_create(size_t data_size);
+hash_container_ptr hash_create(size_t data_size, void (*data_constructor)(void *data));
+hash_container_ptr hash_dup(hash_container_ptr container);
 void               hash_destroy(hash_container_ptr container);
 bool               hash_add(hash_container_ptr container, hash_key_t key, void *data, hash_iterator_ptr iterator, hash_add_mode_e mode, bool *was_existing);
 bool               hash_add_ref(hash_container_ptr container, hash_key_t key, void *data, hash_iterator_ptr iterator, hash_add_mode_e mode, bool *was_existing);

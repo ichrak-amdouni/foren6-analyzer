@@ -106,7 +106,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 		if(!strcmp(nameStr, "frame.number")) {
 			current_packet.packet_id = strtol(showStr, NULL, 10);
 		}
-	} else if(!strcmp(nameStr, "icmpv6.checksum_bad")) {
+	} else if(!strcmp(nameStr, "icmpv6.checksum_bad") && !strcmp(showStr, "1")) {
 		current_packet.is_bad = true;
 	} else if(current_packet.type == RPT_None || current_packet.type == RPT_RplUnknown || current_packet.type == RPT_Data) {
 		if(!strcmp(nameStr, "wpan.src64")) {

@@ -73,7 +73,7 @@ void sniffer_parser_parse_data(const unsigned char* data, int len) {
 	pcap_dump((u_char *)pdumper_out, &pkt_hdr, data);
 	pcap_dump_flush(pdumper_out);
 	fflush(pcap_output);
-	fflush(stdout);
+	//fflush(stdout);
 	//fprintf(stderr, "New packet captured\n");
 	//write(STDOUT_FILENO, data, len);
 }

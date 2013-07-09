@@ -51,3 +51,19 @@ bool route_del_all_outdated(di_route_list_t *list) {
 	return false;
 }
 
+di_route_list_t route_dup(di_route_list_t *routes) {
+	di_route_list_t new_routes = NULL;
+	di_route_el_t *route, *new_route, *last_route;
+	
+	last_route = NULL;
+	LL_FOREACH(*routes, route) {
+		new_route = (di_route_el_t*) malloc(sizeof(di_route_el_t));
+		memcpy(new_route, route, sizeof(di_route_el_t));
+		new_route->next = last_route;
+		last_route = new_route;
+		if(new_routes == NULL)
+			new_routes = new_route;
+	}
+	
+	return new_routes;
+}

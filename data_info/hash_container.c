@@ -13,6 +13,7 @@ typedef struct hash_container_el {
 typedef struct hash_container {
 	hash_container_el_t *head;
 	size_t data_size;
+	void (*data_constructor)(void *data);
 } *hash_container_ptr;
 
 typedef struct hash_iterator {
@@ -22,12 +23,32 @@ typedef struct hash_iterator {
 	hash_container_ptr container;
 } *hash_iterator_ptr;
 
-hash_container_ptr hash_create(size_t data_size) {
+hash_container_ptr hash_create(size_t data_size, void (*data_constructor)(void *data)) {
 	hash_container_ptr new_container;
 	
 	new_container = (hash_container_ptr) calloc(1, sizeof(struct hash_container));
 	new_container->data_size = data_size;
+	new_container->data_constructor = data_constructor;
+
 	return new_container;
+}
+
+hash_container_ptr hash_dup(hash_container_ptr container) {
+	hash_container_ptr new_hash;
+	struct hash_iterator it, end_it;
+	
+	new_hash = malloc(sizeof(struct hash_container));
+	memcpy(new_hash, container, sizeof(struct hash_container));
+	new_hash->head = NULL;
+	
+	hash_begin(container, &it);
+	hash_end(container, &end_it);
+	
+	for(; hash_it_equ(&it, &end_it) == false; hash_it_inc(&it)) {
+		hash_add(new_hash, (hash_key_t){it.current_data->key, it.current_data->key_size}, it.current_data->data, NULL, HAM_NoCheck, NULL);
+	}
+	
+	return new_hash;
 }
 
 void hash_destroy(hash_container_ptr container) {
@@ -40,6 +61,7 @@ bool hash_add(hash_container_ptr container, hash_key_t key, void *data, hash_ite
 	data_content = calloc(1, container->data_size);
 	if(data)
 		memcpy(data_content, data, container->data_size);
+	else if(container->data_constructor) container->data_constructor(data_content);
 	
 	return hash_add_ref(container, key, data_content, iterator, mode, was_existing);
 }

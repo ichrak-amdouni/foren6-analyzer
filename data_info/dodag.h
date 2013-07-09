@@ -29,27 +29,33 @@ typedef struct di_dodag_config {
 	di_objective_function_e objective_function;
 } di_dodag_config_t;
 
-typedef struct di_dodag_key {
+typedef struct di_dodag_ref {
 	addr_ipv6_t dodagid;				//Via DIO, DAO
-	uint16_t version;					//Via DIO
+	int16_t version;					//Via DIO
+} di_dodag_ref_t;
+
+typedef struct di_dodag_key {
+	di_dodag_ref_t ref;
+	uint32_t version;
 } di_dodag_key_t;
 
 typedef struct di_dodag {
-	di_dodag_key_t dodag_key;				//Via DIO & DAO for dodagid and via DIO for version
-	uint32_t version;
+	di_dodag_key_t key;				//Via DIO & DAO for dodagid and via DIO for version
 	
 	//Configuration
 	di_dodag_config_t config;				//Via DIO config option
 
 	di_prefix_t prefix;						//Via DIO prefix option
 
-	int32_t rpl_instance;		//Via DIO, DAO
+	di_rpl_instance_ref_t rpl_instance;		//Via DIO, DAO
 	
 	//Nodes
 	hash_container_ptr nodes;					//Via DIO, sometimes DAO
 	
 	void *user_data;
 } di_dodag_t;
+
+void dodag_init(di_dodag_t *dodag);
 
 #endif	/* DODAG_H */
 

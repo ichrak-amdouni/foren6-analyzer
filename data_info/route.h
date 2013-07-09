@@ -25,5 +25,7 @@ di_route_el_t *route_add(di_route_list_t *list, di_prefix_t route_prefix, bool a
 bool route_remove(di_route_list_t *list, di_prefix_t route_prefix);
 bool route_del_all_outdated(di_route_list_t *list);
 
+di_route_list_t route_dup(di_route_list_t *routes);
+
 #endif	/* ROUTE_H */
 
