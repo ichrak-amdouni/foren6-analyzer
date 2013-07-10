@@ -54,7 +54,7 @@ bool desc_poll_add(int fd, ready_callback callback, void* user_data) {
 	data->user_data = user_data;
 
 	sigemptyset (&x);
-	sigaddset(&x, SIGUSR1);
+	sigaddset(&x, SIGPIPE);
 
 	sigprocmask(SIG_BLOCK, &x, NULL);
 	pthread_mutex_lock(&poll_mutex);
@@ -88,7 +88,7 @@ void desc_poll_del(int fd) {
 	sigset_t x;
 
 	sigemptyset (&x);
-	sigaddset(&x, SIGUSR1);
+	sigaddset(&x, SIGPIPE);
 
 	sigprocmask(SIG_BLOCK, &x, NULL);
 	pthread_mutex_lock(&poll_mutex);
@@ -121,7 +121,7 @@ void desc_poll_process_events() {
 	sigset_t x;
 
 	sigemptyset (&x);
-	sigaddset(&x, SIGUSR1);
+	sigaddset(&x, SIGPIPE);
 
 	FD_ZERO(&read_set);
 
@@ -156,7 +156,13 @@ void desc_poll_process_events() {
 		pthread_mutex_lock(&poll_mutex);
 		for(i = 0; i < SELECT_FD_NUM; i++) {
 			if(poll_data[i] && FD_ISSET(poll_data[i]->fd, &read_set)) {
-				poll_data[i]->callback(poll_data[i]->fd, poll_data[i]->user_data);
+				desc_poll_info_t *current_info = poll_data[i];
+				int fd = poll_data[i]->fd;
+				void *user_data = poll_data[i]->user_data;
+
+				pthread_mutex_unlock(&poll_mutex);
+				current_info->callback(fd, user_data);
+				pthread_mutex_lock(&poll_mutex);
 			}
 		}
 		pthread_mutex_unlock(&poll_mutex);

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   address.h
  * Author: am
  *
@@ -9,6 +9,7 @@
 #define	ADDRESS_H
 
 #include <arpa/inet.h>
+#include <stdbool.h>
 
 #define ADDR_MAC64_BROADCAST 0xFFFF
 
@@ -36,9 +37,15 @@ uint64_t addr_get_int_id_from_mac64(addr_wpan_t mac_address);
 addr_wpan_t addr_get_mac64_from_int_id(uint64_t int_id);
 
 //For list search
-int addr_compare_ip(addr_ipv6_t *a, addr_ipv6_t *b);
-int addr_compare_wpan(addr_wpan_t *a, addr_wpan_t *b);
-int addr_compare_ip_len(addr_ipv6_t *a, addr_ipv6_t *b, int bit_len);	//Compare len bits
+int addr_compare_ip(const addr_ipv6_t *a, const addr_ipv6_t *b);
+int addr_compare_wpan(const addr_wpan_t *a, const addr_wpan_t *b);
+int addr_compare_ip_len(const addr_ipv6_t *a, const addr_ipv6_t *b, int bit_len);	//Compare len bits
+
+bool addr_is_ip_any(addr_ipv6_t address);
+bool addr_is_ip_multicast(addr_ipv6_t address);
+bool addr_is_ip_local(addr_ipv6_t address);
+bool addr_is_ip_global(addr_ipv6_t address);
+bool addr_is_mac64_broadcast(addr_wpan_t address);
 
 #endif	/* ADDRESS_H */
 

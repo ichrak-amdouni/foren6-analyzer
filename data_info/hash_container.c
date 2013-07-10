@@ -25,7 +25,7 @@ typedef struct hash_iterator {
 
 hash_container_ptr hash_create(size_t data_size, void (*data_constructor)(void *data)) {
 	hash_container_ptr new_container;
-	
+
 	new_container = (hash_container_ptr) calloc(1, sizeof(struct hash_container));
 	new_container->data_size = data_size;
 	new_container->data_constructor = data_constructor;
@@ -36,18 +36,18 @@ hash_container_ptr hash_create(size_t data_size, void (*data_constructor)(void *
 hash_container_ptr hash_dup(hash_container_ptr container) {
 	hash_container_ptr new_hash;
 	struct hash_iterator it, end_it;
-	
+
 	new_hash = malloc(sizeof(struct hash_container));
 	memcpy(new_hash, container, sizeof(struct hash_container));
 	new_hash->head = NULL;
-	
+
 	hash_begin(container, &it);
 	hash_end(container, &end_it);
-	
+
 	for(; hash_it_equ(&it, &end_it) == false; hash_it_inc(&it)) {
 		hash_add(new_hash, (hash_key_t){it.current_data->key, it.current_data->key_size}, it.current_data->data, NULL, HAM_NoCheck, NULL);
 	}
-	
+
 	return new_hash;
 }
 
@@ -55,20 +55,20 @@ void hash_destroy(hash_container_ptr container) {
 	free(container);
 }
 
-bool hash_add(hash_container_ptr container, hash_key_t key, void *data, hash_iterator_ptr iterator, hash_add_mode_e mode, bool *was_existing) {
+bool hash_add(hash_container_ptr container, hash_key_t key, const void *data, hash_iterator_ptr iterator, hash_add_mode_e mode, bool *was_existing) {
 	void *data_content;
-	
+
 	data_content = calloc(1, container->data_size);
 	if(data)
 		memcpy(data_content, data, container->data_size);
 	else if(container->data_constructor) container->data_constructor(data_content);
-	
+
 	return hash_add_ref(container, key, data_content, iterator, mode, was_existing);
 }
 
-bool hash_add_ref(hash_container_ptr container, hash_key_t key, void *data, hash_iterator_ptr iterator, hash_add_mode_e mode, bool *was_existing) {
+bool hash_add_ref(hash_container_ptr container, hash_key_t key, const void *data, hash_iterator_ptr iterator, hash_add_mode_e mode, bool *was_existing) {
 	hash_container_el_t *element = NULL;
-	
+
 	assert(data != NULL);
 
 	if(mode != HAM_NoCheck) {
@@ -84,36 +84,36 @@ bool hash_add_ref(hash_container_ptr container, hash_key_t key, void *data, hash
 			return false;
 		}
 	}
-	
+
 	if(element == NULL) {
 		element = calloc(1, sizeof(hash_container_el_t));
-		element->data = data;
+		element->data = (void*)data;
 		element->key = malloc(key.size);
 		memcpy(element->key, key.key, key.size);
 		HASH_ADD_KEYPTR(hh, container->head, element->key, key.size, element);
 		if(was_existing) *was_existing = false;
 	} else {
 		assert(!memcmp(element->key, key.key, key.size));
-		element->data = data;
+		element->data = (void*)data;
 		if(was_existing) *was_existing = true;
 	}
-	
+
 	if(iterator) {
 		iterator->current_data = element;
 		iterator->next = element->hh.next;
 		iterator->prev = element->hh.prev;
 		iterator->container = container;
 	}
-	
+
 	return true;
 }
 
 void *hash_value(hash_container_ptr container, hash_key_t key, hash_value_mode_e mode, bool *was_created) {
 	bool found;
 	struct hash_iterator iterator;
-	
+
 	found = hash_find(container, key, &iterator);
-	
+
 	if(!found && mode == HVM_CreateIfNonExistant) {
 		if(was_created) *was_created = true;
 		if(hash_add(container, key, NULL, &iterator, HAM_NoCheck, NULL) == true) {
@@ -123,7 +123,7 @@ void *hash_value(hash_container_ptr container, hash_key_t key, hash_value_mode_e
 		if(was_created) *was_created = false;
 		return iterator.current_data->data;
 	}
-	
+
 	if(was_created) *was_created = false;
 	return NULL;
 }
@@ -132,7 +132,7 @@ bool hash_find(hash_container_ptr container, hash_key_t key, hash_iterator_ptr i
 	hash_container_el_t *element = NULL;
 
 	HASH_FIND(hh, container->head, key.key, key.size, element);
-	
+
 	if(element) {
 		if(iterator) {
 			iterator->current_data = element;
@@ -140,7 +140,7 @@ bool hash_find(hash_container_ptr container, hash_key_t key, hash_iterator_ptr i
 			iterator->prev = element->hh.prev;
 			iterator->container = container;
 		}
-		
+
 		return true;
 	} else {
 		if(iterator)
@@ -148,14 +148,14 @@ bool hash_find(hash_container_ptr container, hash_key_t key, hash_iterator_ptr i
 
 		return false;
 	}
-	
+
 }
 
 void* hash_remove_ref(hash_container_ptr container, hash_key_t key) {
 	bool found;
 	void *data_ptr;
 	struct hash_iterator iterator;
-	
+
 	data_ptr = NULL;
 
 	found = hash_find(container, key, &iterator);
@@ -169,7 +169,7 @@ void* hash_remove_ref(hash_container_ptr container, hash_key_t key) {
 bool hash_delete(hash_container_ptr container, hash_key_t key) {
 	bool found;
 	struct hash_iterator iterator;
-	
+
 	found = hash_find(container, key, &iterator);
 	if(found) {
 		hash_it_delete_value(&iterator);
@@ -195,10 +195,10 @@ hash_iterator_ptr hash_begin(hash_container_ptr container, hash_iterator_ptr ite
 	if(container == NULL && iterator == NULL) {
 		return calloc(1, sizeof(struct hash_iterator));
 	}
-		
+
 	if(container->head == NULL)
 		return hash_end(container, iterator);
-	
+
 	if(iterator == NULL)
 		iterator = malloc(sizeof(struct hash_iterator));
 
@@ -206,7 +206,7 @@ hash_iterator_ptr hash_begin(hash_container_ptr container, hash_iterator_ptr ite
 	iterator->next = iterator->current_data->hh.next;
 	iterator->prev = iterator->current_data->hh.prev;
 	iterator->container = container;
-	
+
 	return iterator;
 }
 
@@ -224,7 +224,7 @@ hash_iterator_ptr hash_end(hash_container_ptr container, hash_iterator_ptr itera
 		iterator->prev = NULL;
 	else iterator->prev = ELMT_FROM_HH(container->head->hh.tbl, container->head->hh.tbl->tail);
 	iterator->container = container;
-	
+
 	return iterator;
 }
 
@@ -240,7 +240,7 @@ hash_iterator_ptr hash_it_inc(hash_iterator_ptr iterator) {
 	if(iterator->current_data)
 		iterator->next = iterator->current_data->hh.next;
 	else iterator->next = NULL;
-	
+
 	return iterator;
 }
 
@@ -250,7 +250,7 @@ hash_iterator_ptr hash_it_dec(hash_iterator_ptr iterator) {
 	if(iterator->current_data)
 		iterator->prev = iterator->current_data->hh.prev;
 	else iterator->prev = NULL;
-	
+
 	return iterator;
 }
 
@@ -261,28 +261,28 @@ bool hash_it_equ(hash_iterator_ptr iterator, hash_iterator_ptr other_it) {
 hash_iterator_ptr  hash_it_cpy(hash_iterator_ptr iterator, hash_iterator_ptr new_iterator) {
 	if(!new_iterator)
 		new_iterator = malloc(sizeof(struct hash_iterator));
-	
+
 	*new_iterator = *iterator;
-	
+
 	return new_iterator;
 }
 
 hash_iterator_ptr  hash_it_remove_ref(hash_iterator_ptr iterator) {
 	struct hash_iterator next_it;
-	
+
 	hash_it_cpy(iterator, &next_it);
 	hash_it_inc(&next_it);
 
 	HASH_DEL(iterator->container->head, iterator->current_data);
 	free(iterator->current_data->key);
 	free(iterator->current_data);
-	
+
 	return hash_it_cpy(&next_it, iterator);
 }
 
 hash_iterator_ptr  hash_it_delete_value(hash_iterator_ptr iterator) {
 	struct hash_iterator next_it;
-	
+
 	hash_it_cpy(iterator, &next_it);
 	hash_it_inc(&next_it);
 
@@ -290,7 +290,7 @@ hash_iterator_ptr  hash_it_delete_value(hash_iterator_ptr iterator) {
 	free(iterator->current_data->data);
 	free(iterator->current_data->key);
 	free(iterator->current_data);
-	
+
 	return hash_it_cpy(&next_it, iterator);
 }
 
