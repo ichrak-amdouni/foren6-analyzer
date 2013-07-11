@@ -12,6 +12,10 @@
 #include <stdint.h>
 #include "hash_container.h"
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 typedef struct di_dodag di_dodag_t;
 
 typedef enum tag_di_rpl_mop_e {
@@ -46,6 +50,10 @@ void rpl_instance_del_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag);
 const di_rpl_instance_key_t* rpl_instance_get_key(const di_rpl_instance_t* rpl_instance);
 di_rpl_mop_e rpl_instance_get_mop(const di_rpl_instance_t* rpl_instance);
 void *rpl_instance_get_user_data(const di_rpl_instance_t* rpl_instance);
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* RPL_INSTANCE_H */
 

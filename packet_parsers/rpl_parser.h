@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   rpl_parser.h
  * Author: am
  *
@@ -10,7 +10,15 @@
 
 #include "parser_register.h"
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 parser_t rpl_parser_register();
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* RPL_PARSER_H */
 

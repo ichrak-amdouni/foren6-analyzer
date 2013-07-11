@@ -12,6 +12,10 @@
 #include "rpl_instance.h"
 #include "hash_container.h"
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 typedef struct di_node di_node_t;
 
 typedef enum tag_di_objective_function_e {
@@ -63,6 +67,10 @@ const di_rpl_instance_ref_t *dodag_get_rpl_instance(const di_dodag_t *dodag);
 hash_container_ptr dodag_get_node(const di_dodag_t *dodag);
 void *dodag_get_user_data(const di_dodag_t *dodag);
 
+
+#ifdef	__cplusplus
+}
+#endif
 
 
 #endif	/* DODAG_H */

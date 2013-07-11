@@ -14,6 +14,10 @@
 #include "rpl_instance.h"
 #include "hash_container.h"
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 typedef struct di_rpl_data {
 	hash_container_ptr nodes;
 	hash_container_ptr dodags;
@@ -29,7 +33,9 @@ di_dodag_t *rpldata_get_dodag(const di_dodag_key_t *dodag_key);
 di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_key_t *rpl_instance_key);
 di_link_t *rpldata_get_link(const di_link_key_t *link_key);
 
-
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* RPL_DATA_H */
 

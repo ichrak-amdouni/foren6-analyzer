@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   versioned_data.h
  * Author: am
  *
@@ -12,6 +12,10 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include "../uthash.h"
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 typedef struct di_versioned_data_el di_versioned_data_el_t;
 
@@ -61,6 +65,8 @@ void verdata_destroy(di_versioned_data_t handle);
 di_versioned_pointer_t *verdata_create_ptr(size_t working_loc_count);
 void verdata_destroy_ptr(di_versioned_pointer_t ptr);
 
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* VERSIONED_DATA_H */
-

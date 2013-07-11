@@ -11,6 +11,10 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 #define ADDR_MAC64_BROADCAST 0xFFFF
 
 typedef struct in6_addr addr_ipv6_t;
@@ -46,6 +50,10 @@ bool addr_is_ip_multicast(addr_ipv6_t address);
 bool addr_is_ip_local(addr_ipv6_t address);
 bool addr_is_ip_global(addr_ipv6_t address);
 bool addr_is_mac64_broadcast(addr_wpan_t address);
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* ADDRESS_H */
 

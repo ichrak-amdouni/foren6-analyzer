@@ -13,7 +13,6 @@
 #include "route.h"
 #include "dodag.h"
 
-
 #ifdef	__cplusplus
 extern "C" {
 #endif

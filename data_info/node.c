@@ -54,8 +54,8 @@ di_node_t *node_dup(di_node_t *node) {
 void node_set_key(di_node_t *node, const di_node_key_t *key) {
 	node->key = *key;
 
-	if(!node->is_custom_global_address) {
-		node->global_address = addr_get_local_ip_from_mac64(node->key.ref.wpan_address);
+	if(!node->is_custom_local_address) {
+		node->local_address = addr_get_local_ip_from_mac64(node->key.ref.wpan_address);
 	}
 }
 

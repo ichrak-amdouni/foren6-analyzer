@@ -88,8 +88,12 @@ void dodag_add_node(di_dodag_t *dodag, di_node_t *node) {
 
 	hash_add(dodag->nodes, hash_key_make(node_get_key(node)->ref), &node_get_key(node)->ref, NULL, HAM_OverwriteIfExists, &was_already_in_dodag);
 
-	node_set_dodag(node, &dodag->key.ref);
-	node_update_ip(node, &dodag->prefix);
+	if(was_already_in_dodag == false) {
+		node_set_dodag(node, &dodag->key.ref);
+		node_update_ip(node, &dodag->prefix);
+	} else {
+		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
+	}
 }
 
 void dodag_del_node(di_dodag_t *dodag, di_node_t *node) {

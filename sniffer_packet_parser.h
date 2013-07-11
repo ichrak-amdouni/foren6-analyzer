@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   sniffer_packet_parser.h
  * Author: am
  *
@@ -14,6 +14,10 @@
 
 #include "data_info/rpl_instance.h"
 #include "data_info/dodag.h"
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 typedef enum rpl_dio_opt_metricype_e {
 	RDOMT_ETX = 7
@@ -124,6 +128,11 @@ void sniffer_parser_init();
 //Give data to parse to parser
 //Call sensor_info_collector_parse_packet when a packet has been fully received
 void sniffer_parser_parse_data(const unsigned char* data, int len);
+
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* SNIFFER_PACKET_PARSER_H */
 
