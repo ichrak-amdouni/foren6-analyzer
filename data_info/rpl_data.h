@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   collected_data.h
  * Author: am
  *
@@ -15,11 +15,6 @@
 #include "hash_container.h"
 
 typedef struct di_rpl_data {
-//	di_node_hash_t nodes;
-//	di_dodag_hash_t dodags;
-//	di_rpl_instance_hash_t rpl_instances;
-//	di_link_hash_t links;
-	
 	hash_container_ptr nodes;
 	hash_container_ptr dodags;
 	hash_container_ptr rpl_instances;
@@ -28,6 +23,11 @@ typedef struct di_rpl_data {
 
 void rpldata_init();
 di_rpl_data_t *rpldata_get();
+
+di_node_t *rpldata_get_node(const di_node_key_t *node_key);
+di_dodag_t *rpldata_get_dodag(const di_dodag_key_t *dodag_key);
+di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_key_t *rpl_instance_key);
+di_link_t *rpldata_get_link(const di_link_key_t *link_key);
 
 
 

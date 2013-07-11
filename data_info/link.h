@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   link.h
  * Author: am
  *
@@ -32,11 +32,13 @@ typedef struct di_link {
 	time_t last_update;		//TX only
 	time_t expiration_time;
 	uint32_t packet_count;	//TX only
-	
+
 	void *user_data;
 } di_link_t;
 
-void link_init(di_link_t *link);
+size_t link_sizeof();
+
+void link_init(void *data, void *key, size_t key_size);
 bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count);
 di_link_t *link_dup(di_link_t *link);
 

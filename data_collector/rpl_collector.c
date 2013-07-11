@@ -36,18 +36,14 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 
 	di_node_key_t node_key = {{src_wpan_address}, 0};
 	node = hash_value(collected_data->nodes, hash_key_make(node_key), HVM_CreateIfNonExistant, &node_created);
-	node_set_key(node, &node_key);
 
 	di_dodag_key_t dodag_key = {{dio->dodagid, dio->version_number}, 0};
 	dodag = hash_value(collected_data->dodags, hash_key_make(dodag_key), HVM_CreateIfNonExistant, &dodag_created);
-	dodag->key = dodag_key;
 
 	di_rpl_instance_key_t rpl_instance_key = {{dio->rpl_instance_id}, 0};
 	rpl_instance = hash_value(collected_data->rpl_instances, hash_key_make(rpl_instance_key), HVM_CreateIfNonExistant, &rpl_instance_created);
-	rpl_instance->key = rpl_instance_key;
 
-	hash_add(rpl_instance->dodags, hash_key_make(dodag_key.ref), &dodag_key.ref, NULL, HAM_OverwriteIfExists, NULL);
-	dodag->rpl_instance = rpl_instance->key.ref;
+	rpl_instance_add_dodag(rpl_instance, dodag);
 
 	//Manage new version of DODAG
 	if(node_get_dodag(node) && node_get_dodag(node)->version < dio->version_number) {
@@ -57,42 +53,44 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		di_dodag_key_t dodag_key = {*node_get_dodag(node), 0};
 		assert(hash_find(collected_data->dodags, hash_key_make(dodag_key), previous_dodag_it));
 		previous_dodag = hash_it_value(previous_dodag_it);
-		hash_delete(previous_dodag->nodes, hash_key_make(node_key.ref));
+		dodag_del_node(previous_dodag, node);
 		hash_it_destroy(previous_dodag_it);
 
-		hash_add(dodag->nodes, hash_key_make(node_key.ref), &node_key.ref, NULL, HAM_OverwriteIfExists, NULL);
-		node_set_dodag(node, &dodag->key.ref);
+		dodag_add_node(dodag, node);
 	} else if(node_get_dodag(node) == NULL) {
 		//The node was not attached to a dodag, so add to it
-		hash_add(dodag->nodes, hash_key_make(node_key.ref), &node_key.ref, NULL, HAM_OverwriteIfExists, NULL);
-		node_set_dodag(node, &dodag->key.ref);
+		dodag_add_node(dodag, node);
 	}
 
 	node_set_rank(node, dio->rank);
 	node_set_grounded(node, dio->grounded);
-	rpl_instance->mode_of_operation = dio->mode_of_operation;
+	rpl_instance_set_mop(rpl_instance, dio->mode_of_operation);
 
 	if(prefix) {
-		dodag->prefix.length = prefix->prefix_bit_length;
-		dodag->prefix.prefix = prefix->prefix;
+		di_prefix_t dodag_prefix;
+		dodag_prefix.length = prefix->prefix_bit_length;
+		dodag_prefix.prefix = prefix->prefix;
+		dodag_prefix.expiration_time = 0;
 		//dodag->prefix.expiration_time = time(NULL) + prefix->preferred_lifetime;
-		node_set_global_ip(node, addr_get_global_ip_from_mac64(dodag->prefix, src_wpan_address));
+		dodag_set_prefix(dodag, &dodag_prefix);
 	}
 	if(metric && metric->type == RDOMT_ETX) {
 		di_metric_t metric_value = {metric_get_type("ETX"), metric->value};
 		node_set_metric(node, &metric_value);
 	}
 	if(dodag_config) {
-		dodag->config.auth_enabled = dodag_config->auth_enabled;
-		dodag->config.default_lifetime = dodag_config->default_lifetime;
-		dodag->config.dio_interval_max = dodag_config->dio_interval_max;
-		dodag->config.dio_interval_min = dodag_config->dio_interval_min;
-		dodag->config.dio_redundancy_constant = dodag_config->dio_redundancy_constant;
-		dodag->config.lifetime_unit = dodag_config->lifetime_unit;
-		dodag->config.max_rank_inc = dodag_config->max_rank_inc;
-		dodag->config.min_hop_rank_inc = dodag_config->min_hop_rank_inc;
-		dodag->config.objective_function = dodag_config->objective_function;
-		dodag->config.path_control_size = dodag_config->path_control_size;
+		di_dodag_config_t config;
+		config.auth_enabled = dodag_config->auth_enabled;
+		config.default_lifetime = dodag_config->default_lifetime;
+		config.dio_interval_max = dodag_config->dio_interval_max;
+		config.dio_interval_min = dodag_config->dio_interval_min;
+		config.dio_redundancy_constant = dodag_config->dio_redundancy_constant;
+		config.lifetime_unit = dodag_config->lifetime_unit;
+		config.max_rank_inc = dodag_config->max_rank_inc;
+		config.min_hop_rank_inc = dodag_config->min_hop_rank_inc;
+		config.objective_function = dodag_config->objective_function;
+		config.path_control_size = dodag_config->path_control_size;
+		dodag_set_config(dodag, &config);
 	}
 
 	if(node_created)
@@ -138,7 +136,6 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 
 	di_rpl_instance_key_t rpl_instance_key = {{dao->rpl_instance_id}, 0};
 	rpl_instance = hash_value(collected_data->rpl_instances, hash_key_make(rpl_instance_key), HVM_CreateIfNonExistant, &rpl_instance_created);
-	rpl_instance->key = rpl_instance_key;
 
 	if(dao->dodagid_present && node_get_dodag(child)) {
 		di_dodag_key_t dodag_key = {*node_get_dodag(child), 0};
@@ -147,15 +144,13 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	} else dodag = NULL;
 
 	if(dodag) {
-		dodag->rpl_instance = rpl_instance->key.ref;
-		hash_add(rpl_instance->dodags, hash_key_make(dodag->key.ref), &dodag->key.ref, NULL, HAM_OverwriteIfExists, NULL);
+		rpl_instance_add_dodag(rpl_instance, dodag);
 
-		assert(!memcmp(node_get_dodag(child), &dodag->key.ref, sizeof(di_dodag_ref_t)));
+		assert(!memcmp(node_get_dodag(child), &dodag_get_key(dodag)->ref, sizeof(di_dodag_ref_t)));
 		assert(!addr_is_ip_any(*node_get_global_ip(child)));
-		hash_add(dodag->nodes, hash_key_make(node_get_key(child)->ref), &node_get_key(child)->ref, NULL, HAM_OverwriteIfExists, NULL);
 
-		node_set_dodag(parent, &dodag->key.ref);
-		hash_add(dodag->nodes, hash_key_make(node_get_key(parent)->ref), &node_get_key(parent)->ref, NULL, HAM_OverwriteIfExists, NULL);
+		dodag_add_node(dodag, child);
+		dodag_add_node(dodag, parent);
 	}
 
 	if(transit && transit->path_lifetime > 0) {

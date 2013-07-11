@@ -14,6 +14,10 @@ void rpl_tool_init() {
 	sniffer_parser_init();
 }
 
+void rpl_tool_cleanup() {
+	desc_poll_cleanup();
+}
+
 interface_t *rpl_tool_get_interface(const char* name) {
 	return interface_get(name);
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   descriptor_poll.h
  * Author: am
  *
@@ -13,6 +13,7 @@
 typedef void (*ready_callback)(int, void*);
 
 void desc_poll_init();
+void desc_poll_cleanup();
 
 bool desc_poll_add(int fd, ready_callback callback, void* user_data);
 void desc_poll_del(int fd);

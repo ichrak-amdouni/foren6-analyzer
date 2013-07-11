@@ -13,7 +13,7 @@ typedef struct hash_container_el {
 typedef struct hash_container {
 	hash_container_el_t *head;
 	size_t data_size;
-	void (*data_constructor)(void *data);
+	void (*data_constructor)(void *data, void *key, size_t key_size);
 } *hash_container_ptr;
 
 typedef struct hash_iterator {
@@ -23,7 +23,7 @@ typedef struct hash_iterator {
 	hash_container_ptr container;
 } *hash_iterator_ptr;
 
-hash_container_ptr hash_create(size_t data_size, void (*data_constructor)(void *data)) {
+hash_container_ptr hash_create(size_t data_size, void (*data_constructor)(void *data, void *key, size_t key_size)) {
 	hash_container_ptr new_container;
 
 	new_container = (hash_container_ptr) calloc(1, sizeof(struct hash_container));
@@ -61,7 +61,7 @@ bool hash_add(hash_container_ptr container, hash_key_t key, const void *data, ha
 	data_content = calloc(1, container->data_size);
 	if(data)
 		memcpy(data_content, data, container->data_size);
-	else if(container->data_constructor) container->data_constructor(data_content);
+	else if(container->data_constructor) container->data_constructor(data_content, key.key, key.size);
 
 	return hash_add_ref(container, key, data_content, iterator, mode, was_existing);
 }

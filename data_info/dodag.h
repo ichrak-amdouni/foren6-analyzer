@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   dodag.h
  * Author: am
  *
@@ -11,6 +11,8 @@
 #include "address.h"
 #include "rpl_instance.h"
 #include "hash_container.h"
+
+typedef struct di_node di_node_t;
 
 typedef enum tag_di_objective_function_e {
 	ROF_ETX = 1
@@ -39,23 +41,29 @@ typedef struct di_dodag_key {
 	uint32_t version;
 } di_dodag_key_t;
 
-typedef struct di_dodag {
-	di_dodag_key_t key;				//Via DIO & DAO for dodagid and via DIO for version
-	
-	//Configuration
-	di_dodag_config_t config;				//Via DIO config option
+typedef struct di_dodag di_dodag_t;
 
-	di_prefix_t prefix;						//Via DIO prefix option
+size_t dodag_sizeof();
 
-	di_rpl_instance_ref_t rpl_instance;		//Via DIO, DAO
-	
-	//Nodes
-	hash_container_ptr nodes;					//Via DIO, sometimes DAO
-	
-	void *user_data;
-} di_dodag_t;
+void dodag_init(void *data, void *key, size_t key_size);
+di_dodag_t *dodag_dup(di_dodag_t *dodag);
 
-void dodag_init(di_dodag_t *dodag);
+void dodag_set_key(di_dodag_t *dodag, const di_dodag_key_t *key);
+void dodag_set_config(di_dodag_t *dodag, const di_dodag_config_t *config);
+void dodag_set_prefix(di_dodag_t *dodag, const di_prefix_t *prefix);
+void dodag_set_rpl_instance(di_dodag_t *dodag, const di_rpl_instance_ref_t* rpl_instance);
+void dodag_add_node(di_dodag_t *dodag, di_node_t *node);
+void dodag_del_node(di_dodag_t *dodag, di_node_t *node);
+void dodag_set_user_data(di_dodag_t *dodag, void *user_data);
+
+const di_dodag_key_t *dodag_get_key(const di_dodag_t *dodag);
+const di_dodag_config_t *dodag_get_config(const di_dodag_t *dodag);
+const di_prefix_t *dodag_get_prefix(const di_dodag_t *dodag);
+const di_rpl_instance_ref_t *dodag_get_rpl_instance(const di_dodag_t *dodag);
+hash_container_ptr dodag_get_node(const di_dodag_t *dodag);
+void *dodag_get_user_data(const di_dodag_t *dodag);
+
+
 
 #endif	/* DODAG_H */
 

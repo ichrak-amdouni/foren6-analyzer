@@ -8,7 +8,10 @@
 typedef struct di_node {
 	di_node_key_t key;
 
+	bool is_custom_local_address;
 	addr_ipv6_t local_address;
+
+	bool is_custom_global_address;
 	addr_ipv6_t global_address;
 
 	di_route_list_t routes;
@@ -26,9 +29,15 @@ size_t node_sizeof() {
 	return sizeof(di_node_t);
 }
 
-void node_init(di_node_t *node) {
-	node = node;
+void node_init(void *data, void *key, size_t key_size) {
+	di_node_t *node = (di_node_t*) data;
+
+	assert(key_size == sizeof(di_node_key_t));
+
 	node->dodag.version = -1;
+	node->is_custom_global_address = false;
+	node->is_custom_local_address = false;
+	node_set_key(node, key);
 }
 
 di_node_t *node_dup(di_node_t *node) {
@@ -44,6 +53,10 @@ di_node_t *node_dup(di_node_t *node) {
 
 void node_set_key(di_node_t *node, const di_node_key_t *key) {
 	node->key = *key;
+
+	if(!node->is_custom_global_address) {
+		node->global_address = addr_get_local_ip_from_mac64(node->key.ref.wpan_address);
+	}
 }
 
 void node_set_local_ip(di_node_t *node, addr_ipv6_t address) {
@@ -82,6 +95,12 @@ void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref) {
 
 void node_set_user_data(di_node_t *node, void *data) {
 	node->user_data = data;
+}
+
+void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
+	if(!node->is_custom_global_address) {
+		node->global_address = addr_get_global_ip_from_mac64(*prefix, node->key.ref.wpan_address);
+	}
 }
 
 

@@ -19,6 +19,8 @@ typedef struct desc_poll_info {
 
 static pthread_t poll_thread;
 
+static bool stop_thread;
+
 static desc_poll_info_t *poll_data[SELECT_FD_NUM] = {0};
 static int poll_number = 0;
 static pthread_mutex_t poll_mutex;
@@ -41,7 +43,25 @@ void desc_poll_init() {
 	poll_number = 0;
 
 	pthread_mutex_init(&poll_mutex, NULL);
+	stop_thread = false;
 	pthread_create(&poll_thread, NULL, &desc_poll_run, NULL);
+}
+
+void desc_poll_cleanup() {
+	int i;
+
+	stop_thread = true;
+	write(poll_abort_pipe[1], "c", 1);	//write a byte (the string avoid declaring a dummy variable) to abort the select as we want to stop the thread
+	pthread_join(poll_thread, NULL);
+	pthread_mutex_destroy(&poll_mutex);
+
+	for(i = 0; i < SELECT_FD_NUM; i++) {
+		if(poll_data[i])
+			free(poll_data[i]);
+	}
+
+	close(poll_abort_pipe[1]);
+	close(poll_abort_pipe[0]);
 }
 
 bool desc_poll_add(int fd, ready_callback callback, void* user_data) {
@@ -109,7 +129,7 @@ void desc_poll_del(int fd) {
 }
 
 static void *desc_poll_run(void* data) {
-	while(1)
+	while(stop_thread == false)
 		desc_poll_process_events();
 
 	return NULL;
