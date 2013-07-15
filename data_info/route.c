@@ -17,11 +17,12 @@ di_route_el_t *route_get(di_route_list_t *list, di_prefix_t route_prefix, bool a
 	return NULL;
 }
 
-di_route_el_t *route_add(di_route_list_t *list, di_prefix_t route_prefix, bool auto_summary) {
+di_route_el_t *route_add(di_route_list_t *list, di_prefix_t route_prefix, bool auto_summary, bool *was_already_existing) {
 	di_route_el_t *route;
 	
 	LL_FOREACH(*list, route) {
 		if(route_prefix.length == route->route_prefix.length && !addr_compare_ip_len(&route->route_prefix.prefix, &route_prefix.prefix, route_prefix.length)) {
+			if(was_already_existing) *was_already_existing = true;
 			return route;
 		}
 	}
@@ -30,6 +31,7 @@ di_route_el_t *route_add(di_route_list_t *list, di_prefix_t route_prefix, bool a
 	route->route_prefix = route_prefix;
 	LL_PREPEND(*list, route);
 	
+	if(was_already_existing) *was_already_existing = false;
 	return route;
 }
 

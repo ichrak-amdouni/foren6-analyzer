@@ -106,11 +106,15 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	if(rpl_instance_created)
 		rpl_event_rpl_instance_created(rpl_instance);
 
-	rpl_event_node_updated(node);
-	rpl_event_dodag_updated(dodag);
-	rpl_event_rpl_instance_updated(rpl_instance);
+	if(node_has_changed(node))
+		rpl_event_node_updated(node);
+	if(dodag_has_changed(dodag))
+		rpl_event_dodag_updated(dodag);
+	if(rpl_instance_has_changed(rpl_instance))
+		rpl_event_rpl_instance_updated(rpl_instance);
 
-	rpldata_create_version();
+	if(node_has_changed(node) || dodag_has_changed(dodag) || rpl_instance_has_changed(rpl_instance))
+		rpldata_create_version();
 }
 
 void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -218,7 +222,8 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		rpl_event_dodag_updated(dodag);
 	rpl_event_rpl_instance_updated(rpl_instance);
 
-	rpldata_create_version();
+	if(node_has_changed(child) || node_has_changed(parent) || dodag_has_changed(dodag) || rpl_instance_has_changed(rpl_instance) || link_has_changed(new_link))
+		rpldata_create_version();
 }
 
 void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -240,7 +245,8 @@ void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 
 	rpl_event_node_updated(node);
 
-	rpldata_create_version();
+	if(node_has_changed(node))
+		rpldata_create_version();
 }
 
 void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -297,5 +303,6 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 	rpl_event_node_updated(src);
 	rpl_event_node_updated(dst);
 
-	rpldata_create_version();
+	if(node_has_changed(src) || node_has_changed(dst) || link_has_changed(new_link))
+		rpldata_create_version();
 }

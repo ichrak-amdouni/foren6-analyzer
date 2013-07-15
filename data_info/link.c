@@ -29,6 +29,7 @@ void link_init(void *data, void *key, size_t key_size) {
 
 	link->key.ref = *(di_link_ref_t*) key;
 	link->key.version = 0;
+	link->has_changed = true;
 }
 
 void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent, uint32_t version) {
@@ -49,6 +50,7 @@ void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent
 bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count) {
 	link->last_update = time;
 	link->packet_count += added_packet_count;
+	link->has_changed = true;
 
 	rpl_event_link_updated(link);
 
@@ -65,11 +67,17 @@ di_link_t *link_dup(di_link_t *link) {
 }
 
 void link_set_key(di_link_t *link, di_link_key_t *key) {
-	link->key = *key;
+	if(memcmp(&link->key, key, sizeof(di_link_key_t))) {
+		link->key = *key;
+		link->has_changed = true;
+	}
 }
 
 void link_set_metric(di_link_t *link, di_metric_t *metric) {
-	link->metric = *metric;
+	if(link->metric.type != metric->type || link->metric.value != metric->value) {
+		link->metric = *metric;
+		link->has_changed = true;
+	}
 }
 
 void link_set_user_data(di_link_t *link, void *user_data) {

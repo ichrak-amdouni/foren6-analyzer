@@ -27,6 +27,7 @@ void rpl_instance_init(void* data, void *key, size_t key_size) {
 	instance->dodags = hash_create(sizeof(di_dodag_ref_t), NULL);
 	instance->key.ref = *(di_rpl_instance_ref_t*) key;
 	instance->key.version = 0;
+	instance->has_changed = true;
 }
 
 di_rpl_instance_t* rpl_instance_dup(di_rpl_instance_t* rpl_instance) {
@@ -53,11 +54,17 @@ void rpl_instance_ref_init(di_rpl_instance_ref_t *ref, uint8_t rpl_instance) {
 }
 
 void rpl_instance_set_key(di_rpl_instance_t* rpl_instance, const di_rpl_instance_key_t* key) {
-	rpl_instance->key = *key;
+	if(memcmp(&rpl_instance->key, key, sizeof(di_rpl_instance_key_t))) {
+		rpl_instance->key = *key;
+		rpl_instance->has_changed = true;
+	}
 }
 
 void rpl_instance_set_mop(di_rpl_instance_t* rpl_instance, di_rpl_mop_e mop) {
-	rpl_instance->mode_of_operation = mop;
+	if(rpl_instance->mode_of_operation != mop) {
+		rpl_instance->mode_of_operation = mop;
+		rpl_instance->has_changed = true;
+	}
 }
 
 void rpl_instance_set_user_data(di_rpl_instance_t* rpl_instance, void *user_data) {
@@ -65,15 +72,22 @@ void rpl_instance_set_user_data(di_rpl_instance_t* rpl_instance, void *user_data
 }
 
 void rpl_instance_add_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) {
-	hash_add(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref), &dodag_get_key(dodag)->ref, NULL, HAM_OverwriteIfExists, NULL);
-	dodag_set_rpl_instance(dodag, &rpl_instance->key.ref);
+	bool was_already_existing;
+	hash_add(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref), &dodag_get_key(dodag)->ref, NULL, HAM_OverwriteIfExists, &was_already_existing);
+	
+	if(!was_already_existing) {
+		dodag_set_rpl_instance(dodag, &rpl_instance->key.ref);
+		rpl_instance->has_changed = true;
+	}
 }
 
 void rpl_instance_del_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) {
 	static const di_rpl_instance_ref_t null_rpl_instance = {-1};
 
-	hash_delete(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref));
-	dodag_set_rpl_instance(dodag, &null_rpl_instance);
+	if(hash_delete(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref))) {
+		dodag_set_rpl_instance(dodag, &null_rpl_instance);
+		rpl_instance->has_changed = true;
+	}
 }
 
 bool rpl_instance_has_changed(di_rpl_instance_t *rpl_instance) {
