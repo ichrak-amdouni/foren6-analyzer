@@ -11,6 +11,7 @@ typedef struct di_rpl_instance {
 	hash_container_ptr dodags;			//Via DIO, DAO
 	di_rpl_mop_e mode_of_operation;	//Via DIO
 
+	bool has_changed;
 	void *user_data;
 } di_rpl_instance_t;
 
@@ -73,6 +74,14 @@ void rpl_instance_del_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) 
 
 	hash_delete(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref));
 	dodag_set_rpl_instance(dodag, &null_rpl_instance);
+}
+
+bool rpl_instance_has_changed(di_rpl_instance_t *rpl_instance) {
+	return rpl_instance->has_changed;
+}
+
+void rpl_instance_reset_changed(di_rpl_instance_t *rpl_instance) {
+	rpl_instance->has_changed = false;
 }
 
 

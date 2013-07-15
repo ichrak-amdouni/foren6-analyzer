@@ -153,9 +153,9 @@ void rpldata_add_link_version() {
 
 	for(hash_begin(working_container, it), hash_end(working_container, itEnd); !hash_it_equ(it, itEnd); hash_it_inc(it)) {
 		di_link_t *link = hash_it_value(it);
-		di_link_key_t link_key = {link->key.ref, new_version};
+		di_link_key_t link_key = {link_get_key(link)->ref, new_version};
 		di_link_t *new_link = link_dup(link);
-		new_link->key = link_key;
+		link_set_key(new_link, &link_key);
 		hash_add(new_version_container, hash_key_make(link_key.ref), new_link, NULL, HAM_NoCheck, NULL);
 	}
 

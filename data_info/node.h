@@ -47,6 +47,9 @@ void node_set_grounded(di_node_t *node, bool grounded);
 void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref);
 void node_set_user_data(di_node_t *node, void *data);
 
+bool node_has_changed(di_node_t *node);
+void node_reset_changed(di_node_t *node);
+
 void node_update_ip(di_node_t *node, const di_prefix_t *prefix);
 
 const di_node_key_t *node_get_key(const di_node_t *node);

@@ -49,6 +49,9 @@ void rpl_instance_set_user_data(di_rpl_instance_t* rpl_instance, void *user_data
 void rpl_instance_add_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag);
 void rpl_instance_del_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag);
 
+bool rpl_instance_has_changed(di_rpl_instance_t *rpl_instance);
+void rpl_instance_reset_changed(di_rpl_instance_t *rpl_instance);
+
 const di_rpl_instance_key_t* rpl_instance_get_key(const di_rpl_instance_t* rpl_instance);
 di_rpl_mop_e rpl_instance_get_mop(const di_rpl_instance_t* rpl_instance);
 void *rpl_instance_get_user_data(const di_rpl_instance_t* rpl_instance);

@@ -62,6 +62,9 @@ void dodag_add_node(di_dodag_t *dodag, di_node_t *node);
 void dodag_del_node(di_dodag_t *dodag, di_node_t *node);
 void dodag_set_user_data(di_dodag_t *dodag, void *user_data);
 
+bool dodag_has_changed(di_dodag_t *dodag);
+void dodag_reset_changed(di_dodag_t *dodag);
+
 const di_dodag_key_t *dodag_get_key(const di_dodag_t *dodag);
 const di_dodag_config_t *dodag_get_config(const di_dodag_t *dodag);
 const di_prefix_t *dodag_get_prefix(const di_dodag_t *dodag);

@@ -20,6 +20,7 @@ typedef struct di_dodag {
 	//Nodes
 	hash_container_ptr nodes;					//Via DIO, sometimes DAO
 
+	bool has_changed;
 	void *user_data;
 } di_dodag_t;
 
@@ -124,6 +125,14 @@ void dodag_del_node(di_dodag_t *dodag, di_node_t *node) {
 
 void dodag_set_user_data(di_dodag_t *dodag, void *user_data) {
 	dodag->user_data = user_data;
+}
+
+bool dodag_has_changed(di_dodag_t *dodag) {
+	return dodag->has_changed;
+}
+
+void dodag_reset_changed(di_dodag_t *dodag) {
+	dodag->has_changed = false;
 }
 
 

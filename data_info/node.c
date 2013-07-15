@@ -22,6 +22,7 @@ typedef struct di_node {
 
 	di_dodag_ref_t dodag;
 
+	bool has_changed;
 	void *user_data;
 } di_node_t;
 
@@ -114,6 +115,14 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
 	if(!node->is_custom_global_address) {
 		node->global_address = addr_get_global_ip_from_mac64(*prefix, node->key.ref.wpan_address);
 	}
+}
+
+bool node_has_changed(di_node_t *node) {
+	return node->has_changed;
+}
+
+void node_reset_changed(di_node_t *node) {
+	node->has_changed = false;
 }
 
 

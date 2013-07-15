@@ -6,6 +6,18 @@
 #include "link.h"
 #include "../data_collector/rpl_event_callbacks.h"
 
+typedef struct di_link {
+	di_link_key_t key;
+
+	di_metric_t metric;
+	time_t last_update;		//TX only
+	time_t expiration_time;
+	uint32_t packet_count;	//TX only
+
+	bool has_changed;
+	void *user_data;
+} di_link_t;
+
 size_t link_sizeof() {
 	return sizeof(di_link_t);
 }
@@ -50,4 +62,45 @@ di_link_t *link_dup(di_link_t *link) {
 	memcpy(new_link, link, sizeof(di_link_t));
 
 	return new_link;
+}
+
+void link_set_key(di_link_t *link, di_link_key_t *key) {
+	link->key = *key;
+}
+
+void link_set_metric(di_link_t *link, di_metric_t *metric) {
+	link->metric = *metric;
+}
+
+void link_set_user_data(di_link_t *link, void *user_data) {
+	link->user_data = user_data;
+}
+
+bool link_has_changed(di_link_t *link) {
+	return link->has_changed;
+}
+
+void link_reset_changed(di_link_t *link) {
+
+}
+
+
+const di_link_key_t *link_get_key(const di_link_t *link) {
+	return &link->key;
+}
+
+time_t link_get_last_update(const di_link_t *link) {
+	return link->last_update;
+}
+
+uint32_t link_get_packet_count(const di_link_t *link) {
+	return link->packet_count;
+}
+
+const di_metric_t* link_get_metric(const di_link_t *link) {
+	return &link->metric;
+}
+
+void *link_get_user_data(const di_link_t *link) {
+	return link->user_data;
 }
