@@ -31,13 +31,14 @@ size_t node_sizeof() {
 
 void node_init(void *data, void *key, size_t key_size) {
 	di_node_t *node = (di_node_t*) data;
+	di_node_key_t node_key = {*(di_node_ref_t*)key, 0};
 
-	assert(key_size == sizeof(di_node_key_t));
+	assert(key_size == sizeof(di_node_ref_t));
 
 	node->dodag.version = -1;
 	node->is_custom_global_address = false;
 	node->is_custom_local_address = false;
-	node_set_key(node, key);
+	node_set_key(node, &node_key);
 }
 
 di_node_t *node_dup(di_node_t *node) {
@@ -50,6 +51,18 @@ di_node_t *node_dup(di_node_t *node) {
 	return new_node;
 }
 
+void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version) {
+	memset(key, 0, sizeof(di_node_key_t));
+
+	key->ref.wpan_address = wpan_address;
+	key->version = version;
+}
+
+void node_ref_init(di_node_ref_t *ref, addr_wpan_t wpan_address) {
+	memset(ref, 0, sizeof(di_node_ref_t));
+
+	ref->wpan_address = wpan_address;
+}
 
 void node_set_key(di_node_t *node, const di_node_key_t *key) {
 	node->key = *key;

@@ -26,6 +26,7 @@ typedef struct di_node_key {
 	uint32_t version;
 } di_node_key_t;
 
+
 typedef struct di_node di_node_t;
 
 size_t node_sizeof();
@@ -33,6 +34,8 @@ size_t node_sizeof();
 void node_init(void *data, void *key, size_t key_size);
 di_node_t *node_dup(di_node_t *node);
 
+void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version);
+void node_ref_init(di_node_ref_t *ref, addr_wpan_t wpan_address);
 void node_set_key(di_node_t *node, const di_node_key_t *key);
 void node_set_local_ip(di_node_t *node, addr_ipv6_t address);
 void node_set_global_ip(di_node_t *node, addr_ipv6_t address);

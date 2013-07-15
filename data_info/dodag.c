@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "dodag.h"
 #include "node.h"
@@ -29,11 +30,14 @@ size_t dodag_sizeof() {
 void dodag_init(void *data, void *key, size_t key_size) {
 	di_dodag_t *dodag = (di_dodag_t*) data;
 
-	assert(key_size == sizeof(di_dodag_key_t));
+	assert(key_size == sizeof(di_dodag_ref_t));
 
 	dodag->nodes = hash_create(sizeof(di_node_ref_t), NULL);
 	dodag->rpl_instance.rpl_instance = -1;
-	dodag->key = *(di_dodag_key_t*)key;
+	dodag->key.ref = *(di_dodag_ref_t*)key;
+	dodag->key.version = 0;
+
+	fprintf(stderr, "Created dodag %p\n", data);
 }
 
 di_dodag_t *dodag_dup(di_dodag_t *dodag) {
@@ -44,6 +48,21 @@ di_dodag_t *dodag_dup(di_dodag_t *dodag) {
 	new_dodag->nodes = hash_dup(dodag->nodes);
 
 	return new_dodag;
+}
+
+void dodag_key_init(di_dodag_key_t *key, addr_ipv6_t dodag_id, uint8_t dodag_version, uint32_t version) {
+	memset(key, 0, sizeof(di_dodag_key_t));
+
+	key->ref.dodagid = dodag_id;
+	key->ref.version = dodag_version;
+	key->version = version;
+}
+
+void dodag_ref_init(di_dodag_ref_t *ref, addr_ipv6_t dodag_id, uint8_t dodag_version) {
+	memset(ref, 0, sizeof(di_dodag_ref_t));
+
+	ref->dodagid = dodag_id;
+	ref->version = dodag_version;
 }
 
 void dodag_set_key(di_dodag_t *dodag, const di_dodag_key_t *key) {

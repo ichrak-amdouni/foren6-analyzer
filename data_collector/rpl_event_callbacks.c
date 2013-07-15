@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "rpl_event_callbacks.h"
 
 static rpl_event_callbacks_t event_callbacks = {0};

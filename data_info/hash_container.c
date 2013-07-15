@@ -89,6 +89,7 @@ bool hash_add_ref(hash_container_ptr container, hash_key_t key, const void *data
 		element = calloc(1, sizeof(hash_container_el_t));
 		element->data = (void*)data;
 		element->key = malloc(key.size);
+		element->key_size = key.size;
 		memcpy(element->key, key.key, key.size);
 		HASH_ADD_KEYPTR(hh, container->head, element->key, key.size, element);
 		if(was_existing) *was_existing = false;

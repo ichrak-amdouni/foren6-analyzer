@@ -18,12 +18,9 @@
 extern "C" {
 #endif
 
-typedef struct di_rpl_data {
-	hash_container_ptr nodes;
-	hash_container_ptr dodags;
-	hash_container_ptr rpl_instances;
-	hash_container_ptr links;
-} di_rpl_data_t;
+
+//Hash<version> of hash<object key>
+typedef struct di_rpl_data di_rpl_data_t;
 
 void rpldata_init();
 di_rpl_data_t *rpldata_get();
@@ -32,6 +29,23 @@ di_node_t *rpldata_get_node(const di_node_key_t *node_key);
 di_dodag_t *rpldata_get_dodag(const di_dodag_key_t *dodag_key);
 di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_key_t *rpl_instance_key);
 di_link_t *rpldata_get_link(const di_link_key_t *link_key);
+
+hash_container_ptr rpldata_get_nodes(uint32_t version);
+hash_container_ptr rpldata_get_dodags(uint32_t version);
+hash_container_ptr rpldata_get_rpl_instances(uint32_t version);
+hash_container_ptr rpldata_get_links(uint32_t version);
+
+void rpldata_add_node_version();
+void rpldata_add_dodag_version();
+void rpldata_add_rpl_instance_version();
+void rpldata_add_link_version();
+
+void rpldata_create_version();
+
+uint32_t rpldata_get_node_last_version();
+uint32_t rpldata_get_dodag_last_version();
+uint32_t rpldata_get_rpl_instance_last_version();
+uint32_t rpldata_get_link_last_version();
 
 #ifdef	__cplusplus
 }

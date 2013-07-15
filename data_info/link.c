@@ -13,9 +13,25 @@ size_t link_sizeof() {
 void link_init(void *data, void *key, size_t key_size) {
 	di_link_t *link = (di_link_t*) data;
 
-	assert(key_size == sizeof(di_link_key_t));
+	assert(key_size == sizeof(di_link_ref_t));
 
-	link->key = *(di_link_key_t*) key;
+	link->key.ref = *(di_link_ref_t*) key;
+	link->key.version = 0;
+}
+
+void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent, uint32_t version) {
+	memset(key, 0, sizeof(di_link_key_t));
+
+	key->ref.child = child;
+	key->ref.parent = parent;
+	key->version = version;
+}
+
+void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent) {
+	memset(ref, 0, sizeof(di_link_ref_t));
+
+	ref->child = child;
+	ref->parent = parent;
 }
 
 bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count) {

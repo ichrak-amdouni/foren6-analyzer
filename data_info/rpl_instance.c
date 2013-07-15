@@ -21,10 +21,11 @@ size_t rpl_instance_sizeof() {
 void rpl_instance_init(void* data, void *key, size_t key_size) {
 	di_rpl_instance_t *instance = (di_rpl_instance_t*) data;
 
-	assert(key_size == sizeof(di_rpl_instance_key_t));
+	assert(key_size == sizeof(di_rpl_instance_ref_t));
 
 	instance->dodags = hash_create(sizeof(di_dodag_ref_t), NULL);
-	instance->key = *(di_rpl_instance_key_t*) key;
+	instance->key.ref = *(di_rpl_instance_ref_t*) key;
+	instance->key.version = 0;
 }
 
 di_rpl_instance_t* rpl_instance_dup(di_rpl_instance_t* rpl_instance) {
@@ -35,6 +36,19 @@ di_rpl_instance_t* rpl_instance_dup(di_rpl_instance_t* rpl_instance) {
 	new_instance->dodags = hash_dup(rpl_instance->dodags);
 
 	return new_instance;
+}
+
+void rpl_instance_key_init(di_rpl_instance_key_t *key, uint8_t rpl_instance, uint32_t version) {
+	memset(key, 0, sizeof(di_rpl_instance_key_t));
+
+	key->ref.rpl_instance = rpl_instance;
+	key->version = version;
+}
+
+void rpl_instance_ref_init(di_rpl_instance_ref_t *ref, uint8_t rpl_instance) {
+	memset(ref, 0, sizeof(di_rpl_instance_ref_t));
+
+	ref->rpl_instance = rpl_instance;
 }
 
 void rpl_instance_set_key(di_rpl_instance_t* rpl_instance, const di_rpl_instance_key_t* key) {
