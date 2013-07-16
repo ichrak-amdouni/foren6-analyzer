@@ -31,7 +31,7 @@ typedef struct di_node di_node_t;
 
 size_t node_sizeof();
 
-void node_init(void *data, void *key, size_t key_size);
+void node_init(void *data, const void *key, size_t key_size);
 di_node_t *node_dup(di_node_t *node);
 
 void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version);

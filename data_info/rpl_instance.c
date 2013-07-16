@@ -19,7 +19,7 @@ size_t rpl_instance_sizeof() {
 	return sizeof(di_rpl_instance_t);
 }
 
-void rpl_instance_init(void* data, void *key, size_t key_size) {
+void rpl_instance_init(void* data, const void *key, size_t key_size) {
 	di_rpl_instance_t *instance = (di_rpl_instance_t*) data;
 
 	assert(key_size == sizeof(di_rpl_instance_ref_t));
@@ -74,7 +74,7 @@ void rpl_instance_set_user_data(di_rpl_instance_t* rpl_instance, void *user_data
 void rpl_instance_add_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) {
 	bool was_already_existing;
 	hash_add(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref), &dodag_get_key(dodag)->ref, NULL, HAM_OverwriteIfExists, &was_already_existing);
-	
+
 	if(!was_already_existing) {
 		dodag_set_rpl_instance(dodag, &rpl_instance->key.ref);
 		rpl_instance->has_changed = true;

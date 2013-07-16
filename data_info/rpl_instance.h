@@ -38,7 +38,7 @@ typedef struct di_rpl_instance di_rpl_instance_t;
 
 size_t rpl_instance_sizeof();
 
-void rpl_instance_init(void* data, void *key, size_t key_size);
+void rpl_instance_init(void* data, const void *key, size_t key_size);
 di_rpl_instance_t* rpl_instance_dup(di_rpl_instance_t* rpl_instance);
 
 void rpl_instance_key_init(di_rpl_instance_key_t *key, uint8_t rpl_instance, uint32_t version);

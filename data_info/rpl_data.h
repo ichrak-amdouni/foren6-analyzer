@@ -25,10 +25,10 @@ typedef struct di_rpl_data di_rpl_data_t;
 void rpldata_init();
 di_rpl_data_t *rpldata_get();
 
-di_node_t *rpldata_get_node(const di_node_key_t *node_key);
-di_dodag_t *rpldata_get_dodag(const di_dodag_key_t *dodag_key);
-di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_key_t *rpl_instance_key);
-di_link_t *rpldata_get_link(const di_link_key_t *link_key);
+di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e value_mode, bool *was_already_existing);
+di_dodag_t *rpldata_get_dodag(const di_dodag_ref_t *dodag_ref, hash_value_mode_e value_mode, bool *was_already_existing);
+di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_ref_t *rpl_instance_ref, hash_value_mode_e value_mode, bool *was_already_existing);
+di_link_t *rpldata_get_link(const di_link_ref_t *link_ref, hash_value_mode_e value_mode, bool *was_already_existing);
 
 hash_container_ptr rpldata_get_nodes(uint32_t version);
 hash_container_ptr rpldata_get_dodags(uint32_t version);

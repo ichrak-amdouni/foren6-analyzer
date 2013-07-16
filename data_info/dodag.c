@@ -28,7 +28,7 @@ size_t dodag_sizeof() {
 	return sizeof(di_dodag_t);
 }
 
-void dodag_init(void *data, void *key, size_t key_size) {
+void dodag_init(void *data, const void *key, size_t key_size) {
 	di_dodag_t *dodag = (di_dodag_t*) data;
 
 	assert(key_size == sizeof(di_dodag_ref_t));
@@ -94,8 +94,7 @@ void dodag_set_prefix(di_dodag_t *dodag, const di_prefix_t *prefix) {
 	itend = hash_end(dodag->nodes, NULL);
 
 	for(; hash_it_equ(it, itend) == false; hash_it_inc(it)) {
-		di_node_key_t node_key = {*(di_node_ref_t*)hash_it_value(it), 0};
-		di_node_t *node = rpldata_get_node(&node_key);
+		di_node_t *node = rpldata_get_node(hash_it_value(it), HVM_FailIfNonExistant, NULL);
 		assert(node != NULL);
 		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
 		node_update_ip(node, prefix);
@@ -103,7 +102,7 @@ void dodag_set_prefix(di_dodag_t *dodag, const di_prefix_t *prefix) {
 
 	hash_it_destroy(it);
 	hash_it_destroy(itend);
-	
+
 	dodag->has_changed = true;
 }
 

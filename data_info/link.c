@@ -22,7 +22,7 @@ size_t link_sizeof() {
 	return sizeof(di_link_t);
 }
 
-void link_init(void *data, void *key, size_t key_size) {
+void link_init(void *data, const void *key, size_t key_size) {
 	di_link_t *link = (di_link_t*) data;
 
 	assert(key_size == sizeof(di_link_ref_t));

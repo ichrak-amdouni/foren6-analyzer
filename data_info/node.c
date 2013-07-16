@@ -30,7 +30,7 @@ size_t node_sizeof() {
 	return sizeof(di_node_t);
 }
 
-void node_init(void *data, void *key, size_t key_size) {
+void node_init(void *data, const void *key, size_t key_size) {
 	di_node_t *node = (di_node_t*) data;
 	di_node_key_t node_key = {*(di_node_ref_t*)key, 0};
 
@@ -95,7 +95,7 @@ void node_set_global_ip(di_node_t *node, addr_ipv6_t address) {
 void node_add_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node) {
 	bool route_already_existing = false;
 	di_route_el_t *route_el = route_add(&node->routes, *route_prefix, false, &route_already_existing);
-	
+
 	if(route_already_existing == false || route_el->via_node != via_node) {
 		route_el->via_node = via_node;
 		node->has_changed = true;
@@ -122,7 +122,7 @@ void node_set_rank(di_node_t *node, uint16_t rank) {
 }
 
 void node_set_grounded(di_node_t *node, bool grounded) {
-	if(node->grounded = grounded) {
+	if(node->grounded == grounded) {
 		node->grounded = grounded;
 		node->has_changed = true;
 	}

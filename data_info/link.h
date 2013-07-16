@@ -32,7 +32,7 @@ typedef struct di_link di_link_t;
 
 size_t link_sizeof();
 
-void link_init(void *data, void *key, size_t key_size);
+void link_init(void *data, const void *key, size_t key_size);
 
 void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent, uint32_t version);
 void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent);
