@@ -112,9 +112,20 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		rpl_event_dodag_updated(dodag);
 	if(rpl_instance_has_changed(rpl_instance))
 		rpl_event_rpl_instance_updated(rpl_instance);
+	
+	if(node_has_changed(node))
+		rpldata_add_node_version();
+	if(dodag_has_changed(dodag))
+		rpldata_add_dodag_version();
+	if(rpl_instance_has_changed(rpl_instance))
+		rpldata_add_rpl_instance_version();
 
 	if(node_has_changed(node) || dodag_has_changed(dodag) || rpl_instance_has_changed(rpl_instance))
-		rpldata_create_version();
+		rpldata_wsn_create_version();
+
+	node_reset_changed(node);
+	dodag_reset_changed(dodag);
+	rpl_instance_reset_changed(rpl_instance);
 }
 
 void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -221,9 +232,27 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	if(dodag)
 		rpl_event_dodag_updated(dodag);
 	rpl_event_rpl_instance_updated(rpl_instance);
+	
+	
+	if(node_has_changed(child) || node_has_changed(parent))
+		rpldata_add_node_version();
+	if(dodag && dodag_has_changed(dodag))
+		rpldata_add_dodag_version();
+	if(rpl_instance_has_changed(rpl_instance))
+		rpldata_add_rpl_instance_version();
+	if(new_link && link_has_changed(new_link))
+		rpldata_add_link_version();
 
-	if(node_has_changed(child) || node_has_changed(parent) || dodag_has_changed(dodag) || rpl_instance_has_changed(rpl_instance) || link_has_changed(new_link))
-		rpldata_create_version();
+	if(node_has_changed(child) || node_has_changed(parent) || (dodag && dodag_has_changed(dodag)) || rpl_instance_has_changed(rpl_instance) || (new_link && link_has_changed(new_link)))
+		rpldata_wsn_create_version();
+	
+	node_reset_changed(child);
+	node_reset_changed(parent);
+	if(dodag)
+		dodag_reset_changed(dodag);
+	rpl_instance_reset_changed(rpl_instance);
+	if(new_link)
+		link_reset_changed(new_link);
 }
 
 void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -246,7 +275,12 @@ void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	rpl_event_node_updated(node);
 
 	if(node_has_changed(node))
-		rpldata_create_version();
+		rpldata_add_node_version();
+
+	if(node_has_changed(node))
+		rpldata_wsn_create_version();
+
+	node_reset_changed(node);
 }
 
 void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -302,7 +336,19 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 
 	rpl_event_node_updated(src);
 	rpl_event_node_updated(dst);
+	
+	
+	if(node_has_changed(src) || node_has_changed(dst))
+		rpldata_add_node_version();
+	if(new_link && link_has_changed(new_link))
+		rpldata_add_link_version();
 
-	if(node_has_changed(src) || node_has_changed(dst) || link_has_changed(new_link))
-		rpldata_create_version();
+	if(node_has_changed(src) || node_has_changed(dst) || (new_link && link_has_changed(new_link)))
+		rpldata_wsn_create_version();
+	
+	node_reset_changed(src);
+	node_reset_changed(dst);
+	
+	if(new_link)
+		link_reset_changed(new_link);
 }

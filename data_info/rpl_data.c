@@ -17,6 +17,16 @@ typedef struct di_rpl_data {
 	hash_container_ptr links;
 } di_rpl_data_t;
 
+typedef struct di_rpl_wsn_state {
+	uint32_t node_version;
+	uint32_t dodag_version;
+	uint32_t rpl_instance_version;
+	uint32_t links_version;
+} di_rpl_wsn_state_t;
+
+di_rpl_wsn_state_t wsn_versions[20000];
+uint32_t wsn_last_version = 0;
+
 
 void rpldata_init() {
 	collected_data.nodes = hash_create(sizeof(hash_container_ptr), NULL);
@@ -38,6 +48,11 @@ void rpldata_init() {
 
 	hash_ptr = hash_create(link_sizeof(), &link_init);
 	hash_add(collected_data.links, hash_key_make(working_version), &hash_ptr, NULL, HAM_NoCheck, NULL);
+
+	wsn_versions[0].node_version = 0;
+	wsn_versions[0].dodag_version = 0;
+	wsn_versions[0].rpl_instance_version = 0;
+	wsn_versions[0].links_version = 0;
 }
 
 di_rpl_data_t *rpldata_get() {
@@ -45,35 +60,47 @@ di_rpl_data_t *rpldata_get() {
 }
 
 hash_container_ptr rpldata_get_nodes(uint32_t version) {
-	hash_container_ptr *ptr = hash_value(collected_data.nodes, hash_key_make(version), HVM_FailIfNonExistant, NULL);
+	if(wsn_versions[version].node_version == -1)
+		return NULL;
+
+	hash_container_ptr *ptr = hash_value(collected_data.nodes, hash_key_make(wsn_versions[version].node_version), HVM_FailIfNonExistant, NULL);
 	if(ptr)
 		return *ptr;
 	else return NULL;
 }
 
 hash_container_ptr rpldata_get_dodags(uint32_t version) {
-	hash_container_ptr *ptr = hash_value(collected_data.dodags, hash_key_make(version), HVM_FailIfNonExistant, NULL);
+	if(wsn_versions[version].dodag_version == -1)
+		return NULL;
+
+	hash_container_ptr *ptr = hash_value(collected_data.dodags, hash_key_make(wsn_versions[version].dodag_version), HVM_FailIfNonExistant, NULL);
 	if(ptr)
 		return *ptr;
 	else return NULL;
 }
 
 hash_container_ptr rpldata_get_rpl_instances(uint32_t version) {
-	hash_container_ptr *ptr = hash_value(collected_data.rpl_instances, hash_key_make(version), HVM_FailIfNonExistant, NULL);
+	if(wsn_versions[version].rpl_instance_version == -1)
+		return NULL;
+
+	hash_container_ptr *ptr = hash_value(collected_data.rpl_instances, hash_key_make(wsn_versions[version].rpl_instance_version), HVM_FailIfNonExistant, NULL);
 	if(ptr)
 		return *ptr;
 	else return NULL;
 }
 
 hash_container_ptr rpldata_get_links(uint32_t version) {
-	hash_container_ptr *ptr = hash_value(collected_data.links, hash_key_make(version), HVM_FailIfNonExistant, NULL);
+	if(wsn_versions[version].links_version == -1)
+		return NULL;
+
+	hash_container_ptr *ptr = hash_value(collected_data.links, hash_key_make(wsn_versions[version].links_version), HVM_FailIfNonExistant, NULL);
 	if(ptr)
 		return *ptr;
 	else return NULL;
 }
 
 
-void rpldata_add_node_version() {
+uint32_t rpldata_add_node_version() {
 	hash_iterator_ptr it = hash_begin(NULL, NULL);
 	hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
 	node_last_version++;
@@ -94,9 +121,11 @@ void rpldata_add_node_version() {
 
 	hash_it_destroy(it);
 	hash_it_destroy(itEnd);
+	
+	return new_version;
 }
 
-void rpldata_add_dodag_version() {
+uint32_t rpldata_add_dodag_version() {
 	hash_iterator_ptr it = hash_begin(NULL, NULL);
 	hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
 	dodag_last_version++;
@@ -117,9 +146,11 @@ void rpldata_add_dodag_version() {
 
 	hash_it_destroy(it);
 	hash_it_destroy(itEnd);
+	
+	return new_version;
 }
 
-void rpldata_add_rpl_instance_version() {
+uint32_t rpldata_add_rpl_instance_version() {
 	hash_iterator_ptr it = hash_begin(NULL, NULL);
 	hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
 	rpl_instance_last_version++;
@@ -140,9 +171,11 @@ void rpldata_add_rpl_instance_version() {
 
 	hash_it_destroy(it);
 	hash_it_destroy(itEnd);
+	
+	return new_version;
 }
 
-void rpldata_add_link_version() {
+uint32_t rpldata_add_link_version() {
 	hash_iterator_ptr it = hash_begin(NULL, NULL);
 	hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
 	link_last_version++;
@@ -163,6 +196,8 @@ void rpldata_add_link_version() {
 
 	hash_it_destroy(it);
 	hash_it_destroy(itEnd);
+	
+	return new_version;
 }
 
 di_node_t *rpldata_get_node(const di_node_key_t *node_key) {
@@ -181,11 +216,23 @@ di_link_t *rpldata_get_link(const di_link_key_t *link_key) {
 	return hash_value(rpldata_get_links(link_key->version), hash_key_make(link_key->ref), HVM_FailIfNonExistant, NULL);
 }
 
-void rpldata_create_version() {
-	rpldata_add_node_version();
-	rpldata_add_dodag_version();
-	rpldata_add_rpl_instance_version();
-	rpldata_add_link_version();
+void rpldata_wsn_create_version() {
+	wsn_last_version++;
+	if(node_last_version)
+		wsn_versions[wsn_last_version].node_version = node_last_version;
+	else wsn_versions[wsn_last_version].node_version = -1;
+	
+	if(dodag_last_version)
+		wsn_versions[wsn_last_version].dodag_version = dodag_last_version;
+	else wsn_versions[wsn_last_version].dodag_version = -1;
+	
+	if(rpl_instance_last_version)
+		wsn_versions[wsn_last_version].rpl_instance_version = rpl_instance_last_version;
+	else wsn_versions[wsn_last_version].rpl_instance_version = -1;
+	
+	if(link_last_version)
+		wsn_versions[wsn_last_version].links_version = link_last_version;
+	else wsn_versions[wsn_last_version].links_version = -1;
 }
 
 uint32_t rpldata_get_node_last_version() {
@@ -202,5 +249,9 @@ uint32_t rpldata_get_rpl_instance_last_version() {
 
 uint32_t rpldata_get_link_last_version() {
 	return link_last_version;
+}
+
+uint32_t rpldata_get_wsn_last_version() {
+	return wsn_last_version;
 }
 

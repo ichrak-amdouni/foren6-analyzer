@@ -35,17 +35,14 @@ hash_container_ptr rpldata_get_dodags(uint32_t version);
 hash_container_ptr rpldata_get_rpl_instances(uint32_t version);
 hash_container_ptr rpldata_get_links(uint32_t version);
 
-void rpldata_add_node_version();
-void rpldata_add_dodag_version();
-void rpldata_add_rpl_instance_version();
-void rpldata_add_link_version();
+uint32_t rpldata_add_node_version();
+uint32_t rpldata_add_dodag_version();
+uint32_t rpldata_add_rpl_instance_version();
+uint32_t rpldata_add_link_version();
 
-void rpldata_create_version();
+void rpldata_wsn_create_version();
 
-uint32_t rpldata_get_node_last_version();
-uint32_t rpldata_get_dodag_last_version();
-uint32_t rpldata_get_rpl_instance_last_version();
-uint32_t rpldata_get_link_last_version();
+uint32_t rpldata_get_wsn_last_version();
 
 #ifdef	__cplusplus
 }
