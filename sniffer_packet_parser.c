@@ -26,6 +26,8 @@ static int tshark_pid = 0;
 static int pipe_tshark_stdin = 0;	//We will write packets here
 static int pipe_tshark_stdout = 0;	//We will read dissected packets from here
 
+static int packet_count;
+
 static XML_Parser dissected_packet_parser;	//parse output of tshark
 
 static void process_events(int fd, void* data);
@@ -44,11 +46,11 @@ void sniffer_parser_init() {
 	};
 	/* prevent zombie child */
 	sigaction(SIGCHLD, &sigchld_action, NULL);
-	
+
 	parser_register_all();
 
 	sniffer_parser_reset();
-	
+
 	gettimeofday(&start_time, NULL);
 }
 
@@ -78,11 +80,15 @@ void sniffer_parser_parse_data(const unsigned char* data, int len) {
 	//write(STDOUT_FILENO, data, len);
 }
 
+int sniffer_parser_get_packet_count() {
+	return packet_count;
+}
+
 
 static void process_events(int fd, void* data) {
 	char buffer[512];
 	int nbread;
-	
+
 	if(sniffer_parser_reset_requested) {
 		sniffer_parser_reset();
 		sniffer_parser_reset_requested = false;
@@ -91,8 +97,8 @@ static void process_events(int fd, void* data) {
 	while(1) {
 		nbread = read(pipe_tshark_stdout, buffer, 512);
 		if(nbread <= 0) break;
-		
-		
+
+
 		if(!XML_Parse(dissected_packet_parser, buffer, nbread, false)) {
 			buffer[nbread] = 0;
 			fprintf(stderr, "Bad XML input: %s\n%s\n",
@@ -105,6 +111,7 @@ static void process_events(int fd, void* data) {
 static void parse_xml_start_element(void *data, const char *el, const char **attr) {
 	if(!strcmp(el, "packet")) {
 		parser_begin_packet();
+		packet_count++;
 	} else if(!strcmp(el, "field")) {
 		/* Parse packet fields */
 		int i;
@@ -121,10 +128,10 @@ static void parse_xml_start_element(void *data, const char *el, const char **att
 			else if(!strcmp(attr[i], "value"))
 				valueStr = attr[i+1];
 		}
-		
+
 		if(valueStr)
 			valueInt = strtoll(valueStr, NULL, 16);
-		
+
 		if(nameStr != NULL && showStr != NULL)
 			parser_parse_field(nameStr, showStr, valueStr, valueInt);
 	}
@@ -141,7 +148,7 @@ static void parse_xml_end_element(void *data, const char *el) {
 static void sniffer_parser_reset() {
 	if(tshark_pid)
 		kill(tshark_pid, SIGKILL);	//Kill old tshark process to avoid multiple spawned processes at the same time
-	
+
 /*
  Closed by pcap_dump_close(pdumper);
 	if(pcap_output)
@@ -160,7 +167,7 @@ static void sniffer_parser_reset() {
 		pcap_close(pd_out);
 	if(pdumper_out)
 		pcap_dump_close(pdumper_out);
-	
+
 	if(dissected_packet_parser)
 		XML_ParserFree(dissected_packet_parser);
 
@@ -173,6 +180,8 @@ static void sniffer_parser_reset() {
 	pipe_tshark_stdin = 0;
 	pipe_tshark_stdout = 0;
 
+	packet_count = 0;
+
 #ifdef USE_NEW_TSHARK
 	if(spawn_piped_process("/usr/bin/tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-2", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
 #else
@@ -181,27 +190,27 @@ static void sniffer_parser_reset() {
 		perror("Can't spawn tshark process");
 		return;
 	}
-	
+
 	pcap_output = fdopen(pipe_tshark_stdin, "w");
 	if(pcap_output == NULL) {
 		fprintf(stderr, "pipe %d: ", pipe_tshark_stdin);
 		perror("Can't open tshark stdin pipe with fopen");
 		return;
 	}
-	
+
 //	pcap_output = stdout;
 
 	pd = pcap_open_dead(DLT_IEEE802_15_4, 255);
 	pdumper = pcap_dump_fopen(pd, pcap_output);
-	
+
 	pd_out = pcap_open_dead(DLT_IEEE802_15_4, 255);
 	pdumper_out = pcap_dump_open(pd_out, "out.pcap");
 
 	dissected_packet_parser = XML_ParserCreate(NULL);
 	XML_SetElementHandler(dissected_packet_parser, &parse_xml_start_element, &parse_xml_end_element);
-	
+
 	signal(SIGPIPE, &tshark_exited);
-	
+
 	desc_poll_add(pipe_tshark_stdout, &process_events, NULL);
 }
 
@@ -214,14 +223,14 @@ static bool spawn_piped_process(const char* command, char* const arguments[], in
 
 	if(pipe(stdin_pipe))
 		return false;
-	
+
 	if(pipe(stdout_pipe)) {
 		close(stdin_pipe[PIPE_READ]);
 		close(stdin_pipe[PIPE_WRITE]);
 
 		return false;
 	}
-	
+
 	child_pid = fork();
 	if(child_pid == 0) {
 		int result;
@@ -229,12 +238,12 @@ static bool spawn_piped_process(const char* command, char* const arguments[], in
 		//In child process
 		dup2(stdin_pipe[PIPE_READ], STDIN_FILENO);
 		dup2(stdout_pipe[PIPE_WRITE], STDOUT_FILENO);
-		
+
 		// all these are for use by parent only
 		close(stdin_pipe[PIPE_READ]);
 		close(stdin_pipe[PIPE_WRITE]);
 		close(stdout_pipe[PIPE_READ]);
-		close(stdout_pipe[PIPE_WRITE]); 
+		close(stdout_pipe[PIPE_WRITE]);
 
 		result = execv(command, arguments);
 		perror("Failed to spawn process");
@@ -245,18 +254,18 @@ static bool spawn_piped_process(const char* command, char* const arguments[], in
 		close(stdout_pipe[PIPE_WRITE]);
 
 		fcntl(stdout_pipe[PIPE_READ], F_SETFL, fcntl(stdout_pipe[PIPE_READ], F_GETFL, 0) | O_NONBLOCK);
-		
+
 		if(pid) *pid = child_pid;
 		if(process_input_pipe) *process_input_pipe = stdin_pipe[PIPE_WRITE];
 		if(process_output_pipe) *process_output_pipe = stdout_pipe[PIPE_READ];
-		
+
 		return true;
 	} else {
 		close(stdin_pipe[PIPE_READ]);
 		close(stdin_pipe[PIPE_WRITE]);
 		close(stdout_pipe[PIPE_READ]);
 		close(stdout_pipe[PIPE_WRITE]);
-		
+
 		perror("Failed to fork");
 
 		return false;

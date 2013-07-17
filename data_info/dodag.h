@@ -42,7 +42,6 @@ typedef struct di_dodag_ref {
 
 typedef struct di_dodag_key {
 	di_dodag_ref_t ref;
-	uint32_t version;
 } di_dodag_key_t;
 
 typedef struct di_dodag di_dodag_t;

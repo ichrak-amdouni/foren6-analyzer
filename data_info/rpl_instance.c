@@ -26,7 +26,6 @@ void rpl_instance_init(void* data, const void *key, size_t key_size) {
 
 	instance->dodags = hash_create(sizeof(di_dodag_ref_t), NULL);
 	instance->key.ref = *(di_rpl_instance_ref_t*) key;
-	instance->key.version = 0;
 	instance->has_changed = true;
 }
 
@@ -44,7 +43,6 @@ void rpl_instance_key_init(di_rpl_instance_key_t *key, uint8_t rpl_instance, uin
 	memset(key, 0, sizeof(di_rpl_instance_key_t));
 
 	key->ref.rpl_instance = rpl_instance;
-	key->version = version;
 }
 
 void rpl_instance_ref_init(di_rpl_instance_ref_t *ref, uint8_t rpl_instance) {

@@ -36,15 +36,15 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	//Get node, dodag and rpl_instance using their keys. If the requested object does not exist, created it.
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
-	node = hash_value(rpldata_get_nodes(0), hash_key_make(node_ref), HVM_CreateIfNonExistant, &node_created);
+	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
 
 	di_dodag_ref_t dodag_ref;
 	dodag_ref_init(&dodag_ref, dio->dodagid, dio->version_number);
-	dodag = hash_value(rpldata_get_dodags(0), hash_key_make(dodag_ref), HVM_CreateIfNonExistant, &dodag_created);
+	dodag = rpldata_get_dodag(&dodag_ref, HVM_CreateIfNonExistant, &dodag_created);
 
 	di_rpl_instance_ref_t rpl_instance_ref;
 	rpl_instance_ref_init(&rpl_instance_ref, dio->rpl_instance_id);
-	rpl_instance = hash_value(rpldata_get_rpl_instances(0), hash_key_make(rpl_instance_ref), HVM_CreateIfNonExistant, &rpl_instance_created);
+	rpl_instance = rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
 
 	rpl_instance_add_dodag(rpl_instance, dodag);
 
@@ -55,7 +55,7 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		di_dodag_ref_t previous_dodag_ref;
 
 		dodag_ref_init(&previous_dodag_ref, node_get_dodag(node)->dodagid, node_get_dodag(node)->version);
-		previous_dodag = hash_value(rpldata_get_dodags(0), hash_key_make(previous_dodag_ref), HVM_FailIfNonExistant, NULL);
+		previous_dodag = rpldata_get_dodag(&previous_dodag_ref, HVM_FailIfNonExistant, NULL);
 		assert(previous_dodag != NULL);
 		dodag_del_node(previous_dodag, node);
 
@@ -112,13 +112,13 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		rpl_event_dodag_updated(dodag);
 	if(rpl_instance_has_changed(rpl_instance))
 		rpl_event_rpl_instance_updated(rpl_instance);
-	
+
 	if(node_has_changed(node))
-		rpldata_add_node_version();
+		rpldata_add_node_version(node, NULL);
 	if(dodag_has_changed(dodag))
-		rpldata_add_dodag_version();
+		rpldata_add_dodag_version(dodag);
 	if(rpl_instance_has_changed(rpl_instance))
-		rpldata_add_rpl_instance_version();
+		rpldata_add_rpl_instance_version(rpl_instance);
 
 	if(node_has_changed(node) || dodag_has_changed(dodag) || rpl_instance_has_changed(rpl_instance))
 		rpldata_wsn_create_version();
@@ -150,20 +150,20 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
-	child = hash_value(rpldata_get_nodes(0), hash_key_make(node_ref), HVM_CreateIfNonExistant, &child_created);
+	child = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &child_created);
 
 	node_ref_init(&node_ref, dst_wpan_address);
-	parent = hash_value(rpldata_get_nodes(0), hash_key_make(node_ref), HVM_CreateIfNonExistant, &parent_created);
+	parent = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &parent_created);
 
 	di_rpl_instance_ref_t rpl_instance_ref;
 	rpl_instance_ref_init(&rpl_instance_ref, dao->rpl_instance_id);
-	rpl_instance = hash_value(rpldata_get_rpl_instances(0), hash_key_make(rpl_instance_ref), HVM_CreateIfNonExistant, &rpl_instance_created);
+	rpl_instance = rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
 
 
 	if(dao->dodagid_present && node_get_dodag(child)) {
 		di_dodag_ref_t dodag_ref;
 		dodag_ref_init(&dodag_ref, node_get_dodag(child)->dodagid, node_get_dodag(child)->version);
-		dodag = hash_value(rpldata_get_dodags(0), hash_key_make(dodag_ref), HVM_FailIfNonExistant, &dodag_created);
+		dodag = rpldata_get_dodag(&dodag_ref, HVM_FailIfNonExistant, &dodag_created);
 		assert(dodag != NULL);
 
 		rpl_instance_add_dodag(rpl_instance, dodag);
@@ -182,20 +182,20 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 
 		di_link_ref_t link_ref;
 		link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(child)}, (di_node_ref_t){node_get_mac64(parent)});
-		new_link = hash_value(rpldata_get_links(0), hash_key_make(link_ref), HVM_CreateIfNonExistant, &link_created);
+		new_link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
 		link_update(new_link, time(NULL), 1);
 	} else if(transit && transit->path_lifetime == 0) {
 		//No-Path DAO
 		if(target && !addr_compare_ip_len(node_get_global_ip(child), &target->target, target->target_bit_length)) {
 			//link_hash_del(&rpldata_get_links(0), child, parent);
 			di_link_ref_t link_ref;
+			di_link_t *old_link;
 			link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(child)}, (di_node_ref_t){node_get_mac64(parent)});
-			hash_iterator_ptr iterator = hash_begin(NULL, NULL);
-			if(hash_find(rpldata_get_links(0), hash_key_make(link_ref), iterator)) {
-				rpl_event_link_deleted(hash_it_value(iterator));
-				hash_it_delete_value(iterator);
-				hash_it_destroy(iterator);
+			old_link = rpldata_del_link(&link_ref);
+			if(old_link) {
+				rpl_event_link_deleted(old_link);
 			}
+
 			//fprintf(stderr, "No-Path DAO, child = 0x%llX, parent = 0x%llX\n", child->key.ref.wpan_address, parent->key.ref.wpan_address);
 		}
 	}
@@ -232,20 +232,20 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	if(dodag)
 		rpl_event_dodag_updated(dodag);
 	rpl_event_rpl_instance_updated(rpl_instance);
-	
-	
+
+
 	if(node_has_changed(child) || node_has_changed(parent))
-		rpldata_add_node_version();
+		rpldata_add_node_version(child, parent);
 	if(dodag && dodag_has_changed(dodag))
-		rpldata_add_dodag_version();
+		rpldata_add_dodag_version(dodag);
 	if(rpl_instance_has_changed(rpl_instance))
-		rpldata_add_rpl_instance_version();
+		rpldata_add_rpl_instance_version(rpl_instance);
 	if(new_link && link_has_changed(new_link))
-		rpldata_add_link_version();
+		rpldata_add_link_version(new_link);
 
 	if(node_has_changed(child) || node_has_changed(parent) || (dodag && dodag_has_changed(dodag)) || rpl_instance_has_changed(rpl_instance) || (new_link && link_has_changed(new_link)))
 		rpldata_wsn_create_version();
-	
+
 	node_reset_changed(child);
 	node_reset_changed(parent);
 	if(dodag)
@@ -267,7 +267,7 @@ void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
-	node = hash_value(rpldata_get_nodes(0), hash_key_make(node_ref), HVM_CreateIfNonExistant, &node_created);
+	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
 
 	if(node_created)
 		rpl_event_node_created(node);
@@ -275,7 +275,7 @@ void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	rpl_event_node_updated(node);
 
 	if(node_has_changed(node))
-		rpldata_add_node_version();
+		rpldata_add_node_version(node, NULL);
 
 	if(node_has_changed(node))
 		rpldata_wsn_create_version();
@@ -298,7 +298,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
-	src = hash_value(rpldata_get_nodes(0), hash_key_make(node_ref), HVM_CreateIfNonExistant, &src_created);
+	src = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &src_created);
 
 	if(!rpl_info || rpl_info->sender_rank == 0) {
 		//src->global_address = *src_ip_address;
@@ -308,7 +308,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 
 	if(dst_wpan_address != 0 && dst_wpan_address != ADDR_MAC64_BROADCAST) {
 		node_ref_init(&node_ref, dst_wpan_address);
-		dst = hash_value(rpldata_get_nodes(0), hash_key_make(node_ref), HVM_CreateIfNonExistant, &dst_created);
+		dst = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &dst_created);
 
 		/* Add the parent node to the parents list of the child node if not already done */
 
@@ -316,7 +316,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 			if(rpl_info->packet_toward_root) {
 				di_link_ref_t link_ref;
 				link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(src)}, (di_node_ref_t){node_get_mac64(dst)});
-				new_link = hash_value(rpldata_get_links(0), hash_key_make(link_ref), HVM_CreateIfNonExistant, &link_created);
+				new_link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
 
 				di_prefix_t route;
 				route.expiration_time = 0;
@@ -336,19 +336,19 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 
 	rpl_event_node_updated(src);
 	rpl_event_node_updated(dst);
-	
-	
+
+
 	if(node_has_changed(src) || node_has_changed(dst))
-		rpldata_add_node_version();
+		rpldata_add_node_version(src, dst);
 	if(new_link && link_has_changed(new_link))
-		rpldata_add_link_version();
+		rpldata_add_link_version(new_link);
 
 	if(node_has_changed(src) || node_has_changed(dst) || (new_link && link_has_changed(new_link)))
 		rpldata_wsn_create_version();
-	
+
 	node_reset_changed(src);
 	node_reset_changed(dst);
-	
+
 	if(new_link)
 		link_reset_changed(new_link);
 }

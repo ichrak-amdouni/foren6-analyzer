@@ -31,7 +31,6 @@ typedef struct {
 
 typedef struct di_rpl_instance_key {
 	di_rpl_instance_ref_t ref;
-	uint32_t version;
 } di_rpl_instance_key_t;
 
 typedef struct di_rpl_instance di_rpl_instance_t;

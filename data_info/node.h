@@ -23,7 +23,6 @@ typedef struct {
 
 typedef struct di_node_key {
 	di_node_ref_t ref;
-	uint32_t version;
 } di_node_key_t;
 
 

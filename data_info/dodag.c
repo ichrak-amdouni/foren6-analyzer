@@ -36,7 +36,6 @@ void dodag_init(void *data, const void *key, size_t key_size) {
 	dodag->nodes = hash_create(sizeof(di_node_ref_t), NULL);
 	dodag->rpl_instance.rpl_instance = -1;
 	dodag->key.ref = *(di_dodag_ref_t*)key;
-	dodag->key.version = 0;
 	dodag->has_changed = true;
 
 	fprintf(stderr, "Created dodag %p\n", data);
@@ -57,7 +56,6 @@ void dodag_key_init(di_dodag_key_t *key, addr_ipv6_t dodag_id, uint8_t dodag_ver
 
 	key->ref.dodagid = dodag_id;
 	key->ref.version = dodag_version;
-	key->version = version;
 }
 
 void dodag_ref_init(di_dodag_ref_t *ref, addr_ipv6_t dodag_id, uint8_t dodag_version) {

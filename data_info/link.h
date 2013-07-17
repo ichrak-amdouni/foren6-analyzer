@@ -25,7 +25,6 @@ typedef struct di_link_ref {
 
 typedef struct di_link_key {
 	di_link_ref_t ref;
-	uint32_t version;
 } di_link_key_t;
 
 typedef struct di_link di_link_t;

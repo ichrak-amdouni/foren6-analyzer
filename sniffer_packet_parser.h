@@ -129,6 +129,8 @@ void sniffer_parser_init();
 //Call sensor_info_collector_parse_packet when a packet has been fully received
 void sniffer_parser_parse_data(const unsigned char* data, int len);
 
+int sniffer_parser_get_packet_count();
+
 
 #ifdef	__cplusplus
 }

@@ -21,7 +21,3 @@ void rpl_tool_cleanup() {
 interface_t *rpl_tool_get_interface(const char* name) {
 	return interface_get(name);
 }
-
-di_rpl_data_t *rpl_tool_get_collected_data() {
-	return rpldata_get();
-}

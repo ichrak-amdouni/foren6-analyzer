@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "node.h"
 #include "route.h"
@@ -32,7 +33,7 @@ size_t node_sizeof() {
 
 void node_init(void *data, const void *key, size_t key_size) {
 	di_node_t *node = (di_node_t*) data;
-	di_node_key_t node_key = {*(di_node_ref_t*)key, 0};
+	di_node_key_t node_key = {*(di_node_ref_t*)key};
 
 	assert(key_size == sizeof(di_node_ref_t));
 
@@ -57,7 +58,6 @@ void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t versio
 	memset(key, 0, sizeof(di_node_key_t));
 
 	key->ref.wpan_address = wpan_address;
-	key->version = version;
 }
 
 void node_ref_init(di_node_ref_t *ref, addr_wpan_t wpan_address) {

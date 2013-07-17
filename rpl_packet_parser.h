@@ -28,12 +28,6 @@ extern "C" {
 	interface_t *rpl_tool_get_interface(const char *name);
 
 	/**
-	 * Get a pointer to collected data
-     * @return a pointer to collected data
-     */
-	di_rpl_data_t *rpl_tool_get_collected_data();
-
-	/**
 	 * Set callback to call when events are triggered (like node creation)
      * @param callbacks
      */

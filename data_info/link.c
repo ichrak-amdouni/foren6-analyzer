@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "link.h"
 #include "../data_collector/rpl_event_callbacks.h"
@@ -28,7 +29,6 @@ void link_init(void *data, const void *key, size_t key_size) {
 	assert(key_size == sizeof(di_link_ref_t));
 
 	link->key.ref = *(di_link_ref_t*) key;
-	link->key.version = 0;
 	link->has_changed = true;
 }
 
@@ -37,7 +37,6 @@ void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent
 
 	key->ref.child = child;
 	key->ref.parent = parent;
-	key->version = version;
 }
 
 void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent) {
@@ -50,7 +49,7 @@ void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent
 bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count) {
 	link->last_update = time;
 	link->packet_count += added_packet_count;
-	link->has_changed = true;
+	//link->has_changed = true;
 
 	rpl_event_link_updated(link);
 
@@ -89,7 +88,7 @@ bool link_has_changed(di_link_t *link) {
 }
 
 void link_reset_changed(di_link_t *link) {
-
+	link->has_changed = false;
 }
 
 
