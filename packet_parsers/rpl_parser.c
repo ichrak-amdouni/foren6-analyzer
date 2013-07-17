@@ -1,19 +1,14 @@
 #include <stddef.h>
-#include <pcap/pcap.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <expat.h>
 #include <string.h>
-#include <signal.h>
 #include <arpa/inet.h>
 
 #include "rpl_parser.h"
+#include "parser_register.h"
 #include "../data_collector/rpl_collector.h"
 #include "../descriptor_poll.h"
-#include "parser_register.h"
 
 #define ICMPV6_RPL_TYPE 155
 #define ICMPV6_RPL_CODE_DIS     0x0
@@ -111,7 +106,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 		if(!strcmp(nameStr, "frame.number")) {
 			current_packet.packet_id = strtol(showStr, NULL, 10);
 		}
-	} else if(!strcmp(nameStr, "icmpv6.checksum_bad")) {
+	} else if(!strcmp(nameStr, "icmpv6.checksum_bad") && !strcmp(showStr, "1")) {
 		current_packet.is_bad = true;
 	} else if(current_packet.type == RPT_None || current_packet.type == RPT_RplUnknown || current_packet.type == RPT_Data) {
 		if(!strcmp(nameStr, "wpan.src64")) {

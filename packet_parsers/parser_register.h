@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   parser_register.h
  * Author: am
  *
@@ -8,8 +8,11 @@
 #ifndef PARSER_REGISTER_H
 #define	PARSER_REGISTER_H
 
-#include <stdbool.h>
 #include <stdint.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 typedef struct parser {
 	const char *parser_name;
@@ -23,6 +26,10 @@ void parser_register_all();
 void parser_begin_packet();
 void parser_parse_field(const char *nameStr, const char *showStr, const char *valueStr, int64_t valueInt);
 void parser_end_packet();
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* PARSER_REGISTER_H */
 

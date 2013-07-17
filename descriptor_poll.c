@@ -2,12 +2,11 @@
 #include <sys/select.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
-#include <errno.h>
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #define EPOLL_MAX_EVENTS 5
 #define SELECT_FD_NUM 10
@@ -20,6 +19,8 @@ typedef struct desc_poll_info {
 
 static pthread_t poll_thread;
 
+static bool stop_thread;
+
 static desc_poll_info_t *poll_data[SELECT_FD_NUM] = {0};
 static int poll_number = 0;
 static pthread_mutex_t poll_mutex;
@@ -31,28 +32,51 @@ void desc_poll_init() {
 	static bool initialized = false;
 	if(initialized)
 		return;
-	
+
 	initialized = true;
-	
+
 	pipe(poll_abort_pipe);
 	fcntl(poll_abort_pipe[1], F_SETFL, O_NONBLOCK);
 	fcntl(poll_abort_pipe[0], F_SETFL, O_NONBLOCK);
 
 	memset(poll_data, 0, sizeof(poll_data));
 	poll_number = 0;
-	
+
 	pthread_mutex_init(&poll_mutex, NULL);
+	stop_thread = false;
 	pthread_create(&poll_thread, NULL, &desc_poll_run, NULL);
+}
+
+void desc_poll_cleanup() {
+	int i;
+
+	stop_thread = true;
+	write(poll_abort_pipe[1], "c", 1);	//write a byte (the string avoid declaring a dummy variable) to abort the select as we want to stop the thread
+	pthread_join(poll_thread, NULL);
+	pthread_mutex_destroy(&poll_mutex);
+
+	for(i = 0; i < SELECT_FD_NUM; i++) {
+		if(poll_data[i])
+			free(poll_data[i]);
+	}
+
+	close(poll_abort_pipe[1]);
+	close(poll_abort_pipe[0]);
 }
 
 bool desc_poll_add(int fd, ready_callback callback, void* user_data) {
 	int i;
+	sigset_t x;
 	desc_poll_info_t *data = (desc_poll_info_t*) malloc(sizeof(desc_poll_info_t));
-	
+
 	data->fd = fd;
 	data->callback = callback;
 	data->user_data = user_data;
 
+	sigemptyset (&x);
+	sigaddset(&x, SIGPIPE);
+
+	sigprocmask(SIG_BLOCK, &x, NULL);
 	pthread_mutex_lock(&poll_mutex);
 	for(i = 0; i < SELECT_FD_NUM; i++) {
 		if(poll_data[i] == NULL) {
@@ -69,10 +93,11 @@ bool desc_poll_add(int fd, ready_callback callback, void* user_data) {
 		}
 	}
 	pthread_mutex_unlock(&poll_mutex);
+	sigprocmask(SIG_UNBLOCK, &x, NULL);
 
 	if(i < SELECT_FD_NUM)
 		return true;
-	
+
 	free(data);
 
 	return false;
@@ -80,7 +105,12 @@ bool desc_poll_add(int fd, ready_callback callback, void* user_data) {
 
 void desc_poll_del(int fd) {
 	int i;
-	
+	sigset_t x;
+
+	sigemptyset (&x);
+	sigaddset(&x, SIGPIPE);
+
+	sigprocmask(SIG_BLOCK, &x, NULL);
 	pthread_mutex_lock(&poll_mutex);
 	for(i = 0; i < SELECT_FD_NUM; i++) {
 		if(poll_data[i] && poll_data[i]->fd == fd) {
@@ -95,21 +125,27 @@ void desc_poll_del(int fd) {
 		poll_number--;
 	}
 	pthread_mutex_unlock(&poll_mutex);
+	sigprocmask(SIG_UNBLOCK, &x, NULL);
 }
 
 static void *desc_poll_run(void* data) {
-	while(1)
+	while(stop_thread == false)
 		desc_poll_process_events();
-	
+
 	return NULL;
 }
 
 void desc_poll_process_events() {
 	int maxfd, i, retval;
 	fd_set read_set;
-	
+	sigset_t x;
+
+	sigemptyset (&x);
+	sigaddset(&x, SIGPIPE);
+
 	FD_ZERO(&read_set);
 
+	sigprocmask(SIG_BLOCK, &x, NULL);
 	pthread_mutex_lock(&poll_mutex);
 	for(maxfd = -1, i = 0; i < SELECT_FD_NUM; i++) {
 		if(poll_data[i]) {
@@ -119,31 +155,39 @@ void desc_poll_process_events() {
 		}
 	}
 	pthread_mutex_unlock(&poll_mutex);
-	
+	sigprocmask(SIG_UNBLOCK, &x, NULL);
+
 	//No descriptor to poll, just wait and return (to avoid wasting cpu time)
 	if(maxfd == -1) {
 		usleep(100000);
 		return;
 	}
-	
+
 	//Add a pipe to be able to abort the select call when adding new file descriptor to poll
 	if(poll_abort_pipe[0] > maxfd)
 		maxfd = poll_abort_pipe[0];
 	FD_SET(poll_abort_pipe[0], &read_set);
-	
+
 	retval = select(maxfd+1, &read_set, NULL, NULL, NULL);
 	if(retval == -1)
 		perror("select failed");
 	else if(retval > 0) {
-
+		sigprocmask(SIG_BLOCK, &x, NULL);
 		pthread_mutex_lock(&poll_mutex);
 		for(i = 0; i < SELECT_FD_NUM; i++) {
 			if(poll_data[i] && FD_ISSET(poll_data[i]->fd, &read_set)) {
-				poll_data[i]->callback(poll_data[i]->fd, poll_data[i]->user_data);
+				desc_poll_info_t *current_info = poll_data[i];
+				int fd = poll_data[i]->fd;
+				void *user_data = poll_data[i]->user_data;
+
+				pthread_mutex_unlock(&poll_mutex);
+				current_info->callback(fd, user_data);
+				pthread_mutex_lock(&poll_mutex);
 			}
 		}
 		pthread_mutex_unlock(&poll_mutex);
-		
+		sigprocmask(SIG_UNBLOCK, &x, NULL);
+
 		if(FD_ISSET(poll_abort_pipe[0], &read_set)) {
 			char dummy;
 			read(poll_abort_pipe[0], &dummy, 1);

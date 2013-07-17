@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   dodag.h
  * Author: am
  *
@@ -8,15 +8,15 @@
 #ifndef DODAG_H
 #define	DODAG_H
 
-#include "node.h"
-
 #include "address.h"
-#include "node.h"
 #include "rpl_instance.h"
-#include "../uthash.h"
+#include "hash_container.h"
 
-typedef struct di_dodag_el *di_dodag_hash_t;
-typedef struct di_node_el *di_node_hash_t;
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+typedef struct di_node di_node_t;
 
 typedef enum tag_di_objective_function_e {
 	ROF_ETX = 1
@@ -35,80 +35,47 @@ typedef struct di_dodag_config {
 	di_objective_function_e objective_function;
 } di_dodag_config_t;
 
-typedef struct di_dodag_key {
+typedef struct di_dodag_ref {
 	addr_ipv6_t dodagid;				//Via DIO, DAO
-	uint16_t version;					//Via DIO
+	int16_t version;					//Via DIO
+} di_dodag_ref_t;
+
+typedef struct di_dodag_key {
+	di_dodag_ref_t ref;
 } di_dodag_key_t;
 
-typedef struct di_dodag {
-	di_rpl_instance_t *rpl_instance;		//Via DIO, DAO
-	
-	di_dodag_key_t dodag_key;				//Via DIO & DAO for dodagid and via DIO for version
-	
-	//Configuration
-	di_dodag_config_t config;				//Via DIO config option
+typedef struct di_dodag di_dodag_t;
 
-	di_prefix_t prefix;						//Via DIO prefix option
-	
-	//Nodes
-	di_node_hash_t nodes;					//Via DIO, sometimes DAO
-	
-	void *user_data;
-} di_dodag_t;
+size_t dodag_sizeof();
 
-typedef struct di_dodag_el {
-	di_dodag_t *dodag;
-    UT_hash_handle hh;
-} di_dodag_el_t, *di_dodag_hash_t;
+void dodag_init(void *data, const void *key, size_t key_size);
+di_dodag_t *dodag_dup(di_dodag_t *dodag);
 
-/**
- * Get the dodag with specified dodagid and version in the hashtable;
- * If it does not exist, create it if get_or_create is true, else return NULL.
- * 
- * @param hash hashtable from where to get the dodag
- * @param dodagid the id of the dodag to search
- * @param version the version of the dodag
- * @param get_or_create if true, if the dodag is not found in the hashtable, it will be created. If false, NULL is returned when the dodag is not found
- * @return the dodag structure containing data for the specified id and version
- */
-di_dodag_t *dodag_hash_get(di_dodag_hash_t *hash, addr_ipv6_t *dodagid, uint16_t version, bool get_or_create);
+void dodag_key_init(di_dodag_key_t *key, addr_ipv6_t dodag_id, uint8_t dodag_version, uint32_t version);
+void dodag_ref_init(di_dodag_ref_t *ref, addr_ipv6_t dodag_id, uint8_t dodag_version);
+void dodag_set_key(di_dodag_t *dodag, const di_dodag_key_t *key);
+void dodag_set_config(di_dodag_t *dodag, const di_dodag_config_t *config);
+void dodag_set_prefix(di_dodag_t *dodag, const di_prefix_t *prefix);
+void dodag_set_rpl_instance(di_dodag_t *dodag, const di_rpl_instance_ref_t* rpl_instance);
+void dodag_add_node(di_dodag_t *dodag, di_node_t *node);
+void dodag_del_node(di_dodag_t *dodag, di_node_t *node);
+void dodag_set_user_data(di_dodag_t *dodag, void *user_data);
 
-/**
- * Add an existing dodag structure to the hashtable.
- * @param hash hashtable
- * @param dodag pointer to the dodag structure to add
- * @param overwrite_existing if the dodag was already in the hashtable but with a different pointer, overwrite it only if this parameter is true
- * @return the dodag represented by dodagid and version in this hashtable. May not be the dodag parameter if overwrite_existing is false and if there was already existing dodag with same id and version.
- */
-di_dodag_t *dodag_hash_add(di_dodag_hash_t *hash, di_dodag_t *dodag, bool overwrite_existing);
+bool dodag_has_changed(di_dodag_t *dodag);
+void dodag_reset_changed(di_dodag_t *dodag);
 
-/**
- * Remove a dodag structure from the hashtable.
- * The dodag structure is not freed.
- * 
- * @param hash hashtable
- * @param dodagid the dodagid of the dodag to remove
- * @param version the version of the dodag to remove
- * @return a pointer to the removed dodag structure or NULL if it was not found
- */
-di_dodag_t *dodag_hash_remove(di_dodag_hash_t *hash, addr_ipv6_t *dodagid, uint16_t version);
+const di_dodag_key_t *dodag_get_key(const di_dodag_t *dodag);
+const di_dodag_config_t *dodag_get_config(const di_dodag_t *dodag);
+const di_prefix_t *dodag_get_prefix(const di_dodag_t *dodag);
+const di_rpl_instance_ref_t *dodag_get_rpl_instance(const di_dodag_t *dodag);
+hash_container_ptr dodag_get_node(const di_dodag_t *dodag);
+void *dodag_get_user_data(const di_dodag_t *dodag);
 
-/**
- * Remove a dodag from the hashtable and free its memory
- * If the dodag exist in the hashtable, this function is equivalent to free(dodag_hash_remove(...))
- * @param hash hashtable
- * @param dodagid the dodagid of the dodag to delete
- * @param version the version of the dodag to delete
- * @return true if the specified dodag was found and is deleted or false
- */
-bool dodag_hash_del(di_dodag_hash_t *hash, addr_ipv6_t *dodagid, uint16_t version);
 
-/**
- * Return whether the hashtable has at least one dodag
- * @param hash hashtable
- * @return true if there is at least one dodag in this hashtable, or false if it's empty
- */
-bool dodag_hash_is_empty(di_dodag_hash_t *hash);
+#ifdef	__cplusplus
+}
+#endif
+
 
 #endif	/* DODAG_H */
 

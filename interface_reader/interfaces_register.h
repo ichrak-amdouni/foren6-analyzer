@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   interfaces_register.h
  * Author: am
  *
@@ -9,6 +9,10 @@
 #define	INTERFACES_REGISTER_H
 
 #include <stdbool.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 typedef void * ifreader_t;
 
@@ -26,6 +30,10 @@ typedef interface_t (*interface_register_function_t)();
 
 void interface_register_all();
 interface_t *interface_get(const char *name);
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* INTERFACES_REGISTER_H */
 

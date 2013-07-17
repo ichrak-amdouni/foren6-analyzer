@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   rpl_packet_parser.h
  * Author: am
  *
@@ -8,7 +8,7 @@
 #ifndef RPL_PACKET_PARSER_H
 #define	RPL_PACKET_PARSER_H
 
-#include "data_collector/rpl_collector.h"
+#include "data_info/rpl_data.h"
 #include "data_collector/rpl_event_callbacks.h"
 #include "interface_reader/interfaces_register.h"
 
@@ -22,15 +22,11 @@ extern "C" {
      * @param target a target where to read data from the sniffer like /dev/ttyUSB0 for the telos interface
      */
 	void rpl_tool_init();
-	
+
+	void rpl_tool_cleanup();
+
 	interface_t *rpl_tool_get_interface(const char *name);
-	
-	/**
-	 * Get a pointer to collected data
-     * @return a pointer to collected data
-     */
-	rpl_collector_t *rpl_tool_get_collected_data();
-	
+
 	/**
 	 * Set callback to call when events are triggered (like node creation)
      * @param callbacks

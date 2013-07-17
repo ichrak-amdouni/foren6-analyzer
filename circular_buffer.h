@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   circular_buffer.h
  * Author: am
  *
@@ -10,6 +10,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 typedef struct circular_buffer {
 	uint8_t *data;
@@ -25,6 +29,10 @@ bool circular_buffer_is_empty(circular_buffer_t buf);
 bool circular_buffer_is_full(circular_buffer_t buf);
 bool circular_buffer_push_front(circular_buffer_t buf, const void *data);
 void *circular_buffer_pop_back(circular_buffer_t buf);
+
+#ifdef	__cplusplus
+}
+#endif
 
 
 #endif	/* CIRCULAR_BUFFER_H */

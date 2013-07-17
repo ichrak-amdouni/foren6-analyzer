@@ -1,120 +1,173 @@
-#include "dodag.h"
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include <stdio.h>
 
-#include "../data_collector/rpl_event_callbacks.h"
+#include "dodag.h"
+#include "node.h"
+#include "rpl_data.h"
 
-/**
- * Get the dodag with specified dodagid and version in the hashtable;
- * If it does not exist, create it if get_or_create is true, else return NULL.
- * 
- * @param hash hashtable from where to get the dodag
- * @param dodagid the id of the dodag to search
- * @param version the version of the dodag
- * @param get_or_create if true, if the dodag is not found in the hashtable, it will be created. If false, NULL is returned when the dodag is not found
- * @return the dodag structure containing data for the specified id and version
- */
-di_dodag_t *dodag_hash_get(di_dodag_hash_t *hash, addr_ipv6_t *dodagid, uint16_t version, bool get_or_create) {
-	di_dodag_el_t *current_dodag;
-	di_dodag_key_t key;	
-	
-	memset(&key, 0, sizeof(key));	//Padding in structure must be always 0
-	key.dodagid = *dodagid;
-	key.version = version;
+typedef struct di_dodag {
+	di_dodag_key_t key;				//Via DIO & DAO for dodagid and via DIO for version
 
-	HASH_FIND(hh, *hash, &key, sizeof(di_dodag_key_t), current_dodag);
-	if(get_or_create && !current_dodag) {
-		/* dodag was not known before, so add it to known dodags */
-		current_dodag = (di_dodag_el_t*) calloc(1, sizeof(di_dodag_el_t));
-		current_dodag->dodag = (di_dodag_t*) calloc(1, sizeof(di_dodag_t));
-		current_dodag->dodag->dodag_key = key;
-		HASH_ADD(hh, *hash, dodag->dodag_key, sizeof(di_dodag_key_t), current_dodag);
-		rpl_event_dodag_created(current_dodag->dodag);
+	//Configuration
+	di_dodag_config_t config;				//Via DIO config option
+
+	di_prefix_t prefix;						//Via DIO prefix option
+
+	di_rpl_instance_ref_t rpl_instance;		//Via DIO, DAO
+
+	//Nodes
+	hash_container_ptr nodes;					//Via DIO, sometimes DAO
+
+	bool has_changed;
+	void *user_data;
+} di_dodag_t;
+
+size_t dodag_sizeof() {
+	return sizeof(di_dodag_t);
+}
+
+void dodag_init(void *data, const void *key, size_t key_size) {
+	di_dodag_t *dodag = (di_dodag_t*) data;
+
+	assert(key_size == sizeof(di_dodag_ref_t));
+
+	dodag->nodes = hash_create(sizeof(di_node_ref_t), NULL);
+	dodag->rpl_instance.rpl_instance = -1;
+	dodag->key.ref = *(di_dodag_ref_t*)key;
+	dodag->has_changed = true;
+
+	fprintf(stderr, "Created dodag %p\n", data);
+}
+
+di_dodag_t *dodag_dup(di_dodag_t *dodag) {
+	di_dodag_t *new_dodag;
+
+	new_dodag = malloc(sizeof(di_dodag_t));
+	memcpy(new_dodag, dodag, sizeof(di_dodag_t));
+	new_dodag->nodes = hash_dup(dodag->nodes);
+
+	return new_dodag;
+}
+
+void dodag_key_init(di_dodag_key_t *key, addr_ipv6_t dodag_id, uint8_t dodag_version, uint32_t version) {
+	memset(key, 0, sizeof(di_dodag_key_t));
+
+	key->ref.dodagid = dodag_id;
+	key->ref.version = dodag_version;
+}
+
+void dodag_ref_init(di_dodag_ref_t *ref, addr_ipv6_t dodag_id, uint8_t dodag_version) {
+	memset(ref, 0, sizeof(di_dodag_ref_t));
+
+	ref->dodagid = dodag_id;
+	ref->version = dodag_version;
+}
+
+void dodag_set_key(di_dodag_t *dodag, const di_dodag_key_t *key) {
+	if(memcmp(&dodag->key, key, sizeof(di_dodag_key_t))) {
+		dodag->key = *key;
+		dodag->has_changed = true;
 	}
-	
-	return (current_dodag)? current_dodag->dodag : NULL;
 }
 
-/**
- * Add an existing dodag structure to the hashtable.
- * @param hash hashtable
- * @param dodag pointer to the dodag structure to add
- * @param overwrite_existing if the dodag was already in the hashtable but with a different pointer, overwrite it only if this parameter is true (the old di_dodag_t structure is not freed)
- * @return the dodag represented by dodagid and version in this hashtable. May not be the dodag parameter if overwrite_existing is false and if there was already existing dodag with same id and version.
- */
-di_dodag_t *dodag_hash_add(di_dodag_hash_t *hash, di_dodag_t *dodag, bool overwrite_existing) {
-	di_dodag_el_t *current_dodag;
-
-	HASH_FIND(hh, *hash, &dodag->dodag_key, sizeof(di_dodag_key_t), current_dodag);
-	if(overwrite_existing && current_dodag) {
-		fprintf(stderr, "DODAG hashtable: overwrite of a dodag !\n");
-		rpl_event_dodag_deleted(current_dodag->dodag);
-		HASH_DEL(*hash, current_dodag);
-		free(current_dodag->dodag);
-		free(current_dodag);
-		current_dodag = NULL;
+void dodag_set_config(di_dodag_t *dodag, const di_dodag_config_t *config) {
+	if(memcmp(&dodag->config, config, sizeof(di_dodag_config_t))) {
+		dodag->config = *config;
+		dodag->has_changed = true;
 	}
-	if(!current_dodag) {
-		/* dodag was not known before, so add it to known dodags */
-		current_dodag = (di_dodag_el_t*) calloc(1, sizeof(di_dodag_el_t));
-		current_dodag->dodag = dodag;
-		HASH_ADD(hh, *hash, dodag->dodag_key, sizeof(di_dodag_key_t), current_dodag);
+}
+
+void dodag_set_prefix(di_dodag_t *dodag, const di_prefix_t *prefix) {
+	hash_iterator_ptr it, itend;
+
+
+	if(dodag->prefix.length == prefix->length && !addr_compare_ip_len(&dodag->prefix.prefix, &prefix->prefix, prefix->length))
+		return;	//Same prefix, nothing to change
+
+	dodag->prefix = *prefix;
+
+	it = hash_begin(dodag->nodes, NULL);
+	itend = hash_end(dodag->nodes, NULL);
+
+	for(; hash_it_equ(it, itend) == false; hash_it_inc(it)) {
+		di_node_t *node = rpldata_get_node(hash_it_value(it), HVM_FailIfNonExistant, NULL);
+		assert(node != NULL);
+		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
+		node_update_ip(node, prefix);
 	}
-	
-	return current_dodag->dodag;
+
+	hash_it_destroy(it);
+	hash_it_destroy(itend);
+
+	dodag->has_changed = true;
 }
 
-/**
- * Remove a dodag structure from the hashtable.
- * The dodag structure is not freed.
- * 
- * @param hash hashtable
- * @param dodagid the dodagid of the dodag to remove
- * @param version the version of the dodag to remove
- * @return a pointer to the removed dodag structure or NULL if it was not found
- */
-di_dodag_t *dodag_hash_remove(di_dodag_hash_t *hash, addr_ipv6_t *dodagid, uint16_t version) {
-	di_dodag_el_t *current_dodag;
-	di_dodag_key_t key;
-	di_dodag_t *old_dodag = NULL;
-	
-	key.dodagid = *dodagid;
-	key.version = version;
-
-	HASH_FIND(hh, *hash, &key, sizeof(di_dodag_key_t), current_dodag);
-	if(current_dodag) {
-		old_dodag = current_dodag->dodag;
-
-		HASH_DEL(*hash, current_dodag);
-		free(current_dodag);
+void dodag_set_rpl_instance(di_dodag_t *dodag, const di_rpl_instance_ref_t* rpl_instance) {
+	if(dodag->rpl_instance.rpl_instance != rpl_instance->rpl_instance) {
+		dodag->rpl_instance = *rpl_instance;
+		dodag->has_changed = true;
 	}
-	
-	return old_dodag;
 }
 
-/**
- * Remove a dodag from the hashtable and free its memory
- * If the dodag exist in the hashtable, this function is equivalent to free(dodag_hash_remove(...))
- * @param hash hashtable
- * @param dodagid the dodagid of the dodag to delete
- * @param version the version of the dodag to delete
- * @return true if the specified dodag was found and is deleted or false
- */
-bool dodag_hash_del(di_dodag_hash_t *hash, addr_ipv6_t *dodagid, uint16_t version) {
-	di_dodag_t *dodag;
-	
-	dodag = dodag_hash_remove(hash, dodagid, version);
-	if(dodag) {
-		rpl_event_dodag_deleted(dodag);
-		free(dodag);
-		return true;
-	} else return false;
+void dodag_add_node(di_dodag_t *dodag, di_node_t *node) {
+	bool was_already_in_dodag = false;
+
+	hash_add(dodag->nodes, hash_key_make(node_get_key(node)->ref), &node_get_key(node)->ref, NULL, HAM_OverwriteIfExists, &was_already_in_dodag);
+
+	if(was_already_in_dodag == false) {
+		node_set_dodag(node, &dodag->key.ref);
+		node_update_ip(node, &dodag->prefix);
+		dodag->has_changed = true;
+	} else {
+		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
+	}
 }
 
-/**
- * Return whether the hashtable has at least one dodag
- * @param hash hashtable
- * @return true if there is at least one dodag in this hashtable, or false if it's empty
- */
-bool dodag_hash_is_empty(di_dodag_hash_t *hash) {
-	return (HASH_COUNT(*hash)) == 0;
+void dodag_del_node(di_dodag_t *dodag, di_node_t *node) {
+	static const di_dodag_ref_t null_ref = {{{{0}}}, -1};
+
+	if(hash_delete(dodag->nodes, hash_key_make(node_get_key(node)->ref))) {
+		node_set_dodag(node, &null_ref);
+		dodag->has_changed = true;
+	}
 }
+
+void dodag_set_user_data(di_dodag_t *dodag, void *user_data) {
+	dodag->user_data = user_data;
+}
+
+bool dodag_has_changed(di_dodag_t *dodag) {
+	return dodag->has_changed;
+}
+
+void dodag_reset_changed(di_dodag_t *dodag) {
+	dodag->has_changed = false;
+}
+
+
+const di_dodag_key_t *dodag_get_key(const di_dodag_t *dodag) {
+	return &dodag->key;
+}
+
+const di_dodag_config_t *dodag_get_config(const di_dodag_t *dodag) {
+	return &dodag->config;
+}
+
+const di_prefix_t *dodag_get_prefix(const di_dodag_t *dodag) {
+	return &dodag->prefix;
+}
+
+const di_rpl_instance_ref_t *dodag_get_rpl_instance(const di_dodag_t *dodag) {
+	return &dodag->rpl_instance;
+}
+
+hash_container_ptr dodag_get_node(const di_dodag_t *dodag) {
+	return dodag->nodes;
+}
+
+void *dodag_get_user_data(const di_dodag_t *dodag) {
+	return dodag->user_data;
+}
+

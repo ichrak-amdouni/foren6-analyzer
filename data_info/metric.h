@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   metric.h
  * Author: am
  *
@@ -9,6 +9,10 @@
 #define	METRIC_H
 
 #include <stdint.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 typedef struct di_metric_type {
 	const char *name;
@@ -33,6 +37,9 @@ char *metric_to_string(di_metric_t *metric_value);
 double metric_get_display_value(di_metric_t *metric_value);
 void metric_enumerate(metric_enum_callback_t callback);
 
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* METRIC_H */
 

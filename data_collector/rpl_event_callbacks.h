@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   rpl_event_callbacks.h
  * Author: am
  *
@@ -11,6 +11,11 @@
 #include "../data_info/node.h"
 #include "../data_info/dodag.h"
 #include "../data_info/rpl_instance.h"
+#include "../data_info/link.h"
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 typedef struct rpl_event_callbacks {
 	void (*onNodeCreated)(di_node_t *node);
@@ -44,6 +49,10 @@ void rpl_event_link_updated(di_link_t *link);
 void rpl_event_rpl_instance_created(di_rpl_instance_t *rpl_instance);
 void rpl_event_rpl_instance_deleted(di_rpl_instance_t *rpl_instance);
 void rpl_event_rpl_instance_updated(di_rpl_instance_t *rpl_instance);
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* RPL_EVENT_CALLBACKS_H */
 

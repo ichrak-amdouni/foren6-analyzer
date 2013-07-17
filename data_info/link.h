@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   link.h
  * Author: am
  *
@@ -12,37 +12,51 @@
 #include <stdint.h>
 #include "metric.h"
 #include "address.h"
-#include "../uthash.h"
+#include "node.h"
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
-typedef struct di_node di_node_t;
+typedef struct di_link_ref {
+	di_node_ref_t child;
+	di_node_ref_t parent;
+} di_link_ref_t;
 
-typedef struct di_link_addr_pair {
-	di_node_t *child;
-	di_node_t *parent;
-} di_link_addr_pair_t;
+typedef struct di_link_key {
+	di_link_ref_t ref;
+} di_link_key_t;
 
-typedef struct di_link {
-	di_link_addr_pair_t key;
+typedef struct di_link di_link_t;
 
-	di_metric_t metric;
-	time_t last_update;		//TX only
-	time_t expiration_time;
-	uint32_t packet_count;	//TX only
-	
-	void *user_data;
-} di_link_t;
+size_t link_sizeof();
 
-typedef struct di_link_el {
-	di_link_t *link;
-	
-    UT_hash_handle hh;
-} di_link_el_t, *di_link_hash_t;
+void link_init(void *data, const void *key, size_t key_size);
 
-di_link_t *link_hash_get(di_link_hash_t *hash, di_node_t *child_node, di_node_t *parent_node, bool get_or_create);
-bool link_hash_del(di_link_hash_t *hash, di_node_t *child_node, di_node_t *parent_node);
-bool link_hash_remove_all_outdated(di_link_hash_t *hash);
+void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent, uint32_t version);
+void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent);
+di_link_t *link_dup(di_link_t *link);
+
+void link_set_key(di_link_t *link, di_link_key_t *key);
+void link_set_metric(di_link_t *link, di_metric_t *metric);
+void link_set_user_data(di_link_t *link, void *user_data);
 bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count);
+
+bool link_has_changed(di_link_t *link);
+void link_reset_changed(di_link_t *link);
+
+const di_link_key_t *link_get_key(const di_link_t *link);
+time_t link_get_last_update(const di_link_t *link);
+uint32_t link_get_packet_count(const di_link_t *link);
+const di_metric_t* link_get_metric(const di_link_t *link);
+void *link_get_user_data(const di_link_t *link);
+
+
+
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* LINK_H */
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   node.h
  * Author: am
  *
@@ -10,80 +10,62 @@
 
 #include "metric.h"
 #include "address.h"
-#include "link.h"
 #include "route.h"
-#include "../uthash.h"
+#include "dodag.h"
 
-typedef struct di_dodag di_dodag_t;
-typedef struct di_dodag_el *di_dodag_hash_t;
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
-typedef struct di_node {
+typedef struct {
 	addr_wpan_t wpan_address;
-	
-	addr_ipv6_t local_address;
-	addr_ipv6_t global_address;
-	
-	di_route_list_t routes;
-	
-	uint16_t rank;				//Via DIO
-	di_metric_t metric;		//Usually ETX, via DIO with metric
-	bool grounded;				//If true, can propagate packet to the root node.
-	
-	di_dodag_t *dodag;
-	
-	void *user_data;
-} di_node_t;
+} di_node_ref_t;
 
-typedef struct di_node_el {
-	di_node_t *node;
-    UT_hash_handle hh;
-} di_node_el_t, *di_node_hash_t;
+typedef struct di_node_key {
+	di_node_ref_t ref;
+} di_node_key_t;
 
-/**
- * Get the node with specified address in the hashtable;
- * If it does not exist, create it if get_or_create is true, else return NULL.
- * 
- * @param hash hashtable from where to get the node
- * @param wpan_address the address of the node to search
- * @param get_or_create if true, if the node is not found in the hashtable, it will be created. If false, NULL is returned when the node is not found
- * @return the node structure containing data for the specified id and version
- */
-di_node_t *node_hash_get(di_node_hash_t *hash, addr_wpan_t wpan_address, bool get_or_create);
 
-/**
- * Add an existing node structure to the hashtable.
- * @param hash hashtable
- * @param node pointer to the bide structure to add
- * @param overwrite_existing if the node was already in the hashtable but with a different pointer, overwrite it only if this parameter is true
- * @return the node in the hashtable. May not be the node parameter if overwrite_existing is false and if there was already existing node with same address.
- */
-di_node_t *node_hash_add(di_node_hash_t *hash, di_node_t *node, bool overwrite_existing);
+typedef struct di_node di_node_t;
 
-/**
- * Remove a node structure from the hashtable.
- * The node structure is not freed.
- * 
- * @param hash hashtable
- * @param wpan_address the address of the node to remove
- * @return a pointer to the removed node structure or NULL if it was not found
- */
-di_node_t *node_hash_remove(di_node_hash_t *hash, addr_wpan_t wpan_address);
+size_t node_sizeof();
 
-/**
- * Remove a node from the hashtable and free its memory
- * If the node exist in the hashtable, this function is equivalent to free(node_hash_remove(...))
- * @param hash hashtable
- * @param wpan_address the address of the node to delete
- * @return true if the specified node was found and is deleted or false
- */
-bool node_hash_del(di_node_hash_t *hash, addr_wpan_t wpan_address);
+void node_init(void *data, const void *key, size_t key_size);
+di_node_t *node_dup(di_node_t *node);
 
-/**
- * Return whether the hashtable has at least one node
- * @param hash hashtable
- * @return true if there is at least one node in this hashtable, or false if it's empty
- */
-bool node_hash_is_empty(di_node_hash_t *hash);
+void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version);
+void node_ref_init(di_node_ref_t *ref, addr_wpan_t wpan_address);
+void node_set_key(di_node_t *node, const di_node_key_t *key);
+void node_set_local_ip(di_node_t *node, addr_ipv6_t address);
+void node_set_global_ip(di_node_t *node, addr_ipv6_t address);
+void node_add_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node);
+void node_del_route(di_node_t *node, const di_prefix_t *route_prefix);
+void node_set_metric(di_node_t* node, const di_metric_t* metric);
+void node_set_rank(di_node_t *node, uint16_t rank);
+void node_set_grounded(di_node_t *node, bool grounded);
+void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref);
+void node_set_user_data(di_node_t *node, void *data);
+
+bool node_has_changed(di_node_t *node);
+void node_reset_changed(di_node_t *node);
+
+void node_update_ip(di_node_t *node, const di_prefix_t *prefix);
+
+const di_node_key_t *node_get_key(const di_node_t *node);
+addr_wpan_t node_get_mac64(const di_node_t *node);
+const addr_ipv6_t* node_get_local_ip(const di_node_t *node);
+const addr_ipv6_t* node_get_global_ip(const di_node_t *node);
+const di_route_list_t* node_get_routes(const di_node_t *node);
+const di_metric_t* node_get_metric(const di_node_t* node);
+uint16_t node_get_rank(const di_node_t *node);
+bool node_get_grounded(const di_node_t *node);
+const di_dodag_ref_t * node_get_dodag(const di_node_t *node);
+void *node_get_user_data(const di_node_t *node);
+
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif	/* NODE_H */
 
