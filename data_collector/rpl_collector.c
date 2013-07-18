@@ -184,6 +184,7 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(child)}, (di_node_ref_t){node_get_mac64(parent)});
 		new_link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
 		link_update(new_link, time(NULL), 1);
+		link_set_metric(new_link, node_get_metric(child));
 	} else if(transit && transit->path_lifetime == 0) {
 		//No-Path DAO
 		if(target && !addr_compare_ip_len(node_get_global_ip(child), &target->target, target->target_bit_length)) {
@@ -317,6 +318,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 				di_link_ref_t link_ref;
 				link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(src)}, (di_node_ref_t){node_get_mac64(dst)});
 				new_link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
+				link_set_metric(new_link, node_get_metric(src));
 
 				di_prefix_t route;
 				route.expiration_time = 0;

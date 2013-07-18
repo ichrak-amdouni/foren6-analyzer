@@ -72,7 +72,7 @@ void link_set_key(di_link_t *link, di_link_key_t *key) {
 	}
 }
 
-void link_set_metric(di_link_t *link, di_metric_t *metric) {
+void link_set_metric(di_link_t *link, const di_metric_t *metric) {
 	if(link->metric.type != metric->type || link->metric.value != metric->value) {
 		link->metric = *metric;
 		link->has_changed = true;

@@ -38,7 +38,7 @@ void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent
 di_link_t *link_dup(di_link_t *link);
 
 void link_set_key(di_link_t *link, di_link_key_t *key);
-void link_set_metric(di_link_t *link, di_metric_t *metric);
+void link_set_metric(di_link_t *link, const di_metric_t *metric);
 void link_set_user_data(di_link_t *link, void *user_data);
 bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count);
 
