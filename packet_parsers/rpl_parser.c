@@ -10,6 +10,8 @@
 #include "../data_collector/rpl_collector.h"
 #include "../descriptor_poll.h"
 
+#include "../data_info/metric.h"
+
 #define ICMPV6_RPL_TYPE 155
 #define ICMPV6_RPL_CODE_DIS     0x0
 #define ICMPV6_RPL_CODE_DIO     0x1
@@ -76,19 +78,38 @@ typedef struct rpl_packet_content {
 
 static rpl_packet_content_t current_packet;
 
+static double rpl_parser_metric_etx_to_double(uint64_t value);
+static char* rpl_parser_metric_etx_to_string(uint64_t value);
+
 static void rpl_parser_begin_packet();
 static void rpl_parser_parse_field(const char *nameStr, const char *showStr, const char *valueStr, int64_t valueInt);
 static void rpl_parser_end_packet();
 
 parser_t rpl_parser_register() {
 	parser_t parser;
-	
+	di_metric_type_t metric_etx;
+
 	parser.parser_name = "rpl";
 	parser.begin_packet = &rpl_parser_begin_packet;
 	parser.parse_field = &rpl_parser_parse_field;
 	parser.end_packet = &rpl_parser_end_packet;
-	
+
+	metric_etx.name = "ETX";
+	metric_etx.to_display_value = &rpl_parser_metric_etx_to_double;
+	metric_etx.to_string = &rpl_parser_metric_etx_to_string;
+	metric_add_type(&metric_etx);
+
 	return parser;
+}
+
+static double rpl_parser_metric_etx_to_double(uint64_t value) {
+	return value / 128.0;
+}
+
+static char *rpl_parser_metric_etx_to_string(uint64_t value) {
+	char *str = malloc(10);
+	sprintf(str, "%f", value/128.0);
+	return str;
 }
 
 static void rpl_parser_begin_packet() {
@@ -98,10 +119,10 @@ static void rpl_parser_begin_packet() {
 
 static void rpl_parser_parse_field(const char *nameStr, const char *showStr, const char *valueStr, int64_t valueInt) {
 	//fprintf(stderr, "XML element: name= %s, show= %s, value= %lld(%s)\n", nameStr, showStr, valueInt, valueStr);
-	
+
 	if(current_packet.is_bad)
 		return;
-	
+
 	if(valueStr == NULL) {
 		if(!strcmp(nameStr, "frame.number")) {
 			current_packet.packet_id = strtol(showStr, NULL, 10);
@@ -146,7 +167,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 					break;
 			}
 		}
-	} 
+	}
 	if(current_packet.type != RPT_None || current_packet.type != RPT_RplUnknown) {
 		bool option_check;
 		switch(current_packet.type) {
@@ -160,7 +181,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 					current_packet.dis.info.instance_predicate = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.opt.solicited.flag.v"))
 					current_packet.dis.info.version_predicate = valueInt;
-				else if(!strcmp(nameStr, "icmpv6.rpl.opt.solicited.dodagid")) 
+				else if(!strcmp(nameStr, "icmpv6.rpl.opt.solicited.dodagid"))
 					inet_pton(AF_INET6, showStr, &current_packet.dis.info.dodag_predicate);
 				else if(!strcmp(nameStr, "icmpv6.rpl.opt.solicited.instance"))
 					current_packet.dis.info.rpl_instance_id = valueInt;
@@ -294,7 +315,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 				if(option_check)
 					current_packet.dao.has_transit = true;
 				break;
-				
+
 			case RPT_Data:
 				//Transit option
 				option_check = true;
@@ -312,7 +333,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 				if(option_check)
 					current_packet.data.has_hop_info = true;
 				break;
-				
+
 			default:
 				break;
 		}
@@ -360,7 +381,7 @@ static void rpl_parser_end_packet() {
 						(current_packet.dao.has_target)? &current_packet.dao.target : NULL,
 						(current_packet.dao.has_transit)? &current_packet.dao.transit : NULL);
 				break;
-				
+
 			case RPT_Data:
 				rpl_collector_parse_data(
 						current_packet.src_wpan_address,
@@ -370,11 +391,11 @@ static void rpl_parser_end_packet() {
 						(current_packet.data.has_hop_info)? &current_packet.data.hop_info : NULL,
 						current_packet.packet_id);
 				break;
-				
+
 			case RPT_RplUnknown:
 				fprintf(stderr, "Warning: invalid RPL packet\n");
 				break;
-				
+
 			case RPT_None:
 				break;
 		}

@@ -32,9 +32,10 @@ typedef struct di_metric {
 
 typedef void (*metric_enum_callback_t)(di_metric_type_t *metric_type);
 
+void metric_add_type(const di_metric_type_t *metric_model);
 di_metric_type_t *metric_get_type(const char *name);
-char *metric_to_string(di_metric_t *metric_value);
-double metric_get_display_value(di_metric_t *metric_value);
+char *metric_to_string(const di_metric_t *metric_value);
+double metric_get_display_value(const di_metric_t *metric_value);
 void metric_enumerate(metric_enum_callback_t callback);
 
 #ifdef	__cplusplus
