@@ -10,6 +10,8 @@
 #include "sniffer_packet_parser.h"
 #include "descriptor_poll.h"
 #include "packet_parsers/parser_register.h"
+#include "data_info/hash_container.h"
+#include "sha1.h"
 
 //Define that to use the new command line format of newer tshark versions
 //#define USE_NEW_TSHARK
@@ -29,6 +31,14 @@ static int pipe_tshark_stdout = 0;	//We will read dissected packets from here
 static pthread_mutex_t new_packet_mutex;
 
 static int packet_count;
+static int packet_input_count;
+
+#define LAST_PACKET_NUMBER 10
+static hash_container_ptr last_packets;
+struct packet_data {
+	void* data;
+	int len;
+};
 
 static XML_Parser dissected_packet_parser;	//parse output of tshark
 
@@ -39,6 +49,8 @@ static void tshark_exited();
 
 static void parse_xml_start_element(void *data, const char *el, const char **attr);
 static void parse_xml_end_element(void *data, const char *el);
+
+static bool check_duplicate_packet(const unsigned char* data, int len);
 
 //Initialize sniffer parser
 void sniffer_parser_init() {
@@ -51,6 +63,8 @@ void sniffer_parser_init() {
 	pthread_mutex_init(&new_packet_mutex, NULL);
 
 	parser_register_all();
+
+	last_packets = hash_create(sizeof(struct packet_data), NULL);
 
 	sniffer_parser_reset();
 
@@ -74,11 +88,16 @@ void sniffer_parser_parse_data(const unsigned char* data, int len) {
 	pkt_hdr.caplen = len;
 	pkt_hdr.len = len + 2;	//FCS is not captured (2 bytes)
 	pthread_mutex_lock(&new_packet_mutex);
-	pcap_dump((u_char *)pdumper, &pkt_hdr, data);
-	pcap_dump_flush(pdumper);
-	pcap_dump((u_char *)pdumper_out, &pkt_hdr, data);
-	pcap_dump_flush(pdumper_out);
-	fflush(pcap_output);
+	packet_input_count++;
+
+	if(check_duplicate_packet(data, len)) {
+		pcap_dump((u_char *)pdumper, &pkt_hdr, data);
+		pcap_dump_flush(pdumper);
+		pcap_dump((u_char *)pdumper_out, &pkt_hdr, data);
+		pcap_dump_flush(pdumper_out);
+		fflush(pcap_output);
+	}
+
 	pthread_mutex_unlock(&new_packet_mutex);
 	//fflush(stdout);
 	//fprintf(stderr, "New packet captured\n");
@@ -286,4 +305,42 @@ static void tshark_exited() {
 	signal(SIGPIPE, SIG_IGN);
 	sniffer_parser_reset_requested = true;
 	fprintf(stderr, "tshark exited, parser reset requested\n");
+}
+
+static bool check_duplicate_packet(const unsigned char* data, int len) {
+	uint32_t hashed_data[5];
+	struct packet_data pkt_data;
+	hash_iterator_ptr it = hash_begin(NULL, NULL);
+	bool is_duplicate;
+
+	sha1_buffer((const char*)data, len, hashed_data);
+
+	if(hash_find(last_packets, (hash_key_t){hashed_data, sizeof(hashed_data)}, it)) {
+		struct packet_data *old_pkt;
+
+		old_pkt = (struct packet_data *)hash_it_value(it);
+		free(old_pkt->data);
+
+		hash_it_delete_value(it);
+		is_duplicate = true;
+	} else {
+		is_duplicate = false;
+		if(hash_size(last_packets) >= LAST_PACKET_NUMBER) {
+			//values are added to the end of the hash, so to remove the oldest value, remove the one at the beginning
+			struct packet_data *old_pkt;
+			hash_begin(last_packets, it);
+			old_pkt = (struct packet_data *)hash_it_value(it);
+			free(old_pkt->data);
+			hash_it_delete_value(it);
+		}
+	}
+
+	hash_it_destroy(it);
+
+	pkt_data.data = malloc(len);
+	memcpy(pkt_data.data, data, len);
+	pkt_data.len = len;
+	hash_add(last_packets, (hash_key_t){hashed_data, sizeof(hashed_data)}, &pkt_data, NULL, HAM_FailIfExists, NULL);
+
+	return is_duplicate == false;
 }

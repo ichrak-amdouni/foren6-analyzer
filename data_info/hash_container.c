@@ -191,6 +191,13 @@ void hash_clear(hash_container_ptr container) {
 	}
 }
 
+unsigned int hash_size(hash_container_ptr container) {
+	if(container->head == 0)
+		return 0;
+	else
+		return container->head->hh.tbl->num_items;
+}
+
 
 hash_iterator_ptr hash_begin(hash_container_ptr container, hash_iterator_ptr iterator) {
 	if(container == NULL && iterator == NULL) {
