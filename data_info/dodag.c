@@ -37,8 +37,6 @@ void dodag_init(void *data, const void *key, size_t key_size) {
 	dodag->rpl_instance.rpl_instance = -1;
 	dodag->key.ref = *(di_dodag_ref_t*)key;
 	dodag->has_changed = true;
-
-	fprintf(stderr, "Created dodag %p\n", data);
 }
 
 di_dodag_t *dodag_dup(di_dodag_t *dodag) {
