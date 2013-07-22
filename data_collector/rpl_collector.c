@@ -289,7 +289,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 		rpl_hop_by_hop_opt_t* rpl_info, int packet_id)
 {
 
-	di_node_t *src, *dst;
+	di_node_t *src, *dst = NULL;
 	di_link_t *new_link = NULL;
 
 	bool src_created, dst_created;
@@ -331,25 +331,27 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 
 	if(src_created)
 		rpl_event_node_created(src);
-	if(dst_created)
+	if(dst && dst_created)
 		rpl_event_node_created(dst);
 	if(new_link && link_created)
 		rpl_event_link_created(new_link);
 
 	rpl_event_node_updated(src);
-	rpl_event_node_updated(dst);
+	if(dst)
+		rpl_event_node_updated(dst);
 
 
-	if(node_has_changed(src) || node_has_changed(dst))
+	if(node_has_changed(src) || (dst && node_has_changed(dst)))
 		rpldata_add_node_version(src, dst);
 	if(new_link && link_has_changed(new_link))
 		rpldata_add_link_version(new_link);
 
-	if(node_has_changed(src) || node_has_changed(dst) || (new_link && link_has_changed(new_link)))
+	if(node_has_changed(src) || (dst && node_has_changed(dst)) || (new_link && link_has_changed(new_link)))
 		rpldata_wsn_create_version();
 
 	node_reset_changed(src);
-	node_reset_changed(dst);
+	if(dst)
+		node_reset_changed(dst);
 
 	if(new_link)
 		link_reset_changed(new_link);

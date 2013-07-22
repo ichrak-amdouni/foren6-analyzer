@@ -5,6 +5,7 @@
 #include <expat.h>
 #include <string.h>
 #include <signal.h>
+#include <pthread.h>
 
 #include "sniffer_packet_parser.h"
 #include "descriptor_poll.h"
@@ -25,6 +26,7 @@ static struct timeval start_time;
 static int tshark_pid = 0;
 static int pipe_tshark_stdin = 0;	//We will write packets here
 static int pipe_tshark_stdout = 0;	//We will read dissected packets from here
+static pthread_mutex_t new_packet_mutex;
 
 static int packet_count;
 
@@ -46,6 +48,7 @@ void sniffer_parser_init() {
 	};
 	/* prevent zombie child */
 	sigaction(SIGCHLD, &sigchld_action, NULL);
+	pthread_mutex_init(&new_packet_mutex, NULL);
 
 	parser_register_all();
 
@@ -70,11 +73,13 @@ void sniffer_parser_parse_data(const unsigned char* data, int len) {
 
 	pkt_hdr.caplen = len;
 	pkt_hdr.len = len + 2;	//FCS is not captured (2 bytes)
+	pthread_mutex_lock(&new_packet_mutex);
 	pcap_dump((u_char *)pdumper, &pkt_hdr, data);
 	pcap_dump_flush(pdumper);
 	pcap_dump((u_char *)pdumper_out, &pkt_hdr, data);
 	pcap_dump_flush(pdumper_out);
 	fflush(pcap_output);
+	pthread_mutex_unlock(&new_packet_mutex);
 	//fflush(stdout);
 	//fprintf(stderr, "New packet captured\n");
 	//write(STDOUT_FILENO, data, len);

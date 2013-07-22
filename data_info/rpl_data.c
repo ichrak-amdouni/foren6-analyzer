@@ -253,15 +253,15 @@ uint32_t rpldata_add_link_version(di_link_t* changed_link) {
 	return new_version;
 }
 
-di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e value_mode, bool *was_already_existing) {
+di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e value_mode, bool *was_created) {
 	bool already_existing;
 	di_node_t *new_node;
 	di_node_t **new_node_ptr;
 
-	if(was_already_existing == NULL)
-		was_already_existing = &already_existing;
+	if(was_created == NULL)
+		was_created = &already_existing;
 
-	new_node_ptr = (di_node_t**)hash_value(rpldata_get_nodes(0), hash_key_make(*node_ref), HVM_FailIfNonExistant, was_already_existing);
+	new_node_ptr = (di_node_t**)hash_value(rpldata_get_nodes(0), hash_key_make(*node_ref), HVM_FailIfNonExistant, was_created);
 	if(new_node_ptr)
 		new_node = *new_node_ptr;
 	else  new_node = NULL;
@@ -275,20 +275,22 @@ di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e val
 
 		DL_APPEND(allocated_objects.nodes, node_el);
 		hash_add(rpldata_get_nodes(0), hash_key_make(*node_ref), &new_node, NULL, HAM_NoCheck, NULL);
-	}
+
+		*was_created = true;
+	} else *was_created = false;
 
 	return new_node;
 }
 
-di_dodag_t *rpldata_get_dodag(const di_dodag_ref_t *dodag_ref, hash_value_mode_e value_mode, bool *was_already_existing) {
+di_dodag_t *rpldata_get_dodag(const di_dodag_ref_t *dodag_ref, hash_value_mode_e value_mode, bool *was_created) {
 	bool already_existing;
 	di_dodag_t *new_dodag;
 	di_dodag_t **new_dodag_ptr;
 
-	if(was_already_existing == NULL)
-		was_already_existing = &already_existing;
+	if(was_created == NULL)
+		was_created = &already_existing;
 
-	new_dodag_ptr = (di_dodag_t**)hash_value(rpldata_get_dodags(0), hash_key_make(*dodag_ref), HVM_FailIfNonExistant, was_already_existing);
+	new_dodag_ptr = (di_dodag_t**)hash_value(rpldata_get_dodags(0), hash_key_make(*dodag_ref), HVM_FailIfNonExistant, was_created);
 	if(new_dodag_ptr)
 		new_dodag = *new_dodag_ptr;
 	else new_dodag = NULL;
@@ -302,20 +304,22 @@ di_dodag_t *rpldata_get_dodag(const di_dodag_ref_t *dodag_ref, hash_value_mode_e
 
 		DL_APPEND(allocated_objects.dodags, dodag_el);
 		hash_add(rpldata_get_dodags(0), hash_key_make(*dodag_ref), &new_dodag, NULL, HAM_NoCheck, NULL);
-	}
+
+		*was_created = true;
+	} else *was_created = false;
 
 	return new_dodag;
 }
 
-di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_ref_t *rpl_instance_ref, hash_value_mode_e value_mode, bool *was_already_existing) {
+di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_ref_t *rpl_instance_ref, hash_value_mode_e value_mode, bool *was_created) {
 	bool already_existing;
 	di_rpl_instance_t *new_rpl_instance;
 	di_rpl_instance_t **new_rpl_instance_ptr;
 
-	if(was_already_existing == NULL)
-		was_already_existing = &already_existing;
+	if(was_created == NULL)
+		was_created = &already_existing;
 
-	new_rpl_instance_ptr = (di_rpl_instance_t **)hash_value(rpldata_get_rpl_instances(0), hash_key_make(*rpl_instance_ref), HVM_FailIfNonExistant, was_already_existing);
+	new_rpl_instance_ptr = (di_rpl_instance_t **)hash_value(rpldata_get_rpl_instances(0), hash_key_make(*rpl_instance_ref), HVM_FailIfNonExistant, was_created);
 	if(new_rpl_instance_ptr)
 		new_rpl_instance = *new_rpl_instance_ptr;
 	else new_rpl_instance = NULL;
@@ -329,20 +333,22 @@ di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_ref_t *rpl_ins
 
 		DL_APPEND(allocated_objects.rpl_instances, rpl_instance_el);
 		hash_add(rpldata_get_rpl_instances(0), hash_key_make(*rpl_instance_ref), &new_rpl_instance, NULL, HAM_NoCheck, NULL);
-	}
+
+		*was_created = true;
+	} else *was_created = false;
 
 	return new_rpl_instance;
 }
 
-di_link_t *rpldata_get_link(const di_link_ref_t *link_ref, hash_value_mode_e value_mode, bool *was_already_existing) {
+di_link_t *rpldata_get_link(const di_link_ref_t *link_ref, hash_value_mode_e value_mode, bool *was_created) {
 	bool already_existing;
 	di_link_t **new_link_ptr;
 	di_link_t *new_link;
 
-	if(was_already_existing == NULL)
-		was_already_existing = &already_existing;
+	if(was_created == NULL)
+		was_created = &already_existing;
 
-	new_link_ptr = (di_link_t**)hash_value(rpldata_get_links(0), hash_key_make(*link_ref), HVM_FailIfNonExistant, was_already_existing);
+	new_link_ptr = (di_link_t**)hash_value(rpldata_get_links(0), hash_key_make(*link_ref), HVM_FailIfNonExistant, was_created);
 	if(new_link_ptr)
 		new_link = *new_link_ptr;
 	else new_link = NULL;
@@ -356,7 +362,9 @@ di_link_t *rpldata_get_link(const di_link_ref_t *link_ref, hash_value_mode_e val
 
 		DL_APPEND(allocated_objects.links, link_el);
 		hash_add(rpldata_get_links(0), hash_key_make(*link_ref), &new_link, NULL, HAM_NoCheck, NULL);
-	}
+
+		*was_created = true;
+	} else *was_created = false;
 
 	return new_link;
 }
