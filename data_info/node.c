@@ -8,6 +8,7 @@
 
 typedef struct di_node {
 	di_node_key_t key;
+	uint16_t simple_id;
 
 	bool is_custom_local_address;
 	addr_ipv6_t local_address;
@@ -27,6 +28,8 @@ typedef struct di_node {
 	void *user_data;
 } di_node_t;
 
+static uint16_t last_simple_id = 0;
+
 size_t node_sizeof() {
 	return sizeof(di_node_t);
 }
@@ -42,6 +45,9 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->is_custom_local_address = false;
 	node_set_key(node, &node_key);
 	node->has_changed = true;
+
+	last_simple_id++;
+	node->simple_id = last_simple_id;
 }
 
 di_node_t *node_dup(di_node_t *node) {
@@ -165,6 +171,10 @@ const di_node_key_t *node_get_key(const di_node_t *node) {
 
 addr_wpan_t node_get_mac64(const di_node_t *node) {
 	return node->key.ref.wpan_address;
+}
+
+uint16_t node_get_simple_id(const di_node_t *node) {
+	return node->simple_id;
 }
 
 const addr_ipv6_t* node_get_local_ip(const di_node_t *node) {

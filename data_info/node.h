@@ -53,6 +53,7 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix);
 
 const di_node_key_t *node_get_key(const di_node_t *node);
 addr_wpan_t node_get_mac64(const di_node_t *node);
+uint16_t node_get_simple_id(const di_node_t *node);
 const addr_ipv6_t* node_get_local_ip(const di_node_t *node);
 const addr_ipv6_t* node_get_global_ip(const di_node_t *node);
 const di_route_list_t* node_get_routes(const di_node_t *node);
