@@ -147,6 +147,7 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	bool dodag_created = false;
 	bool rpl_instance_created = false;
 	bool link_created = false;
+	bool link_deleted = false;
 
 	//fprintf(stderr, "Received DAO\n");
 
@@ -197,6 +198,8 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 			old_link = rpldata_del_link(&link_ref);
 			if(old_link) {
 				rpl_event_link_deleted(old_link);
+				free(old_link);
+				link_deleted = true;
 			}
 
 			//fprintf(stderr, "No-Path DAO, child = 0x%llX, parent = 0x%llX\n", child->key.ref.wpan_address, parent->key.ref.wpan_address);
@@ -216,7 +219,6 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		}
 	}
 
-
 	if(node_has_changed(child) || node_has_changed(parent))
 		rpldata_add_node_version(child, parent);
 	if(dodag && dodag_has_changed(dodag))
@@ -225,8 +227,10 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		rpldata_add_rpl_instance_version(rpl_instance);
 	if(new_link && link_has_changed(new_link))
 		rpldata_add_link_version(new_link);
+	if(link_deleted)
+		rpldata_add_link_version(NULL);
 
-	if(node_has_changed(child) || node_has_changed(parent) || (dodag && dodag_has_changed(dodag)) || rpl_instance_has_changed(rpl_instance) || (new_link && link_has_changed(new_link)))
+	if(node_has_changed(child) || node_has_changed(parent) || (dodag && dodag_has_changed(dodag)) || rpl_instance_has_changed(rpl_instance) || (new_link && link_has_changed(new_link)) || link_deleted)
 		rpldata_wsn_create_version();
 
 	if(child_created)

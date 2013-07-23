@@ -376,7 +376,7 @@ di_link_t *rpldata_del_link(const di_link_ref_t *link_ref) {
 
 	found = hash_find(rpldata_get_links(0), hash_key_make(*link_ref), it);
 	if(found) {
-		deleted_link = hash_it_value(it);
+		deleted_link = *(di_link_t**)hash_it_value(it);
 		hash_it_delete_value(it);
 	}
 
