@@ -33,7 +33,7 @@ static pthread_mutex_t new_packet_mutex;
 static int packet_count;
 static int packet_input_count;
 
-#define LAST_PACKET_NUMBER 10
+#define LAST_PACKET_NUMBER 100
 static hash_container_ptr last_packets;
 struct packet_data {
 	void* data;
