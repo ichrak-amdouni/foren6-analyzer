@@ -20,3 +20,4 @@ build*
 dist
 .dep.inc
 info
+*.user*
