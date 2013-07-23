@@ -49,6 +49,7 @@ bool               hash_find(hash_container_ptr container, hash_key_t key, hash_
 void *             hash_remove_ref(hash_container_ptr container, hash_key_t key);
 bool               hash_delete(hash_container_ptr container, hash_key_t key);
 void               hash_clear(hash_container_ptr container);
+unsigned int       hash_size(hash_container_ptr container);
 
 hash_iterator_ptr  hash_begin(hash_container_ptr container, hash_iterator_ptr iterator);
 hash_iterator_ptr  hash_end(hash_container_ptr container, hash_iterator_ptr iterator);
