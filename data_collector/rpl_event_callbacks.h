@@ -19,14 +19,14 @@ extern "C" {
 
 typedef struct rpl_event_callbacks {
 	void (*onNodeCreated)(di_node_t *node);
+	void (*onNodeUpdated)(di_node_t *node);
 	void (*onNodeDeleted)(di_node_t *node);
-	void (*onNodeUpdate)(di_node_t *node);
 	void (*onDodagCreated)(di_dodag_t *dodag);
-	void (*onDodagDeleted)(di_dodag_t *dodag);
 	void (*onDodagUpdated)(di_dodag_t *dodag);
+	void (*onDodagDeleted)(di_dodag_t *dodag);
 	void (*onLinkCreated)(di_link_t *link);
-	void (*onLinkDeleted)(di_link_t *link);
 	void (*onLinkUpdated)(di_link_t *link);
+	void (*onLinkDeleted)(di_link_t *link);
 	void (*onRplInstanceCreated)(di_rpl_instance_t *rpl_instance);
 	void (*onRplInstanceUpdated)(di_rpl_instance_t *rpl_instance);
 	void (*onRplInstanceDeleted)(di_rpl_instance_t *rpl_instance);

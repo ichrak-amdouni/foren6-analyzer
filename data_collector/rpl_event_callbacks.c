@@ -17,7 +17,7 @@ void rpl_event_node_deleted(di_node_t *node) {
 }
 
 void rpl_event_node_updated(di_node_t *node) {
-	if(event_callbacks.onNodeUpdate) event_callbacks.onNodeUpdate(node);
+	if(event_callbacks.onNodeUpdated) event_callbacks.onNodeUpdated(node);
 }
 
 
