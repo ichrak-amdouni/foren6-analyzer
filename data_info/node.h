@@ -56,7 +56,7 @@ addr_wpan_t node_get_mac64(const di_node_t *node);
 uint16_t node_get_simple_id(const di_node_t *node);
 const addr_ipv6_t* node_get_local_ip(const di_node_t *node);
 const addr_ipv6_t* node_get_global_ip(const di_node_t *node);
-const di_route_list_t* node_get_routes(const di_node_t *node);
+di_route_list_t node_get_routes(const di_node_t *node);
 const di_metric_t* node_get_metric(const di_node_t* node);
 uint16_t node_get_rank(const di_node_t *node);
 bool node_get_grounded(const di_node_t *node);

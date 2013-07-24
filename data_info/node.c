@@ -185,8 +185,8 @@ const addr_ipv6_t* node_get_global_ip(const di_node_t *node) {
 	return &node->global_address;
 }
 
-const di_route_list_t* node_get_routes(const di_node_t *node) {
-	return &node->routes;
+di_route_list_t node_get_routes(const di_node_t *node) {
+	return node->routes;
 }
 
 const di_metric_t *node_get_metric(const di_node_t* node) {
