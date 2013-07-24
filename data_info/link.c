@@ -51,7 +51,7 @@ bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count) {
 	link->packet_count += added_packet_count;
 	//link->has_changed = true;
 
-	rpl_event_link_updated(link);
+	//No update here, managed by has_changed mechanism
 
 	return true;
 }
