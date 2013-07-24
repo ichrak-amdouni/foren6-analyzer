@@ -42,7 +42,7 @@ bool route_remove(di_route_list_t *list, di_prefix_t route_prefix) {
 		if(route_prefix.length == route->route_prefix.length && !addr_compare_ip_len(&route->route_prefix.prefix, &route_prefix.prefix, route_prefix.length)) {
 			LL_DELETE(*list, route);
 			free(route);
-			return false;
+			return true;
 		}
 	}
 	
@@ -61,10 +61,12 @@ di_route_list_t route_dup(di_route_list_t *routes) {
 	LL_FOREACH(*routes, route) {
 		new_route = (di_route_el_t*) malloc(sizeof(di_route_el_t));
 		memcpy(new_route, route, sizeof(di_route_el_t));
-		new_route->next = last_route;
-		last_route = new_route;
+		if(last_route)
+			last_route->next = new_route;
+		new_route->next = NULL;
 		if(new_routes == NULL)
 			new_routes = new_route;
+		last_route = new_route;
 	}
 	
 	return new_routes;
