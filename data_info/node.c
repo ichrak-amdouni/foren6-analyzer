@@ -100,16 +100,15 @@ void node_set_global_ip(di_node_t *node, addr_ipv6_t address) {
 
 void node_add_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node) {
 	bool route_already_existing = false;
-	di_route_el_t *route_el = route_add(&node->routes, *route_prefix, false, &route_already_existing);
+	route_add(&node->routes, *route_prefix, via_node, false, &route_already_existing);
 
-	if(route_already_existing == false || route_el->via_node != via_node) {
-		route_el->via_node = via_node;
+	if(route_already_existing == false) {
 		node->has_changed = true;
 	}
 }
 
-void node_del_route(di_node_t *node, const di_prefix_t *route_prefix) {
-	if(route_remove(&node->routes, *route_prefix))
+void node_del_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node) {
+	if(route_remove(&node->routes, *route_prefix, via_node))
 		node->has_changed = true;
 }
 

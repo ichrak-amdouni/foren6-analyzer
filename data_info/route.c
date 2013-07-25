@@ -6,40 +6,43 @@
 #include "route.h"
 #include "../utlist.h"
 
-di_route_el_t *route_get(di_route_list_t *list, di_prefix_t route_prefix, bool allow_summary) {
+di_route_el_t *route_get(di_route_list_t *list, di_prefix_t route_prefix, addr_wpan_t via_node, bool allow_summary) {
 	di_route_el_t *route;
 	
 	LL_FOREACH(*list, route) {
-		if(route_prefix.length == route->route_prefix.length && !addr_compare_ip_len(&route->route_prefix.prefix, &route_prefix.prefix, route_prefix.length))
+		if(route->via_node == via_node && route_prefix.length == route->route_prefix.length && !addr_compare_ip_len(&route->route_prefix.prefix, &route_prefix.prefix, route_prefix.length))
 			return route;
 	}
 	
 	return NULL;
 }
 
-di_route_el_t *route_add(di_route_list_t *list, di_prefix_t route_prefix, bool auto_summary, bool *was_already_existing) {
+di_route_el_t *route_add(di_route_list_t *list, di_prefix_t route_prefix, addr_wpan_t via_node, bool auto_summary, bool *was_already_existing) {
 	di_route_el_t *route;
 	
 	LL_FOREACH(*list, route) {
 		if(route_prefix.length == route->route_prefix.length && !addr_compare_ip_len(&route->route_prefix.prefix, &route_prefix.prefix, route_prefix.length)) {
-			if(was_already_existing) *was_already_existing = true;
+			if(route->via_node == via_node && was_already_existing)
+				*was_already_existing = true;
+			else route->via_node = via_node;
 			return route;
 		}
 	}
 	
 	route = (di_route_el_t*) calloc(1, sizeof(di_route_el_t));
 	route->route_prefix = route_prefix;
+	route->via_node = via_node;
 	LL_PREPEND(*list, route);
 	
 	if(was_already_existing) *was_already_existing = false;
 	return route;
 }
 
-bool route_remove(di_route_list_t *list, di_prefix_t route_prefix) {
+bool route_remove(di_route_list_t *list, di_prefix_t route_prefix, addr_wpan_t via_node) {
 	di_route_el_t *route;
 	
 	LL_FOREACH(*list, route) {
-		if(route_prefix.length == route->route_prefix.length && !addr_compare_ip_len(&route->route_prefix.prefix, &route_prefix.prefix, route_prefix.length)) {
+		if(route->via_node == via_node && route_prefix.length == route->route_prefix.length && !addr_compare_ip_len(&route->route_prefix.prefix, &route_prefix.prefix, route_prefix.length)) {
 			LL_DELETE(*list, route);
 			free(route);
 			return true;

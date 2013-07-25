@@ -39,7 +39,7 @@ void node_set_key(di_node_t *node, const di_node_key_t *key);
 void node_set_local_ip(di_node_t *node, addr_ipv6_t address);
 void node_set_global_ip(di_node_t *node, addr_ipv6_t address);
 void node_add_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node);
-void node_del_route(di_node_t *node, const di_prefix_t *route_prefix);
+void node_del_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node);
 void node_set_metric(di_node_t* node, const di_metric_t* metric);
 void node_set_rank(di_node_t *node, uint16_t rank);
 void node_set_grounded(di_node_t *node, bool grounded);

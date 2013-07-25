@@ -213,7 +213,7 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		if(transit->path_lifetime > 0) {
 			node_add_route(parent, &route, node_get_mac64(child));
 		} else {	//No-path DAO
-			node_del_route(parent, &route);
+			node_del_route(parent, &route, node_get_mac64(child));
 		}
 	}
 
