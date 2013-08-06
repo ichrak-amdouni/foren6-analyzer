@@ -19,35 +19,6 @@ interface_list_t interfaces;
 static interface_el_t *interface_register_from_shared_obj(const char* filename);
 static interface_el_t *interface_add(interface_t *interface);
 
-void interface_register_all() {
-	static const char *dir = ".";
-	char filename_qfd[100];
-
-	interfaces = NULL;
-
-	struct dirent *dp;
-	DIR *dfd;
-	dfd = opendir(dir);
-	if(!dfd)
-		goto error;
-	
-	while((dp = readdir(dfd)) != NULL) {
-		struct stat stbuf;
-		sprintf(filename_qfd , "%s/%s", dir, dp->d_name);
-		if(stat(filename_qfd, &stbuf) == -1)
-			continue;
-		
-		if((stbuf.st_mode & S_IFMT) == S_IFREG) {
-			interface_register_from_shared_obj(filename_qfd);
-		}
-	}
-	
-	closedir(dfd);
-	
-error:
-	;
-}
-
 void interface_enumerate(interface_enum_function_t callback) {
 	interface_el_t *interface_element;
 	

@@ -19,7 +19,7 @@ typedef void * ifreader_t;
 typedef struct interface {
 	const char *interface_name;
 	void (*init)();
-	ifreader_t (*open)(const char *target);
+	ifreader_t (*open)(const char *target, int channel);
 	bool (*start)(ifreader_t handle);
 	void (*stop)(ifreader_t handle);
 	void (*close)(ifreader_t handle);
@@ -28,7 +28,6 @@ typedef struct interface {
 typedef void (*interface_enum_function_t)(const char* interface_name);
 typedef interface_t (*interface_register_function_t)();
 
-void interface_register_all();
 interface_t *interface_get(const char *name);
 
 #ifdef	__cplusplus

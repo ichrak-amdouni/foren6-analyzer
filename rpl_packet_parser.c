@@ -10,7 +10,6 @@ void rpl_tool_set_callbacks(rpl_event_callbacks_t *callbacks) {
 void rpl_tool_init() {
 	desc_poll_init();
 	rpldata_init();
-	interface_register_all();
 	sniffer_parser_init();
 }
 
