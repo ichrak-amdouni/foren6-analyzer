@@ -419,6 +419,8 @@ time_t rpldata_wsn_version_get_timestamp(uint32_t version) {
 }
 
 uint32_t rpldata_wsn_version_get_packet_count(uint32_t version) {
+	if(version == 0)
+		return sniffer_parser_get_packet_count();
 	return wsn_versions[version].packet_count;
 }
 
@@ -441,4 +443,3 @@ uint32_t rpldata_get_link_last_version() {
 uint32_t rpldata_get_wsn_last_version() {
 	return wsn_last_version;
 }
-

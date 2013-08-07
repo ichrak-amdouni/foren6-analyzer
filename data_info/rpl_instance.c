@@ -4,6 +4,7 @@
 
 #include "rpl_instance.h"
 #include "dodag.h"
+#include "../data_collector/rpl_event_callbacks.h"
 
 typedef struct di_rpl_instance {
 	di_rpl_instance_key_t key;
@@ -14,6 +15,8 @@ typedef struct di_rpl_instance {
 	bool has_changed;
 	void *user_data;
 } di_rpl_instance_t;
+
+static void rpl_instance_set_changed(di_rpl_instance_t *rpl_instance);
 
 size_t rpl_instance_sizeof() {
 	return sizeof(di_rpl_instance_t);
@@ -27,6 +30,7 @@ void rpl_instance_init(void* data, const void *key, size_t key_size) {
 	instance->dodags = hash_create(sizeof(di_dodag_ref_t), NULL);
 	instance->key.ref = *(di_rpl_instance_ref_t*) key;
 	instance->has_changed = true;
+	rpl_event_rpl_instance_created(instance);
 }
 
 di_rpl_instance_t* rpl_instance_dup(di_rpl_instance_t* rpl_instance) {
@@ -86,6 +90,12 @@ void rpl_instance_del_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) 
 		dodag_set_rpl_instance(dodag, &null_rpl_instance);
 		rpl_instance->has_changed = true;
 	}
+}
+
+static void rpl_instance_set_changed(di_rpl_instance_t *rpl_instance) {
+	if(rpl_instance->has_changed == false)
+		rpl_event_rpl_instance_updated(rpl_instance);
+	rpl_instance->has_changed = true;
 }
 
 bool rpl_instance_has_changed(di_rpl_instance_t *rpl_instance) {
