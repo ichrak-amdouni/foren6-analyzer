@@ -52,14 +52,14 @@ uint32_t link_last_version = 0;
 
 di_rpl_allocated_objects_t allocated_objects;
 
-di_rpl_wsn_state_t *wsn_versions;
+di_rpl_wsn_state_t *wsn_versions = 0;
 uint32_t wsn_version_array_size = 0;
 uint32_t wsn_last_version = 0;
 
 
 void rpldata_init() {
 	wsn_version_array_size = 256;
-	wsn_versions = realloc(wsn_versions, wsn_version_array_size*sizeof(di_rpl_wsn_state_t));
+	wsn_versions = malloc(wsn_version_array_size*sizeof(di_rpl_wsn_state_t));
 
 	collected_data.nodes = hash_create(sizeof(hash_container_ptr), NULL);
 	collected_data.dodags = hash_create(sizeof(hash_container_ptr), NULL);
@@ -253,28 +253,28 @@ uint32_t rpldata_add_link_version(di_link_t* changed_link) {
 	return new_version;
 }
 
-di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e value_mode, bool *was_created) {
+void *rpldata_get_object(hash_container_ptr container, size_t object_size, void (*onInit)(void *data, const void *key, size_t key_size), hash_key_t key, hash_value_mode_e value_mode, bool *was_created) {
 	bool already_existing;
-	di_node_t *new_node;
-	di_node_t **new_node_ptr;
+	void *new_node;
+	void **new_node_ptr;
 
 	if(was_created == NULL)
 		was_created = &already_existing;
 
-	new_node_ptr = (di_node_t**)hash_value(rpldata_get_nodes(0), hash_key_make(*node_ref), HVM_FailIfNonExistant, was_created);
+	new_node_ptr = (void**)hash_value(container, key, HVM_FailIfNonExistant, was_created);
 	if(new_node_ptr)
 		new_node = *new_node_ptr;
 	else  new_node = NULL;
 
 	if(!new_node && value_mode == HVM_CreateIfNonExistant) {
-		new_node = calloc(1, node_sizeof());
-		node_init(new_node, node_ref, sizeof(*node_ref));
+		new_node = calloc(1, object_size);
+		onInit(new_node, key.key, key.size);
 
 		di_rpl_object_el_t *node_el = calloc(1, sizeof(di_rpl_object_el_t));
 		node_el->object = new_node;
 
 		DL_APPEND(allocated_objects.nodes, node_el);
-		hash_add(rpldata_get_nodes(0), hash_key_make(*node_ref), &new_node, NULL, HAM_NoCheck, NULL);
+		hash_add(container, key, &new_node, NULL, HAM_NoCheck, NULL);
 
 		*was_created = true;
 	} else *was_created = false;
@@ -282,91 +282,20 @@ di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e val
 	return new_node;
 }
 
+di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e value_mode, bool *was_created) {
+	return rpldata_get_object(rpldata_get_nodes(0), node_sizeof(), &node_init, hash_key_make(*node_ref), value_mode, was_created);
+}
+
 di_dodag_t *rpldata_get_dodag(const di_dodag_ref_t *dodag_ref, hash_value_mode_e value_mode, bool *was_created) {
-	bool already_existing;
-	di_dodag_t *new_dodag;
-	di_dodag_t **new_dodag_ptr;
-
-	if(was_created == NULL)
-		was_created = &already_existing;
-
-	new_dodag_ptr = (di_dodag_t**)hash_value(rpldata_get_dodags(0), hash_key_make(*dodag_ref), HVM_FailIfNonExistant, was_created);
-	if(new_dodag_ptr)
-		new_dodag = *new_dodag_ptr;
-	else new_dodag = NULL;
-
-	if(!new_dodag && value_mode == HVM_CreateIfNonExistant) {
-		new_dodag = calloc(1, dodag_sizeof());
-		dodag_init(new_dodag, dodag_ref, sizeof(*dodag_ref));
-
-		di_rpl_object_el_t *dodag_el = calloc(1, sizeof(di_rpl_object_el_t));
-		dodag_el->object = new_dodag;
-
-		DL_APPEND(allocated_objects.dodags, dodag_el);
-		hash_add(rpldata_get_dodags(0), hash_key_make(*dodag_ref), &new_dodag, NULL, HAM_NoCheck, NULL);
-
-		*was_created = true;
-	} else *was_created = false;
-
-	return new_dodag;
+	return rpldata_get_object(rpldata_get_dodags(0), dodag_sizeof(), &dodag_init, hash_key_make(*dodag_ref), value_mode, was_created);
 }
 
 di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_ref_t *rpl_instance_ref, hash_value_mode_e value_mode, bool *was_created) {
-	bool already_existing;
-	di_rpl_instance_t *new_rpl_instance;
-	di_rpl_instance_t **new_rpl_instance_ptr;
-
-	if(was_created == NULL)
-		was_created = &already_existing;
-
-	new_rpl_instance_ptr = (di_rpl_instance_t **)hash_value(rpldata_get_rpl_instances(0), hash_key_make(*rpl_instance_ref), HVM_FailIfNonExistant, was_created);
-	if(new_rpl_instance_ptr)
-		new_rpl_instance = *new_rpl_instance_ptr;
-	else new_rpl_instance = NULL;
-
-	if(!new_rpl_instance && value_mode == HVM_CreateIfNonExistant) {
-		new_rpl_instance = calloc(1, rpl_instance_sizeof());
-		rpl_instance_init(new_rpl_instance, rpl_instance_ref, sizeof(*rpl_instance_ref));
-
-		di_rpl_object_el_t *rpl_instance_el = calloc(1, sizeof(di_rpl_object_el_t));
-		rpl_instance_el->object = new_rpl_instance;
-
-		DL_APPEND(allocated_objects.rpl_instances, rpl_instance_el);
-		hash_add(rpldata_get_rpl_instances(0), hash_key_make(*rpl_instance_ref), &new_rpl_instance, NULL, HAM_NoCheck, NULL);
-
-		*was_created = true;
-	} else *was_created = false;
-
-	return new_rpl_instance;
+	return rpldata_get_object(rpldata_get_rpl_instances(0), rpl_instance_sizeof(), &rpl_instance_init, hash_key_make(*rpl_instance_ref), value_mode, was_created);
 }
 
 di_link_t *rpldata_get_link(const di_link_ref_t *link_ref, hash_value_mode_e value_mode, bool *was_created) {
-	bool already_existing;
-	di_link_t **new_link_ptr;
-	di_link_t *new_link;
-
-	if(was_created == NULL)
-		was_created = &already_existing;
-
-	new_link_ptr = (di_link_t**)hash_value(rpldata_get_links(0), hash_key_make(*link_ref), HVM_FailIfNonExistant, was_created);
-	if(new_link_ptr)
-		new_link = *new_link_ptr;
-	else new_link = NULL;
-
-	if(!new_link && value_mode == HVM_CreateIfNonExistant) {
-		new_link = calloc(1, link_sizeof());
-		link_init(new_link, link_ref, sizeof(*link_ref));
-
-		di_rpl_object_el_t *link_el = calloc(1, sizeof(di_rpl_object_el_t));
-		link_el->object = new_link;
-
-		DL_APPEND(allocated_objects.links, link_el);
-		hash_add(rpldata_get_links(0), hash_key_make(*link_ref), &new_link, NULL, HAM_NoCheck, NULL);
-
-		*was_created = true;
-	} else *was_created = false;
-
-	return new_link;
+	return rpldata_get_object(rpldata_get_links(0), link_sizeof(), &link_init, hash_key_make(*link_ref), value_mode, was_created);
 }
 
 di_link_t *rpldata_del_link(const di_link_ref_t *link_ref) {
