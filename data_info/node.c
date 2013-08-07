@@ -52,7 +52,7 @@ void node_init(void *data, const void *key, size_t key_size) {
 
 	node_set_key(node, &node_key);
 
-	rpl_event_node_created(node);
+	rpl_event_node(node, RET_Created);
 }
 
 di_node_t *node_dup(di_node_t *node) {
@@ -162,7 +162,7 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
 
 static void node_set_changed(di_node_t *node) {
 	if(node->has_changed == false)
-		rpl_event_node_updated(node);
+		rpl_event_node(node, RET_Updated);
 	node->has_changed = true;
 }
 

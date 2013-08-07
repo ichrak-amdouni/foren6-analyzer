@@ -32,7 +32,7 @@ void link_init(void *data, const void *key, size_t key_size) {
 
 	link->key.ref = *(di_link_ref_t*) key;
 	link->has_changed = true;
-	rpl_event_link_created(link);
+	rpl_event_link(link, RET_Created);
 }
 
 void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent, uint32_t version) {
@@ -61,7 +61,7 @@ bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count) {
 
 static void link_set_changed(di_link_t *link) {
 	if(link->has_changed == false)
-		rpl_event_link_updated(link);
+		rpl_event_link(link, RET_Updated);
 	link->has_changed = true;
 }
 

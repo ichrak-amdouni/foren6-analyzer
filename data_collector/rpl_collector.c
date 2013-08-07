@@ -216,7 +216,7 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		rpldata_wsn_create_version();
 
 	if(link_deleted) {
-		rpl_event_link_deleted(old_link);
+		rpl_event_link(old_link, RET_Deleted);
 		free(old_link);
 	}
 

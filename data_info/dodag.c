@@ -40,7 +40,7 @@ void dodag_init(void *data, const void *key, size_t key_size) {
 	dodag->rpl_instance.rpl_instance = -1;
 	dodag->key.ref = *(di_dodag_ref_t*)key;
 	dodag->has_changed = true;
-	rpl_event_dodag_created(dodag);
+	rpl_event_dodag(dodag, RET_Created);
 }
 
 di_dodag_t *dodag_dup(di_dodag_t *dodag) {
@@ -142,7 +142,7 @@ void dodag_set_user_data(di_dodag_t *dodag, void *user_data) {
 
 static void dodag_set_changed(di_dodag_t *dodag) {
 	if(dodag->has_changed == false)
-		rpl_event_dodag_updated(dodag);
+		rpl_event_dodag(dodag, RET_Updated);
 	dodag->has_changed = true;
 }
 
