@@ -119,7 +119,9 @@ void dodag_add_node(di_dodag_t *dodag, di_node_t *node) {
 		node_update_ip(node, &dodag->prefix);
 		dodag->has_changed = true;
 	} else {
-		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
+		assert(!memcmp(&node_get_dodag(node)->dodagid, &dodag->key.ref.dodagid, sizeof(addr_ipv6_t)));
+		if(node_get_dodag(node)->version < dodag->key.ref.version)
+			node_set_dodag(node, &dodag->key.ref);
 	}
 }
 
