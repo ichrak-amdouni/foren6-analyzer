@@ -11,7 +11,7 @@
 #include "../data_collector/rpl_collector.h"
 #include "../descriptor_poll.h"
 #ifdef __APPLE__
-#include "../endian.h"
+#include "../apple-endian.h"
 #endif
 
 #include "../data_info/metric.h"
