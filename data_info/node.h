@@ -8,6 +8,8 @@
 #ifndef NODE_H
 #define	NODE_H
 
+#include "node_type.h"
+
 #include "metric.h"
 #include "address.h"
 #include "route.h"
@@ -24,9 +26,6 @@ typedef struct {
 typedef struct di_node_key {
 	di_node_ref_t ref;
 } di_node_key_t;
-
-
-typedef struct di_node di_node_t;
 
 size_t node_sizeof();
 

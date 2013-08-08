@@ -14,6 +14,8 @@
 #include "address.h"
 #include "node.h"
 
+#include "link_type.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -26,8 +28,6 @@ typedef struct di_link_ref {
 typedef struct di_link_key {
 	di_link_ref_t ref;
 } di_link_key_t;
-
-typedef struct di_link di_link_t;
 
 size_t link_sizeof();
 

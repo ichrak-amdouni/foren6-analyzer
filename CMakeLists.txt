@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(analyzer)
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-add_definitions(-Wall)
+add_definitions(-Wall -std=gnu99)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../dist/Debug/GNU-Linux-x86/)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../dist/Debug/GNU-Linux-x86/)

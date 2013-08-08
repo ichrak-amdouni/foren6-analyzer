@@ -12,11 +12,12 @@
 #include "rpl_instance.h"
 #include "hash_container.h"
 
+#include "node_type.h"
+#include "dodag_type.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-typedef struct di_node di_node_t;
 
 typedef enum tag_di_objective_function_e {
 	ROF_ETX = 1
@@ -43,8 +44,6 @@ typedef struct di_dodag_ref {
 typedef struct di_dodag_key {
 	di_dodag_ref_t ref;
 } di_dodag_key_t;
-
-typedef struct di_dodag di_dodag_t;
 
 size_t dodag_sizeof();
 

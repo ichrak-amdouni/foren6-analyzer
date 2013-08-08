@@ -12,11 +12,12 @@
 #include <stdint.h>
 #include "hash_container.h"
 
+#include "rpl_instance_type.h"
+#include "dodag_type.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-typedef struct di_dodag di_dodag_t;
 
 typedef enum tag_di_rpl_mop_e {
 	RDMOP_NoDownwardRoute,
@@ -32,8 +33,6 @@ typedef struct {
 typedef struct di_rpl_instance_key {
 	di_rpl_instance_ref_t ref;
 } di_rpl_instance_key_t;
-
-typedef struct di_rpl_instance di_rpl_instance_t;
 
 size_t rpl_instance_sizeof();
 
