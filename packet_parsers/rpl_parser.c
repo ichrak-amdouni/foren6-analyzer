@@ -146,6 +146,9 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 		} else if(!strcmp(nameStr, "wpan.dst64")) {
 			uint64_t addr = strtoull(valueStr, NULL, 16);
 			current_packet.dst_wpan_address = htobe64(addr);
+		} else if(!strcmp(nameStr, "wpan.dst_addr64")) {
+			uint64_t addr = strtoull(valueStr, NULL, 16);
+			current_packet.dst_wpan_address = htobe64(addr);
 		} else if(!strcmp(nameStr, "ipv6.src")) {
 			 inet_pton(AF_INET6, showStr, &current_packet.src_ip_address);
 			 if(current_packet.type == RPT_None)
