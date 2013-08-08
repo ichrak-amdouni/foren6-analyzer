@@ -10,6 +10,9 @@
 #include "parser_register.h"
 #include "../data_collector/rpl_collector.h"
 #include "../descriptor_poll.h"
+#ifdef __APPLE__
+#include "../endian.h"
+#endif
 
 #include "../data_info/metric.h"
 

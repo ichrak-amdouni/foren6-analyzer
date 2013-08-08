@@ -2,6 +2,9 @@
 #include "../utlist.h"
 #include <string.h>
 #include <stdlib.h>
+#ifdef __APPLE__
+#include "../endian.h"
+#endif
 
 static int addr_list_compare(wpan_addr_elt_t *a, wpan_addr_elt_t *b);
 

@@ -7,7 +7,7 @@
 #include "link.h"
 #include "../data_collector/rpl_event_callbacks.h"
 
-typedef struct di_link {
+struct di_link {
 	di_link_key_t key;
 
 	di_metric_t metric;
@@ -17,7 +17,7 @@ typedef struct di_link {
 
 	bool has_changed;
 	void *user_data;
-} di_link_t;
+};
 
 size_t link_sizeof() {
 	return sizeof(di_link_t);

@@ -6,7 +6,7 @@
 #include "node.h"
 #include "route.h"
 
-typedef struct di_node {
+struct di_node {
 	di_node_key_t key;
 	uint16_t simple_id;
 
@@ -26,7 +26,7 @@ typedef struct di_node {
 
 	bool has_changed;
 	void *user_data;
-} di_node_t;
+};
 
 static uint16_t last_simple_id = 0;
 

@@ -20,6 +20,10 @@ extern "C" {
 typedef struct in6_addr addr_ipv6_t;
 typedef uint64_t addr_wpan_t;
 
+#ifdef __APPLE__
+#define __in6_u __u6_addr
+#endif
+
 typedef struct di_prefix {
 	uint8_t length;
 	addr_ipv6_t prefix;

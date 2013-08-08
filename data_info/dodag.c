@@ -7,7 +7,7 @@
 #include "node.h"
 #include "rpl_data.h"
 
-typedef struct di_dodag {
+struct di_dodag {
 	di_dodag_key_t key;				//Via DIO & DAO for dodagid and via DIO for version
 
 	//Configuration
@@ -22,7 +22,7 @@ typedef struct di_dodag {
 
 	bool has_changed;
 	void *user_data;
-} di_dodag_t;
+};
 
 size_t dodag_sizeof() {
 	return sizeof(di_dodag_t);

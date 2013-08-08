@@ -5,7 +5,7 @@
 #include "rpl_instance.h"
 #include "dodag.h"
 
-typedef struct di_rpl_instance {
+struct di_rpl_instance {
 	di_rpl_instance_key_t key;
 
 	hash_container_ptr dodags;			//Via DIO, DAO
@@ -13,7 +13,7 @@ typedef struct di_rpl_instance {
 
 	bool has_changed;
 	void *user_data;
-} di_rpl_instance_t;
+};
 
 size_t rpl_instance_sizeof() {
 	return sizeof(di_rpl_instance_t);
