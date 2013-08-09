@@ -24,6 +24,7 @@ typedef struct rpl_event_el {
 		int packet_id;
 	};
 	struct rpl_event_el *next;
+	struct rpl_event_el *prev;
 } *rpl_event_list_t, rpl_event_el_t;
 
 rpl_event_list_t head;
@@ -39,7 +40,7 @@ void rpl_event_packet(int packet_id) {
 	element->object_type = ROT_Packet;
 	element->packet_id = packet_id;
 
-	LL_PREPEND(head, element);
+	DL_APPEND(head, element);
 }
 
 void rpl_event_node(di_node_t *node, rpl_event_type_e type) {
@@ -49,7 +50,7 @@ void rpl_event_node(di_node_t *node, rpl_event_type_e type) {
 	element->object_type = ROT_Node;
 	element->node_ref = node_get_key(node)->ref;
 
-	LL_PREPEND(head, element);
+	DL_APPEND(head, element);
 }
 
 void rpl_event_dodag(di_dodag_t *dodag, rpl_event_type_e type) {
@@ -59,7 +60,7 @@ void rpl_event_dodag(di_dodag_t *dodag, rpl_event_type_e type) {
 	element->object_type = ROT_Dodag;
 	element->dodag_ref = dodag_get_key(dodag)->ref;
 
-	LL_PREPEND(head, element);
+	DL_APPEND(head, element);
 }
 
 void rpl_event_link(di_link_t *link, rpl_event_type_e type) {
@@ -69,7 +70,7 @@ void rpl_event_link(di_link_t *link, rpl_event_type_e type) {
 	element->object_type = ROT_Link;
 	element->link_ref = link_get_key(link)->ref;
 
-	LL_PREPEND(head, element);
+	DL_APPEND(head, element);
 }
 
 void rpl_event_rpl_instance(di_rpl_instance_t *rpl_instance, rpl_event_type_e type) {
@@ -79,7 +80,7 @@ void rpl_event_rpl_instance(di_rpl_instance_t *rpl_instance, rpl_event_type_e ty
 	element->object_type = ROT_RplInstance;
 	element->rpl_instance_ref = rpl_instance_get_key(rpl_instance)->ref;
 
-	LL_PREPEND(head, element);
+	DL_APPEND(head, element);
 }
 
 void rpl_event_process_events(int wsn_version) {
@@ -87,7 +88,7 @@ void rpl_event_process_events(int wsn_version) {
 	int version;
 	hash_container_ptr container;
 
-	LL_FOREACH_SAFE(head, event, tmp) {
+	DL_FOREACH_SAFE(head, event, tmp) {
 		if(event->type == RET_Deleted)
 			version = wsn_version - 1;
 		else version = wsn_version;
@@ -128,6 +129,6 @@ void rpl_event_process_events(int wsn_version) {
 			case ROT_Packet:
 				if(event_callbacks.onPacketEvent) event_callbacks.onPacketEvent(event->packet_id);
 		}
-		LL_DELETE(head, event);
+		DL_DELETE(head, event);
 	}
 }
