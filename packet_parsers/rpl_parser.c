@@ -126,7 +126,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 
 	if(valueStr == NULL) {
 		if(!strcmp(nameStr, "frame.number")) {
-			current_packet.packet_id = strtol(showStr, NULL, 10);
+			current_packet.packet_id = strtol(showStr, NULL, 10)-1;  //wireshark's first packet is number 1
 		}
 	} else if(!strcmp(nameStr, "icmpv6.checksum_bad") && !strcmp(showStr, "1")) {
 		current_packet.is_bad = true;
