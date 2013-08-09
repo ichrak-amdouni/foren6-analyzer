@@ -8,6 +8,7 @@
 #include "rpl_parser.h"
 #include "parser_register.h"
 #include "../data_collector/rpl_collector.h"
+#include "../data_collector/rpl_event_callbacks.h"
 #include "../descriptor_poll.h"
 
 #include "../data_info/metric.h"
@@ -348,6 +349,7 @@ static void rpl_parser_end_packet() {
 	}
 
 	if(current_packet.type != RPT_None && current_packet.type != RPT_RplUnknown) {
+		rpl_event_packet(current_packet.packet_id);
 		switch(current_packet.type) {
 			case RPT_DIS:
 				rpl_collector_parse_dis(

@@ -28,11 +28,13 @@ typedef struct rpl_event_callbacks {
 	void (*onDodagEvent)(di_dodag_t *dodag, rpl_event_type_e event_type);
 	void (*onLinkEvent)(di_link_t *link, rpl_event_type_e event_type);
 	void (*onRplInstanceEvent)(di_rpl_instance_t *rpl_instance, rpl_event_type_e event_type);
+	void (*onPacketEvent)(int packet_id);
 } rpl_event_callbacks_t;
 
 
 void rpl_event_set_callbacks(rpl_event_callbacks_t *callbacks);
 
+void rpl_event_packet(int packet_id);
 void rpl_event_node(di_node_t *node, rpl_event_type_e type);
 void rpl_event_dodag(di_dodag_t *dodag, rpl_event_type_e type);
 void rpl_event_link(di_link_t *link, rpl_event_type_e type);

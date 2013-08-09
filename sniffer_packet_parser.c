@@ -209,7 +209,7 @@ static void sniffer_parser_reset() {
 #ifdef USE_NEW_TSHARK
 	if(spawn_piped_process("/usr/bin/tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-2", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
 #else
-	if(spawn_piped_process("/usr/bin/tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
+	if(spawn_piped_process("/usr/bin/tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
 #endif
 		perror("Can't spawn tshark process");
 		return;
