@@ -11,6 +11,7 @@
 #include "dodag.h"
 #include "rpl_instance.h"
 #include "../sniffer_packet_parser.h"
+#include "../data_collector/rpl_event_callbacks.h"
 
 typedef struct di_rpl_data {
 	hash_container_ptr nodes;
@@ -412,6 +413,8 @@ void rpldata_wsn_create_version() {
 	if(link_last_version)
 		wsn_versions[wsn_last_version].links_version = link_last_version;
 	else wsn_versions[wsn_last_version].links_version = -1;
+
+	rpl_event_process_events(wsn_last_version);
 }
 
 time_t rpldata_wsn_version_get_timestamp(uint32_t version) {
