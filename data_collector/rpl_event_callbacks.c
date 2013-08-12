@@ -83,6 +83,47 @@ void rpl_event_rpl_instance(di_rpl_instance_t *rpl_instance, rpl_event_type_e ty
 	DL_APPEND(head, element);
 }
 
+bool rpl_event_commit_changed_objects() {
+	//These boolean are true if we already created a version for the according object type
+	bool node, dodag, link, rpl_instance;
+	rpl_event_el_t *event;
+
+	node = dodag = link = rpl_instance = false;
+
+	DL_FOREACH(head, event) {
+		switch(event->object_type) {
+			case ROT_Dodag:
+				if(!dodag)
+					rpldata_add_dodag_version();
+				dodag = true;
+				break;
+
+			case ROT_Link:
+				if(!link)
+					rpldata_add_link_version();
+				link = true;
+				break;
+
+			case ROT_Node:
+				if(!node)
+					rpldata_add_node_version();
+				node = true;
+				break;
+
+			case ROT_RplInstance:
+				if(!rpl_instance)
+					rpldata_add_rpl_instance_version();
+				rpl_instance = true;
+				break;
+
+			case ROT_Packet:
+				break;
+		}
+	}
+
+	return node || link || dodag || rpl_instance;
+}
+
 void rpl_event_process_events(int wsn_version) {
 	rpl_event_el_t *event, *tmp;
 	int version;

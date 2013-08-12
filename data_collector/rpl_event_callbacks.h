@@ -40,6 +40,9 @@ void rpl_event_dodag(di_dodag_t *dodag, rpl_event_type_e type);
 void rpl_event_link(di_link_t *link, rpl_event_type_e type);
 void rpl_event_rpl_instance(di_rpl_instance_t *rpl_instance, rpl_event_type_e type);
 
+//return true if at least one object has changed
+bool rpl_event_commit_changed_objects();
+
 void rpl_event_process_events(int wsn_version);
 
 #ifdef	__cplusplus

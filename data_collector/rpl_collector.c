@@ -99,20 +99,7 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		dodag_set_config(dodag, &config);
 	}
 
-
-	if(node_has_changed(node))
-		rpldata_add_node_version(node, NULL);
-	if(dodag_has_changed(dodag))
-		rpldata_add_dodag_version(dodag);
-	if(rpl_instance_has_changed(rpl_instance))
-		rpldata_add_rpl_instance_version(rpl_instance);
-
-	if(node_has_changed(node) || dodag_has_changed(dodag) || rpl_instance_has_changed(rpl_instance))
-		rpldata_wsn_create_version();
-
-	node_reset_changed(node);
-	dodag_reset_changed(dodag);
-	rpl_instance_reset_changed(rpl_instance);
+	rpldata_wsn_create_version();
 }
 
 void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -133,7 +120,6 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	bool dodag_created = false;
 	bool rpl_instance_created = false;
 	bool link_created = false;
-	bool link_deleted = false;
 
 	//fprintf(stderr, "Received DAO\n");
 
@@ -181,7 +167,6 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 			link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(child)}, (di_node_ref_t){node_get_mac64(parent)});
 			old_link = rpldata_del_link(&link_ref);
 			if(old_link) {
-				link_deleted = true;
 				rpl_event_link(old_link, RET_Deleted);
 				free(old_link);
 			}
@@ -203,51 +188,22 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		}
 	}
 
-	if(node_has_changed(child) || node_has_changed(parent))
-		rpldata_add_node_version(child, parent);
-	if(dodag && dodag_has_changed(dodag))
-		rpldata_add_dodag_version(dodag);
-	if(rpl_instance_has_changed(rpl_instance))
-		rpldata_add_rpl_instance_version(rpl_instance);
-	if(new_link && link_has_changed(new_link))
-		rpldata_add_link_version(new_link);
-	else if(link_deleted)
-		rpldata_add_link_version(NULL);
-
-	if(node_has_changed(child) || node_has_changed(parent) || (dodag && dodag_has_changed(dodag)) || rpl_instance_has_changed(rpl_instance) || (new_link && link_has_changed(new_link)) || link_deleted)
-		rpldata_wsn_create_version();
-
-
-	node_reset_changed(child);
-	node_reset_changed(parent);
-	if(dodag)
-		dodag_reset_changed(dodag);
-	rpl_instance_reset_changed(rpl_instance);
-	if(new_link)
-		link_reset_changed(new_link);
+	rpldata_wsn_create_version();
 }
 
 void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_address,
 		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
 		rpl_dis_opt_info_req_t *request)
 {
-
-	di_node_t *node;
 	bool node_created;
 
 	//fprintf(stderr, "Received DIS\n");
 
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
-	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
+	rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);  //nothing to do with the node, but be sure it exists in the node list
 
-	if(node_has_changed(node))
-		rpldata_add_node_version(node, NULL);
-
-	if(node_has_changed(node))
-		rpldata_wsn_create_version();
-
-	node_reset_changed(node);
+	rpldata_wsn_create_version();
 }
 
 void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -256,7 +212,6 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 {
 
 	di_node_t *src, *dst = NULL;
-	di_link_t *new_link = NULL;
 
 	bool src_created, dst_created;
 	bool link_created;
@@ -283,7 +238,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 			if(rpl_info->packet_toward_root) {
 				di_link_ref_t link_ref;
 				link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(src)}, (di_node_ref_t){node_get_mac64(dst)});
-				new_link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
+				rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
 				//link_set_metric(new_link, node_get_metric(src));
 
 				di_prefix_t route;
@@ -296,18 +251,5 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 	}
 
 
-	if(node_has_changed(src) || (dst && node_has_changed(dst)))
-		rpldata_add_node_version(src, dst);
-	if(new_link && link_has_changed(new_link))
-		rpldata_add_link_version(new_link);
-
-	if(node_has_changed(src) || (dst && node_has_changed(dst)) || (new_link && link_has_changed(new_link)))
-		rpldata_wsn_create_version();
-
-	node_reset_changed(src);
-	if(dst)
-		node_reset_changed(dst);
-
-	if(new_link)
-		link_reset_changed(new_link);
+	rpldata_wsn_create_version();
 }
