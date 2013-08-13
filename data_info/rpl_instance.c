@@ -4,6 +4,7 @@
 
 #include "rpl_instance.h"
 #include "dodag.h"
+#include "../data_collector/rpl_event_callbacks.h"
 
 struct di_rpl_instance {
 	di_rpl_instance_key_t key;
@@ -14,6 +15,8 @@ struct di_rpl_instance {
 	bool has_changed;
 	void *user_data;
 };
+
+static void rpl_instance_set_changed(di_rpl_instance_t *rpl_instance);
 
 size_t rpl_instance_sizeof() {
 	return sizeof(di_rpl_instance_t);
@@ -27,6 +30,7 @@ void rpl_instance_init(void* data, const void *key, size_t key_size) {
 	instance->dodags = hash_create(sizeof(di_dodag_ref_t), NULL);
 	instance->key.ref = *(di_rpl_instance_ref_t*) key;
 	instance->has_changed = true;
+	rpl_event_rpl_instance(instance, RET_Created);
 }
 
 di_rpl_instance_t* rpl_instance_dup(di_rpl_instance_t* rpl_instance) {
@@ -54,14 +58,14 @@ void rpl_instance_ref_init(di_rpl_instance_ref_t *ref, uint8_t rpl_instance) {
 void rpl_instance_set_key(di_rpl_instance_t* rpl_instance, const di_rpl_instance_key_t* key) {
 	if(memcmp(&rpl_instance->key, key, sizeof(di_rpl_instance_key_t))) {
 		rpl_instance->key = *key;
-		rpl_instance->has_changed = true;
+		rpl_instance_set_changed(rpl_instance);
 	}
 }
 
 void rpl_instance_set_mop(di_rpl_instance_t* rpl_instance, di_rpl_mop_e mop) {
 	if(rpl_instance->mode_of_operation != mop) {
 		rpl_instance->mode_of_operation = mop;
-		rpl_instance->has_changed = true;
+		rpl_instance_set_changed(rpl_instance);
 	}
 }
 
@@ -75,7 +79,7 @@ void rpl_instance_add_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) 
 
 	if(!was_already_existing) {
 		dodag_set_rpl_instance(dodag, &rpl_instance->key.ref);
-		rpl_instance->has_changed = true;
+		rpl_instance_set_changed(rpl_instance);
 	}
 }
 
@@ -84,8 +88,14 @@ void rpl_instance_del_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) 
 
 	if(hash_delete(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref))) {
 		dodag_set_rpl_instance(dodag, &null_rpl_instance);
-		rpl_instance->has_changed = true;
+		rpl_instance_set_changed(rpl_instance);
 	}
+}
+
+static void rpl_instance_set_changed(di_rpl_instance_t *rpl_instance) {
+	if(rpl_instance->has_changed == false)
+		rpl_event_rpl_instance(rpl_instance, RET_Updated);
+	rpl_instance->has_changed = true;
 }
 
 bool rpl_instance_has_changed(di_rpl_instance_t *rpl_instance) {

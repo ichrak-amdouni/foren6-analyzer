@@ -5,6 +5,7 @@
 
 #include "node.h"
 #include "route.h"
+#include "../data_collector/rpl_event_callbacks.h"
 
 struct di_node {
 	di_node_key_t key;
@@ -29,6 +30,7 @@ struct di_node {
 };
 
 static uint16_t last_simple_id = 0;
+static void node_set_changed(di_node_t *node);
 
 size_t node_sizeof() {
 	return sizeof(di_node_t);
@@ -43,11 +45,14 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->dodag.version = -1;
 	node->is_custom_global_address = false;
 	node->is_custom_local_address = false;
-	node_set_key(node, &node_key);
 	node->has_changed = true;
 
 	last_simple_id++;
 	node->simple_id = last_simple_id;
+
+	node_set_key(node, &node_key);
+
+	rpl_event_node(node, RET_Created);
 }
 
 di_node_t *node_dup(di_node_t *node) {
@@ -80,21 +85,21 @@ void node_set_key(di_node_t *node, const di_node_key_t *key) {
 			node->local_address = addr_get_local_ip_from_mac64(node->key.ref.wpan_address);
 		}
 
-		node->has_changed = true;
+		node_set_changed(node);
 	}
 }
 
 void node_set_local_ip(di_node_t *node, addr_ipv6_t address) {
 	if(addr_compare_ip(&node->local_address, &address)) {
 		node->local_address = address;
-		node->has_changed = true;
+		node_set_changed(node);
 	}
 }
 
 void node_set_global_ip(di_node_t *node, addr_ipv6_t address) {
 	if(addr_compare_ip(&node->global_address, &address)) {
 		node->global_address = address;
-		node->has_changed = true;
+		node_set_changed(node);
 	}
 }
 
@@ -103,33 +108,33 @@ void node_add_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_
 	route_add(&node->routes, *route_prefix, via_node, false, &route_already_existing);
 
 	if(route_already_existing == false) {
-		node->has_changed = true;
+		node_set_changed(node);
 	}
 }
 
 void node_del_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node) {
 	if(route_remove(&node->routes, *route_prefix, via_node))
-		node->has_changed = true;
+		node_set_changed(node);
 }
 
 void node_set_metric(di_node_t* node, const di_metric_t* metric) {
 	if(node->metric.type != metric->type || node->metric.value != metric->value) {
 		node->metric = *metric;
-		node->has_changed = true;
+		node_set_changed(node);
 	}
 }
 
 void node_set_rank(di_node_t *node, uint16_t rank) {
 	if(node->rank != rank) {
 		node->rank = rank;
-		node->has_changed = true;
+		node_set_changed(node);
 	}
 }
 
 void node_set_grounded(di_node_t *node, bool grounded) {
 	if(node->grounded == grounded) {
 		node->grounded = grounded;
-		node->has_changed = true;
+		node_set_changed(node);
 	}
 }
 
@@ -137,7 +142,7 @@ void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref) {
 	assert(dodag_ref->version >= 0);
 	if(memcmp(&node->dodag, dodag_ref, sizeof(di_dodag_ref_t))) {
 		node->dodag = *dodag_ref;
-		node->has_changed = true;
+		node_set_changed(node);
 	}
 }
 
@@ -150,9 +155,15 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
 		addr_ipv6_t ip = addr_get_global_ip_from_mac64(*prefix, node->key.ref.wpan_address);
 		if(memcmp(&ip, &node->global_address, sizeof(addr_ipv6_t))) {
 			node->global_address = ip;
-			node->has_changed = true;
+			node_set_changed(node);
 		}
 	}
+}
+
+static void node_set_changed(di_node_t *node) {
+	if(node->has_changed == false)
+		rpl_event_node(node, RET_Updated);
+	node->has_changed = true;
 }
 
 bool node_has_changed(di_node_t *node) {

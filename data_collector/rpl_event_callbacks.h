@@ -17,38 +17,33 @@
 extern "C" {
 #endif
 
+typedef enum rpl_event_type {
+	RET_Created,
+	RET_Updated,
+	RET_Deleted
+} rpl_event_type_e;
+
 typedef struct rpl_event_callbacks {
-	void (*onNodeCreated)(di_node_t *node);
-	void (*onNodeUpdated)(di_node_t *node);
-	void (*onNodeDeleted)(di_node_t *node);
-	void (*onDodagCreated)(di_dodag_t *dodag);
-	void (*onDodagUpdated)(di_dodag_t *dodag);
-	void (*onDodagDeleted)(di_dodag_t *dodag);
-	void (*onLinkCreated)(di_link_t *link);
-	void (*onLinkUpdated)(di_link_t *link);
-	void (*onLinkDeleted)(di_link_t *link);
-	void (*onRplInstanceCreated)(di_rpl_instance_t *rpl_instance);
-	void (*onRplInstanceUpdated)(di_rpl_instance_t *rpl_instance);
-	void (*onRplInstanceDeleted)(di_rpl_instance_t *rpl_instance);
+	void (*onNodeEvent)(di_node_t *node, rpl_event_type_e event_type);
+	void (*onDodagEvent)(di_dodag_t *dodag, rpl_event_type_e event_type);
+	void (*onLinkEvent)(di_link_t *link, rpl_event_type_e event_type);
+	void (*onRplInstanceEvent)(di_rpl_instance_t *rpl_instance, rpl_event_type_e event_type);
+	void (*onPacketEvent)(int packet_id);
 } rpl_event_callbacks_t;
 
 
 void rpl_event_set_callbacks(rpl_event_callbacks_t *callbacks);
-void rpl_event_node_created(di_node_t *node);
-void rpl_event_node_deleted(di_node_t *node);
-void rpl_event_node_updated(di_node_t *node);
 
-void rpl_event_dodag_created(di_dodag_t *dodag);
-void rpl_event_dodag_deleted(di_dodag_t *dodag);
-void rpl_event_dodag_updated(di_dodag_t *dodag);
+void rpl_event_packet(int packet_id);
+void rpl_event_node(di_node_t *node, rpl_event_type_e type);
+void rpl_event_dodag(di_dodag_t *dodag, rpl_event_type_e type);
+void rpl_event_link(di_link_t *link, rpl_event_type_e type);
+void rpl_event_rpl_instance(di_rpl_instance_t *rpl_instance, rpl_event_type_e type);
 
-void rpl_event_link_created(di_link_t *link);
-void rpl_event_link_deleted(di_link_t *link);
-void rpl_event_link_updated(di_link_t *link);
+//create a WSN version if needed and return true if at least one object has changed
+bool rpl_event_commit_changed_objects(int packet_id, double timestamp);
 
-void rpl_event_rpl_instance_created(di_rpl_instance_t *rpl_instance);
-void rpl_event_rpl_instance_deleted(di_rpl_instance_t *rpl_instance);
-void rpl_event_rpl_instance_updated(di_rpl_instance_t *rpl_instance);
+void rpl_event_process_events(int wsn_version);
 
 #ifdef	__cplusplus
 }

@@ -33,13 +33,13 @@ hash_container_ptr rpldata_get_rpl_instances(uint32_t version);
 hash_container_ptr rpldata_get_links(uint32_t version);
 
 
-uint32_t rpldata_add_node_version(di_node_t *changed_node_1, di_node_t *changed_node_2);
-uint32_t rpldata_add_dodag_version(di_dodag_t *changed_dodag);
-uint32_t rpldata_add_rpl_instance_version(di_rpl_instance_t *changed_instance);
-uint32_t rpldata_add_link_version(di_link_t* changed_link);
+uint32_t rpldata_add_node_version();
+uint32_t rpldata_add_dodag_version();
+uint32_t rpldata_add_rpl_instance_version();
+uint32_t rpldata_add_link_version();
 
-void rpldata_wsn_create_version();
-time_t rpldata_wsn_version_get_timestamp(uint32_t version);
+void rpldata_wsn_create_version(int packed_id, double timestamp);
+double rpldata_wsn_version_get_timestamp(uint32_t version);
 uint32_t rpldata_wsn_version_get_packet_count(uint32_t version);
 
 uint32_t rpldata_get_wsn_last_version();

@@ -11,6 +11,7 @@
 #include "dodag.h"
 #include "rpl_instance.h"
 #include "../sniffer_packet_parser.h"
+#include "../data_collector/rpl_event_callbacks.h"
 
 typedef struct di_rpl_data {
 	hash_container_ptr nodes;
@@ -25,8 +26,8 @@ typedef struct di_rpl_wsn_state {
 	uint32_t rpl_instance_version;
 	uint32_t links_version;
 
-	time_t timestamp;
-	uint32_t packet_count;
+	double timestamp;
+	uint32_t packet_id;
 } di_rpl_wsn_state_t;
 
 typedef struct di_rpl_object_el {
@@ -85,6 +86,7 @@ void rpldata_init() {
 	wsn_versions[0].dodag_version = 0;
 	wsn_versions[0].rpl_instance_version = 0;
 	wsn_versions[0].links_version = 0;
+	wsn_versions[0].timestamp = 0;
 }
 
 hash_container_ptr rpldata_get_nodes(uint32_t version) {
@@ -128,7 +130,7 @@ hash_container_ptr rpldata_get_links(uint32_t version) {
 }
 
 
-uint32_t rpldata_add_node_version(di_node_t *changed_node_1, di_node_t *changed_node_2) {
+uint32_t rpldata_add_node_version() {
 	hash_iterator_ptr it = hash_begin(NULL, NULL);
 	hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
 	node_last_version++;
@@ -144,7 +146,8 @@ uint32_t rpldata_add_node_version(di_node_t *changed_node_1, di_node_t *changed_
 		di_node_t *node = (node_ptr)? *node_ptr : NULL;
 		di_node_ref_t node_ref = node_get_key(node)->ref;
 		di_node_t *new_node;
-		if(node == changed_node_1 || node == changed_node_2) {
+		if(node_has_changed(node)) {
+			node_reset_changed(node);
 			new_node = node_dup(node);
 		} else {
 			new_node = *(di_node_t**)hash_value(last_container, hash_key_make(node_ref), HVM_FailIfNonExistant, NULL);//*/node;
@@ -160,7 +163,7 @@ uint32_t rpldata_add_node_version(di_node_t *changed_node_1, di_node_t *changed_
 	return new_version;
 }
 
-uint32_t rpldata_add_dodag_version(di_dodag_t *changed_dodag) {
+uint32_t rpldata_add_dodag_version() {
 	hash_iterator_ptr it = hash_begin(NULL, NULL);
 	hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
 	dodag_last_version++;
@@ -176,7 +179,8 @@ uint32_t rpldata_add_dodag_version(di_dodag_t *changed_dodag) {
 		di_dodag_t *dodag = (dodag_ptr)? *dodag_ptr : NULL;
 		di_dodag_ref_t dodag_ref = dodag_get_key(dodag)->ref;
 		di_dodag_t *new_dodag;
-		if(dodag == changed_dodag) {
+		if(dodag_has_changed(dodag)) {
+			dodag_reset_changed(dodag);
 			new_dodag = dodag_dup(dodag);
 		} else {
 			new_dodag = *(di_dodag_t**)hash_value(last_container, hash_key_make(dodag_ref), HVM_FailIfNonExistant, NULL);
@@ -192,7 +196,7 @@ uint32_t rpldata_add_dodag_version(di_dodag_t *changed_dodag) {
 	return new_version;
 }
 
-uint32_t rpldata_add_rpl_instance_version(di_rpl_instance_t *changed_instance) {
+uint32_t rpldata_add_rpl_instance_version() {
 	hash_iterator_ptr it = hash_begin(NULL, NULL);
 	hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
 	rpl_instance_last_version++;
@@ -208,7 +212,8 @@ uint32_t rpldata_add_rpl_instance_version(di_rpl_instance_t *changed_instance) {
 		di_rpl_instance_t *rpl_instance = (rpl_instance_ptr)? *rpl_instance_ptr : NULL;
 		di_rpl_instance_ref_t rpl_instance_ref = rpl_instance_get_key(rpl_instance)->ref;
 		di_rpl_instance_t *new_rpl_instance;
-		if(rpl_instance == changed_instance) {
+		if(rpl_instance_has_changed(rpl_instance)) {
+			rpl_instance_reset_changed(rpl_instance);
 			new_rpl_instance = rpl_instance_dup(rpl_instance);
 		} else new_rpl_instance = *(di_rpl_instance_t**)hash_value(last_container, hash_key_make(rpl_instance_ref), HVM_FailIfNonExistant, NULL);
 		hash_add(new_version_container, hash_key_make(rpl_instance_ref), &new_rpl_instance, NULL, HAM_NoCheck, NULL);
@@ -222,7 +227,7 @@ uint32_t rpldata_add_rpl_instance_version(di_rpl_instance_t *changed_instance) {
 	return new_version;
 }
 
-uint32_t rpldata_add_link_version(di_link_t* changed_link) {
+uint32_t rpldata_add_link_version() {
 	hash_iterator_ptr it = hash_begin(NULL, NULL);
 	hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
 	link_last_version++;
@@ -238,7 +243,8 @@ uint32_t rpldata_add_link_version(di_link_t* changed_link) {
 		di_link_t *link = (link_ptr)? *link_ptr : NULL;
 		di_link_ref_t link_ref = link_get_key(link)->ref;
 		di_link_t *new_link;
-		if(link == changed_link) {
+		if(link_has_changed(link)) {
+			link_reset_changed(link);
 			new_link = link_dup(link);
 		} else new_link = *(di_link_t**)hash_value(last_container, hash_key_make(link_ref), HVM_FailIfNonExistant, NULL);
 
@@ -314,7 +320,7 @@ di_link_t *rpldata_del_link(const di_link_ref_t *link_ref) {
 	return deleted_link;
 }
 
-void rpldata_wsn_create_version() {
+void rpldata_wsn_create_version(int packed_id, double timestamp) {
 	wsn_last_version++;
 
 	if(wsn_version_array_size <= wsn_last_version) {
@@ -323,8 +329,8 @@ void rpldata_wsn_create_version() {
 		assert(wsn_versions != NULL);
 	}
 
-	wsn_versions[wsn_last_version].timestamp = time(NULL);
-	wsn_versions[wsn_last_version].packet_count = sniffer_parser_get_packet_count();
+	wsn_versions[wsn_last_version].timestamp = timestamp;
+	wsn_versions[wsn_last_version].packet_id = packed_id;
 
 	if(node_last_version)
 		wsn_versions[wsn_last_version].node_version = node_last_version;
@@ -341,14 +347,20 @@ void rpldata_wsn_create_version() {
 	if(link_last_version)
 		wsn_versions[wsn_last_version].links_version = link_last_version;
 	else wsn_versions[wsn_last_version].links_version = -1;
+
+	rpl_event_process_events(wsn_last_version);
 }
 
-time_t rpldata_wsn_version_get_timestamp(uint32_t version) {
+double rpldata_wsn_version_get_timestamp(uint32_t version) {
+	if(version == 0)
+		version = wsn_last_version;
 	return wsn_versions[version].timestamp;
 }
 
 uint32_t rpldata_wsn_version_get_packet_count(uint32_t version) {
-	return wsn_versions[version].packet_count;
+	if(version == 0)
+		version = wsn_last_version;
+	return wsn_versions[version].packet_id;
 }
 
 uint32_t rpldata_get_node_last_version() {
@@ -370,4 +382,3 @@ uint32_t rpldata_get_link_last_version() {
 uint32_t rpldata_get_wsn_last_version() {
 	return wsn_last_version;
 }
-

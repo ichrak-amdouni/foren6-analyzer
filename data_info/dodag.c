@@ -6,6 +6,7 @@
 #include "dodag.h"
 #include "node.h"
 #include "rpl_data.h"
+#include "../data_collector/rpl_event_callbacks.h"
 
 struct di_dodag {
 	di_dodag_key_t key;				//Via DIO & DAO for dodagid and via DIO for version
@@ -24,6 +25,8 @@ struct di_dodag {
 	void *user_data;
 };
 
+static void dodag_set_changed(di_dodag_t *dodag);
+
 size_t dodag_sizeof() {
 	return sizeof(di_dodag_t);
 }
@@ -37,6 +40,7 @@ void dodag_init(void *data, const void *key, size_t key_size) {
 	dodag->rpl_instance.rpl_instance = -1;
 	dodag->key.ref = *(di_dodag_ref_t*)key;
 	dodag->has_changed = true;
+	rpl_event_dodag(dodag, RET_Created);
 }
 
 di_dodag_t *dodag_dup(di_dodag_t *dodag) {
@@ -66,14 +70,14 @@ void dodag_ref_init(di_dodag_ref_t *ref, addr_ipv6_t dodag_id, uint8_t dodag_ver
 void dodag_set_key(di_dodag_t *dodag, const di_dodag_key_t *key) {
 	if(memcmp(&dodag->key, key, sizeof(di_dodag_key_t))) {
 		dodag->key = *key;
-		dodag->has_changed = true;
+		dodag_set_changed(dodag);
 	}
 }
 
 void dodag_set_config(di_dodag_t *dodag, const di_dodag_config_t *config) {
 	if(memcmp(&dodag->config, config, sizeof(di_dodag_config_t))) {
 		dodag->config = *config;
-		dodag->has_changed = true;
+		dodag_set_changed(dodag);
 	}
 }
 
@@ -99,13 +103,13 @@ void dodag_set_prefix(di_dodag_t *dodag, const di_prefix_t *prefix) {
 	hash_it_destroy(it);
 	hash_it_destroy(itend);
 
-	dodag->has_changed = true;
+	dodag_set_changed(dodag);
 }
 
 void dodag_set_rpl_instance(di_dodag_t *dodag, const di_rpl_instance_ref_t* rpl_instance) {
 	if(dodag->rpl_instance.rpl_instance != rpl_instance->rpl_instance) {
 		dodag->rpl_instance = *rpl_instance;
-		dodag->has_changed = true;
+		dodag_set_changed(dodag);
 	}
 }
 
@@ -117,7 +121,7 @@ void dodag_add_node(di_dodag_t *dodag, di_node_t *node) {
 	if(was_already_in_dodag == false) {
 		node_set_dodag(node, &dodag->key.ref);
 		node_update_ip(node, &dodag->prefix);
-		dodag->has_changed = true;
+		dodag_set_changed(dodag);
 	} else {
 		assert(!memcmp(&node_get_dodag(node)->dodagid, &dodag->key.ref.dodagid, sizeof(addr_ipv6_t)));
 		if(node_get_dodag(node)->version < dodag->key.ref.version)
@@ -130,12 +134,18 @@ void dodag_del_node(di_dodag_t *dodag, di_node_t *node) {
 
 	if(hash_delete(dodag->nodes, hash_key_make(node_get_key(node)->ref))) {
 		node_set_dodag(node, &null_ref);
-		dodag->has_changed = true;
+		dodag_set_changed(dodag);
 	}
 }
 
 void dodag_set_user_data(di_dodag_t *dodag, void *user_data) {
 	dodag->user_data = user_data;
+}
+
+static void dodag_set_changed(di_dodag_t *dodag) {
+	if(dodag->has_changed == false)
+		rpl_event_dodag(dodag, RET_Updated);
+	dodag->has_changed = true;
 }
 
 bool dodag_has_changed(di_dodag_t *dodag) {
