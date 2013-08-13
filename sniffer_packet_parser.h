@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <netinet/in.h>
+#include <sys/time.h>
 
 #include "data_info/rpl_instance.h"
 #include "data_info/dodag.h"
@@ -127,7 +128,7 @@ void sniffer_parser_init();
 
 //Give data to parse to parser
 //Call sensor_info_collector_parse_packet when a packet has been fully received
-void sniffer_parser_parse_data(const unsigned char* data, int len);
+void sniffer_parser_parse_data(const unsigned char* data, int len, struct timeval timestamp);
 
 int sniffer_parser_get_packet_count();
 

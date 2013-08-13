@@ -23,7 +23,6 @@ static pcap_dumper_t* pdumper = NULL;
 static pcap_t* pd_out = NULL;
 static pcap_dumper_t* pdumper_out = NULL;
 static FILE* pcap_output = NULL;
-static struct timeval start_time;
 
 static int tshark_pid = 0;
 static int pipe_tshark_stdin = 0;	//We will write packets here
@@ -67,26 +66,15 @@ void sniffer_parser_init() {
 	last_packets = hash_create(sizeof(struct packet_data), NULL);
 
 	sniffer_parser_reset();
-
-	gettimeofday(&start_time, NULL);
 }
 
 //Give data to parse to parser
-void sniffer_parser_parse_data(const unsigned char* data, int len) {
+void sniffer_parser_parse_data(const unsigned char* data, int len, struct timeval timestamp) {
 	struct pcap_pkthdr pkt_hdr;
-	struct timeval pkt_time;
-
-	gettimeofday(&pkt_time, NULL);
-	if(pkt_time.tv_usec < start_time.tv_usec) {
-		pkt_hdr.ts.tv_sec = pkt_time.tv_sec - start_time.tv_sec - 1;
-		pkt_hdr.ts.tv_usec = pkt_time.tv_usec + 1000000 - start_time.tv_usec;
-	} else {
-		pkt_hdr.ts.tv_sec = pkt_time.tv_sec - start_time.tv_sec;
-		pkt_hdr.ts.tv_usec = pkt_time.tv_usec - start_time.tv_usec;
-	}
 
 	pkt_hdr.caplen = len;
 	pkt_hdr.len = len + 2;	//FCS is not captured (2 bytes)
+	pkt_hdr.ts = timestamp;
 	pthread_mutex_lock(&new_packet_mutex);
 	packet_input_count++;
 

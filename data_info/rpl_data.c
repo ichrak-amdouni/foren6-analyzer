@@ -26,7 +26,7 @@ typedef struct di_rpl_wsn_state {
 	uint32_t rpl_instance_version;
 	uint32_t links_version;
 
-	time_t timestamp;
+	double timestamp;
 	uint32_t packet_id;
 } di_rpl_wsn_state_t;
 
@@ -86,6 +86,7 @@ void rpldata_init() {
 	wsn_versions[0].dodag_version = 0;
 	wsn_versions[0].rpl_instance_version = 0;
 	wsn_versions[0].links_version = 0;
+	wsn_versions[0].timestamp = 0;
 }
 
 hash_container_ptr rpldata_get_nodes(uint32_t version) {
@@ -421,13 +422,15 @@ void rpldata_wsn_create_version(int packed_id, double timestamp) {
 	rpl_event_process_events(wsn_last_version);
 }
 
-time_t rpldata_wsn_version_get_timestamp(uint32_t version) {
+double rpldata_wsn_version_get_timestamp(uint32_t version) {
+	if(version == 0)
+		version = wsn_last_version;
 	return wsn_versions[version].timestamp;
 }
 
 uint32_t rpldata_wsn_version_get_packet_count(uint32_t version) {
 	if(version == 0)
-		return sniffer_parser_get_packet_count();
+		version = wsn_last_version;
 	return wsn_versions[version].packet_id;
 }
 
