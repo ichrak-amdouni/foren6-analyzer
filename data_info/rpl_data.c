@@ -27,7 +27,7 @@ typedef struct di_rpl_wsn_state {
 	uint32_t links_version;
 
 	time_t timestamp;
-	uint32_t packet_count;
+	uint32_t packet_id;
 } di_rpl_wsn_state_t;
 
 typedef struct di_rpl_object_el {
@@ -390,10 +390,7 @@ di_link_t *rpldata_del_link(const di_link_ref_t *link_ref) {
 	return deleted_link;
 }
 
-void rpldata_wsn_create_version() {
-	if(rpl_event_commit_changed_objects() == false)
-		return;   //Nothing has changed -> no need to create a new version
-
+void rpldata_wsn_create_version(int packed_id, double timestamp) {
 	wsn_last_version++;
 
 	if(wsn_version_array_size <= wsn_last_version) {
@@ -402,8 +399,8 @@ void rpldata_wsn_create_version() {
 		assert(wsn_versions != NULL);
 	}
 
-	wsn_versions[wsn_last_version].timestamp = time(NULL);
-	wsn_versions[wsn_last_version].packet_count = sniffer_parser_get_packet_count();
+	wsn_versions[wsn_last_version].timestamp = timestamp;
+	wsn_versions[wsn_last_version].packet_id = packed_id;
 
 	if(node_last_version)
 		wsn_versions[wsn_last_version].node_version = node_last_version;
@@ -431,7 +428,7 @@ time_t rpldata_wsn_version_get_timestamp(uint32_t version) {
 uint32_t rpldata_wsn_version_get_packet_count(uint32_t version) {
 	if(version == 0)
 		return sniffer_parser_get_packet_count();
-	return wsn_versions[version].packet_count;
+	return wsn_versions[version].packet_id;
 }
 
 uint32_t rpldata_get_node_last_version() {

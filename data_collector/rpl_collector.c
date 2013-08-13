@@ -98,8 +98,6 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		config.path_control_size = dodag_config->path_control_size;
 		dodag_set_config(dodag, &config);
 	}
-
-	rpldata_wsn_create_version();
 }
 
 void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -187,8 +185,6 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 			node_del_route(parent, &route, node_get_mac64(child));
 		}
 	}
-
-	rpldata_wsn_create_version();
 }
 
 void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -202,15 +198,12 @@ void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
 	rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);  //nothing to do with the node, but be sure it exists in the node list
-
-	rpldata_wsn_create_version();
 }
 
 void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_address,
 		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
-		rpl_hop_by_hop_opt_t* rpl_info, int packet_id)
+		rpl_hop_by_hop_opt_t* rpl_info)
 {
-
 	di_node_t *src, *dst = NULL;
 
 	bool src_created, dst_created;
@@ -249,7 +242,4 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 			}
 		}
 	}
-
-
-	rpldata_wsn_create_version();
 }

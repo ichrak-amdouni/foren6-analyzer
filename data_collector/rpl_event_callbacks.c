@@ -83,7 +83,7 @@ void rpl_event_rpl_instance(di_rpl_instance_t *rpl_instance, rpl_event_type_e ty
 	DL_APPEND(head, element);
 }
 
-bool rpl_event_commit_changed_objects() {
+bool rpl_event_commit_changed_objects(int packet_id, double timestamp) {
 	//These boolean are true if we already created a version for the according object type
 	bool node, dodag, link, rpl_instance;
 	rpl_event_el_t *event;
@@ -120,6 +120,9 @@ bool rpl_event_commit_changed_objects() {
 				break;
 		}
 	}
+
+	if(node || link || dodag || rpl_instance)
+		rpldata_wsn_create_version(packet_id, timestamp);
 
 	return node || link || dodag || rpl_instance;
 }

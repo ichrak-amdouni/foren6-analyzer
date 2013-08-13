@@ -38,7 +38,7 @@ uint32_t rpldata_add_dodag_version();
 uint32_t rpldata_add_rpl_instance_version();
 uint32_t rpldata_add_link_version();
 
-void rpldata_wsn_create_version();
+void rpldata_wsn_create_version(int packed_id, double timestamp);
 time_t rpldata_wsn_version_get_timestamp(uint32_t version);
 uint32_t rpldata_wsn_version_get_packet_count(uint32_t version);
 

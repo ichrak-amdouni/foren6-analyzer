@@ -64,6 +64,7 @@ typedef struct rpl_packet_data {
 typedef struct rpl_packet_content {
 	int packet_id;
 	rpl_packet_type_e type;
+	double timestamp;
 	bool is_bad;
 	uint64_t src_wpan_address;
 	uint64_t dst_wpan_address;
@@ -127,6 +128,8 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 	if(valueStr == NULL) {
 		if(!strcmp(nameStr, "frame.number")) {
 			current_packet.packet_id = strtol(showStr, NULL, 10)-1;  //wireshark's first packet is number 1
+		} else if(!strcmp(nameStr, "frame.time_relative")) {
+			current_packet.timestamp = strtod(showStr, NULL);
 		}
 	} else if(!strcmp(nameStr, "icmpv6.checksum_bad") && !strcmp(showStr, "1")) {
 		current_packet.is_bad = true;
@@ -390,8 +393,7 @@ static void rpl_parser_end_packet() {
 						current_packet.dst_wpan_address,
 						&current_packet.src_ip_address,
 						&current_packet.dst_ip_address,
-						(current_packet.data.has_hop_info)? &current_packet.data.hop_info : NULL,
-						current_packet.packet_id);
+						(current_packet.data.has_hop_info)? &current_packet.data.hop_info : NULL);
 				break;
 
 			case RPT_RplUnknown:
@@ -401,5 +403,6 @@ static void rpl_parser_end_packet() {
 			case RPT_None:
 				break;
 		}
+		rpl_event_commit_changed_objects(current_packet.packet_id, current_packet.timestamp);
 	}
 }
