@@ -74,7 +74,6 @@ typedef struct rpl_packet_content {
 	uint64_t dst_wpan_address;
 	struct in6_addr src_ip_address;
 	struct in6_addr dst_ip_address;
-	struct timeval timestamp;
 	union {
 		rpl_packet_dis_t dis;
 		rpl_packet_dio_t dio;
@@ -139,12 +138,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 	} else if(!strcmp(nameStr, "icmpv6.checksum_bad") && !strcmp(showStr, "1")) {
 		current_packet.is_bad = true;
 	} else if(current_packet.type == RPT_None || current_packet.type == RPT_RplUnknown || current_packet.type == RPT_Data) {
-		if(!strcmp(nameStr, "frame.time_epoch")) {
-			char *endptr = 0;
-			current_packet.timestamp.tv_sec = strtol(showStr, &endptr, 10);
-			if(endptr != 0 && *endptr == '.')
-				current_packet.timestamp.tv_usec = strtod(endptr, NULL)/1000000.0;
-		} else if(!strcmp(nameStr, "wpan.src64")) {
+		if(!strcmp(nameStr, "wpan.src64")) {
 			uint64_t addr = strtoull(valueStr, NULL, 16);
 			current_packet.src_wpan_address = htobe64(addr);
 		} else if(!strcmp(nameStr, "wpan.dst64")) {
