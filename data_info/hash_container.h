@@ -10,6 +10,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <pthread.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -22,8 +23,6 @@ typedef struct hash_key {
 
 typedef struct hash_container *hash_container_ptr;
 typedef struct hash_iterator *hash_iterator_ptr;
-
-
 
 typedef enum hash_add_mode {
 	HAM_NoCheck,

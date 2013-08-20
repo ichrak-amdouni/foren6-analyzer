@@ -93,7 +93,9 @@ hash_container_ptr rpldata_get_nodes(uint32_t version) {
 	if(wsn_versions[version].node_version == -1)
 		return NULL;
 
-	hash_container_ptr *ptr = hash_value(collected_data.nodes, hash_key_make(wsn_versions[version].node_version), HVM_FailIfNonExistant, NULL);
+	hash_key_t key = hash_key_make(wsn_versions[version].node_version);
+
+	hash_container_ptr *ptr = hash_value(collected_data.nodes, key, HVM_FailIfNonExistant, NULL);
 	if(ptr)
 		return *ptr;
 	else return NULL;

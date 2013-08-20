@@ -2,18 +2,21 @@
 
 #include "hash_container.h"
 #include "../uthash.h"
+#include "pthread.h"
 
 typedef struct hash_container_el {
 	void *data;
 	void *key;
 	size_t key_size;
-    UT_hash_handle hh;
+	UT_hash_handle hh;
 } hash_container_el_t;
 
 struct hash_container {
 	hash_container_el_t *head;
 	size_t data_size;
 	void (*data_constructor)(void *data, const void *key, size_t key_size);
+	pthread_spinlock_t lock;
+	int last_lock_line;
 };
 
 struct hash_iterator {
@@ -29,6 +32,8 @@ hash_container_ptr hash_create(size_t data_size, void (*data_constructor)(void *
 	new_container = (hash_container_ptr) calloc(1, sizeof(struct hash_container));
 	new_container->data_size = data_size;
 	new_container->data_constructor = data_constructor;
+	pthread_spin_init(&new_container->lock, PTHREAD_PROCESS_PRIVATE);
+	new_container->last_lock_line = 0;
 
 	return new_container;
 }
@@ -40,6 +45,8 @@ hash_container_ptr hash_dup(hash_container_ptr container) {
 	new_hash = malloc(sizeof(struct hash_container));
 	memcpy(new_hash, container, sizeof(struct hash_container));
 	new_hash->head = NULL;
+	pthread_spin_init(&new_hash->lock, PTHREAD_PROCESS_PRIVATE);
+	new_hash->last_lock_line = 0;
 
 	hash_begin(container, &it);
 	hash_end(container, &end_it);
@@ -70,9 +77,12 @@ bool hash_add_ref(hash_container_ptr container, hash_key_t key, const void *data
 	hash_container_el_t *element = NULL;
 
 	assert(data != NULL);
+	pthread_spin_lock(&container->lock);
+	container->last_lock_line = __LINE__;
 
 	if(mode != HAM_NoCheck) {
 		HASH_FIND(hh, container->head, key.key, key.size, element);
+
 		if(element && mode == HAM_FailIfExists) {
 			if(iterator) {
 				iterator->current_data = element;
@@ -81,6 +91,7 @@ bool hash_add_ref(hash_container_ptr container, hash_key_t key, const void *data
 				iterator->container = container;
 			}
 			if(was_existing) *was_existing = true;
+			pthread_spin_unlock(&container->lock);
 			return false;
 		}
 	}
@@ -91,11 +102,14 @@ bool hash_add_ref(hash_container_ptr container, hash_key_t key, const void *data
 		element->key = malloc(key.size);
 		element->key_size = key.size;
 		memcpy(element->key, key.key, key.size);
+
 		HASH_ADD_KEYPTR(hh, container->head, element->key, key.size, element);
+
 		if(was_existing) *was_existing = false;
 	} else {
 		assert(!memcmp(element->key, key.key, key.size));
 		element->data = (void*)data;
+
 		if(was_existing) *was_existing = true;
 	}
 
@@ -105,6 +119,8 @@ bool hash_add_ref(hash_container_ptr container, hash_key_t key, const void *data
 		iterator->prev = element->hh.prev;
 		iterator->container = container;
 	}
+
+	pthread_spin_unlock(&container->lock);
 
 	return true;
 }
@@ -132,7 +148,11 @@ void *hash_value(hash_container_ptr container, hash_key_t key, hash_value_mode_e
 bool hash_find(hash_container_ptr container, hash_key_t key, hash_iterator_ptr iterator) {
 	hash_container_el_t *element = NULL;
 
+
+	pthread_spin_lock(&container->lock);
+	container->last_lock_line = __LINE__;
 	HASH_FIND(hh, container->head, key.key, key.size, element);
+	pthread_spin_unlock(&container->lock);
 
 	if(element) {
 		if(iterator) {
@@ -182,6 +202,8 @@ bool hash_delete(hash_container_ptr container, hash_key_t key) {
 void hash_clear(hash_container_ptr container) {
 	hash_container_el_t *element, *tmp;
 
+	pthread_spin_lock(&container->lock);
+	container->last_lock_line = __LINE__;
 	HASH_ITER(hh, container->head, element, tmp) {
 		HASH_DEL(container->head, element);
 		free(element->data);
@@ -189,6 +211,7 @@ void hash_clear(hash_container_ptr container) {
 		free(element->key);
 		free(element);
 	}
+	pthread_spin_unlock(&container->lock);
 }
 
 unsigned int hash_size(hash_container_ptr container) {
@@ -281,7 +304,11 @@ hash_iterator_ptr  hash_it_remove_ref(hash_iterator_ptr iterator) {
 	hash_it_cpy(iterator, &next_it);
 	hash_it_inc(&next_it);
 
+	pthread_spin_lock(&iterator->container->lock);
+	iterator->container->last_lock_line = __LINE__;
 	HASH_DEL(iterator->container->head, iterator->current_data);
+	pthread_spin_unlock(&iterator->container->lock);
+
 	free(iterator->current_data->key);
 	free(iterator->current_data);
 
@@ -294,7 +321,11 @@ hash_iterator_ptr  hash_it_delete_value(hash_iterator_ptr iterator) {
 	hash_it_cpy(iterator, &next_it);
 	hash_it_inc(&next_it);
 
+	pthread_spin_lock(&iterator->container->lock);
+	iterator->container->last_lock_line = __LINE__;
 	HASH_DEL(iterator->container->head, iterator->current_data);
+	pthread_spin_unlock(&iterator->container->lock);
+
 	free(iterator->current_data->data);
 	free(iterator->current_data->key);
 	free(iterator->current_data);

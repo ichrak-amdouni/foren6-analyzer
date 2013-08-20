@@ -44,6 +44,7 @@ void desc_poll_init() {
 
 	pthread_mutex_init(&poll_mutex, NULL);
 	stop_thread = false;
+
 	pthread_create(&poll_thread, NULL, &desc_poll_run, NULL);
 }
 
