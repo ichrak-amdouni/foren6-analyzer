@@ -52,8 +52,6 @@ const di_metric_t* link_get_metric(const di_link_t *link);
 void *link_get_user_data(const di_link_t *link);
 
 
-
-
 #ifdef	__cplusplus
 }
 #endif

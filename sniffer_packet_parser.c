@@ -17,6 +17,11 @@
 //#define USE_NEW_TSHARK
 
 static bool sniffer_parser_reset_requested = false;
+static enum {
+	XPS_Run,
+	XPS_Paused
+} xml_parser_state = false;
+pthread_mutex_t state_lock;
 
 static pcap_t* pd = NULL;
 static pcap_dumper_t* pdumper = NULL;
@@ -60,6 +65,7 @@ void sniffer_parser_init() {
 	/* prevent zombie child */
 	sigaction(SIGCHLD, &sigchld_action, NULL);
 	pthread_mutex_init(&new_packet_mutex, NULL);
+	pthread_mutex_init(&state_lock, NULL);
 
 	parser_register_all();
 
@@ -96,6 +102,16 @@ int sniffer_parser_get_packet_count() {
 	return packet_count;
 }
 
+void sniffer_parser_pause_parser(bool pause) {
+	pthread_mutex_lock(&state_lock);
+	if(pause) {
+		xml_parser_state = XPS_Paused;
+	} else {
+		xml_parser_state = XPS_Run;
+	}
+	pthread_mutex_unlock(&state_lock);
+}
+
 
 static void process_events(int fd, void* data) {
 	char buffer[512];
@@ -110,6 +126,14 @@ static void process_events(int fd, void* data) {
 		nbread = read(pipe_tshark_stdout, buffer, 512);
 		if(nbread <= 0) break;
 
+		while(1) {
+			pthread_mutex_lock(&state_lock);
+			if(xml_parser_state != XPS_Paused) {
+				break;
+			}
+			pthread_mutex_unlock(&state_lock);
+			usleep(100000);
+		}
 
 		if(!XML_Parse(dissected_packet_parser, buffer, nbread, false)) {
 			buffer[nbread] = 0;
@@ -117,6 +141,7 @@ static void process_events(int fd, void* data) {
 				buffer,
 				XML_ErrorString(XML_GetErrorCode(dissected_packet_parser)));
 		}
+		pthread_mutex_unlock(&state_lock);
 	}
 }
 

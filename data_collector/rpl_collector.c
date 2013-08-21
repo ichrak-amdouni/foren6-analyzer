@@ -166,7 +166,8 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 			old_link = rpldata_del_link(&link_ref);
 			if(old_link) {
 				rpl_event_link(old_link, RET_Deleted);
-				free(old_link);
+				//free(old_link);
+				//freed when clearing the WSN, see rpldata_clear()
 			}
 
 			//fprintf(stderr, "No-Path DAO, child = 0x%llX, parent = 0x%llX\n", child->key.ref.wpan_address, parent->key.ref.wpan_address);

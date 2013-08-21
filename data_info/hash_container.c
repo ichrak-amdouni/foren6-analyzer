@@ -3,6 +3,7 @@
 #include "hash_container.h"
 #include "../uthash.h"
 #include "pthread.h"
+#include <stdio.h>
 
 typedef struct hash_container_el {
 	void *data;
@@ -59,6 +60,7 @@ hash_container_ptr hash_dup(hash_container_ptr container) {
 }
 
 void hash_destroy(hash_container_ptr container) {
+	hash_clear(container);
 	free(container);
 }
 
