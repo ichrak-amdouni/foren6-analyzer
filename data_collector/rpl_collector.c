@@ -37,6 +37,7 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
 	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
+	node_add_packet_count(node, 1);
 
 	di_dodag_ref_t dodag_ref;
 	dodag_ref_init(&dodag_ref, dio->dodagid, dio->version_number);
@@ -124,6 +125,7 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
 	child = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &child_created);
+	node_add_packet_count(child, 1);
 
 	node_ref_init(&node_ref, dst_wpan_address);
 	parent = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &parent_created);
@@ -192,12 +194,14 @@ void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		rpl_dis_opt_info_req_t *request)
 {
 	bool node_created;
+	di_node_t *node;
 
 	//fprintf(stderr, "Received DIS\n");
 
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
-	rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);  //nothing to do with the node, but be sure it exists in the node list
+	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);  //nothing to do with the node, but be sure it exists in the node list
+	node_add_packet_count(node, 1);
 }
 
 void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_address,
@@ -205,6 +209,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 		rpl_hop_by_hop_opt_t* rpl_info)
 {
 	di_node_t *src, *dst = NULL;
+	di_link_t *link;
 
 	bool src_created, dst_created;
 	bool link_created;
@@ -214,6 +219,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, src_wpan_address);
 	src = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &src_created);
+	node_add_packet_count(src, 1);
 
 	if(!rpl_info || rpl_info->sender_rank == 0) {
 		//src->global_address = *src_ip_address;
@@ -231,7 +237,8 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 			if(rpl_info->packet_toward_root) {
 				di_link_ref_t link_ref;
 				link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(src)}, (di_node_ref_t){node_get_mac64(dst)});
-				rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
+				link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
+				link_update(link, time(NULL), 1);
 				//link_set_metric(new_link, node_get_metric(src));
 
 				di_prefix_t route;

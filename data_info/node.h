@@ -31,6 +31,7 @@ size_t node_sizeof();
 
 void node_init(void *data, const void *key, size_t key_size);
 di_node_t *node_dup(di_node_t *node);
+void node_update_from(di_node_t *dst_node, const di_node_t *src_node);
 
 void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version);
 void node_ref_init(di_node_ref_t *ref, addr_wpan_t wpan_address);
@@ -44,6 +45,7 @@ void node_set_rank(di_node_t *node, uint16_t rank);
 void node_set_grounded(di_node_t *node, bool grounded);
 void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref);
 void node_set_user_data(di_node_t *node, void *data);
+void node_add_packet_count(di_node_t *node, int count);
 
 bool node_has_changed(di_node_t *node);
 void node_reset_changed(di_node_t *node);
@@ -61,6 +63,7 @@ uint16_t node_get_rank(const di_node_t *node);
 bool node_get_grounded(const di_node_t *node);
 const di_dodag_ref_t * node_get_dodag(const di_node_t *node);
 void *node_get_user_data(const di_node_t *node);
+int node_get_packet_count(const di_node_t *node);
 
 
 #ifdef	__cplusplus
