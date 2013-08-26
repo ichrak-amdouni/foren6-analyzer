@@ -39,7 +39,7 @@ hash_container_ptr hash_create(size_t data_size, void (*data_constructor)(void *
 	return new_container;
 }
 
-hash_container_ptr hash_dup(hash_container_ptr container) {
+hash_container_ptr hash_dup(const hash_container_ptr container) {
 	hash_container_ptr new_hash;
 	struct hash_iterator it, end_it;
 

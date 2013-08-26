@@ -33,7 +33,13 @@ void rpl_instance_init(void* data, const void *key, size_t key_size) {
 	rpl_event_rpl_instance(instance, RET_Created);
 }
 
-di_rpl_instance_t* rpl_instance_dup(di_rpl_instance_t* rpl_instance) {
+void rpl_instance_destroy(void *data) {
+	di_rpl_instance_t *instance = (di_rpl_instance_t*) data;
+
+	hash_destroy(instance->dodags);
+}
+
+di_rpl_instance_t* rpl_instance_dup(const di_rpl_instance_t* rpl_instance) {
 	di_rpl_instance_t *new_instance;
 
 	new_instance = malloc(sizeof(di_rpl_instance_t));

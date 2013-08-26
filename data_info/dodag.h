@@ -48,7 +48,8 @@ typedef struct di_dodag_key {
 size_t dodag_sizeof();
 
 void dodag_init(void *data, const void *key, size_t key_size);
-di_dodag_t *dodag_dup(di_dodag_t *dodag);
+void dodag_destroy(void *data);
+di_dodag_t *dodag_dup(const di_dodag_t *dodag);
 
 void dodag_key_init(di_dodag_key_t *key, addr_ipv6_t dodag_id, uint8_t dodag_version, uint32_t version);
 void dodag_ref_init(di_dodag_ref_t *ref, addr_ipv6_t dodag_id, uint8_t dodag_version);

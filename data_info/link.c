@@ -35,6 +35,11 @@ void link_init(void *data, const void *key, size_t key_size) {
 	rpl_event_link(link, RET_Created);
 }
 
+void link_destroy(void *data) {
+	data = data; //prevent a unused arg warning
+	// Nothing to do
+}
+
 void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent, uint32_t version) {
 	memset(key, 0, sizeof(di_link_key_t));
 
@@ -65,7 +70,7 @@ static void link_set_changed(di_link_t *link) {
 	link->has_changed = true;
 }
 
-di_link_t *link_dup(di_link_t *link) {
+di_link_t *link_dup(const di_link_t *link) {
 	di_link_t *new_link;
 
 	new_link = malloc(sizeof(di_link_t));
