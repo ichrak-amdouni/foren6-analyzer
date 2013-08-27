@@ -55,6 +55,7 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix);
 void node_set_dtsn(di_node_t *node, int dtsn);
 void node_set_dao_seq(di_node_t *node, int dao_seq);
 void node_update_dao_interval(di_node_t *node, double timestamp);
+void node_update_dio_interval(di_node_t *node, double timestamp);
 
 const di_node_key_t *node_get_key(const di_node_t *node);
 addr_wpan_t node_get_mac64(const di_node_t *node);
@@ -72,6 +73,7 @@ int node_get_packet_count(const di_node_t *node);
 int node_get_dtsn(const di_node_t *node);
 int node_get_dao_seq(const di_node_t *node);
 double node_get_max_dao_interval(const di_node_t *node);
+double node_get_max_dio_interval(const di_node_t *node);
 
 
 #ifdef	__cplusplus

@@ -38,6 +38,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
 	node_add_packet_count(node, 1);
 	node_set_dtsn(node, dio->dtsn);
+	node_update_dio_interval(node, pkt_info.timestamp);
 
 	di_dodag_ref_t dodag_ref;
 	dodag_ref_init(&dodag_ref, dio->dodagid, dio->version_number);

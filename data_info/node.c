@@ -34,6 +34,7 @@ struct di_node {
 	//statistics
 	int packet_count;
 	double max_dao_interval;
+	double max_dio_interval;
 };
 
 static uint16_t last_simple_id = 0;
@@ -227,11 +228,24 @@ void node_update_dao_interval(di_node_t *node, double timestamp) {
 		if(!node->max_dao_interval || (node->max_dao_interval < interval)) {
 			node->max_dao_interval = interval;
 			node_update_old_field(node, offsetof(di_node_t, max_dao_interval), sizeof(node->max_dao_interval));
-			fprintf(stderr, "Update DAO interval for node %llx to %f\n", node->key.ref.wpan_address, node->max_dao_interval);
 		}
 	}
 
 	last_dao_timestamp = timestamp;
+}
+
+void node_update_dio_interval(di_node_t *node, double timestamp) {
+	static double last_dio_timestamp = 0;
+
+	if(last_dio_timestamp) {
+		double interval = timestamp - last_dio_timestamp;
+		if(!node->max_dio_interval || (node->max_dio_interval < interval)) {
+			node->max_dio_interval = interval;
+			node_update_old_field(node, offsetof(di_node_t, max_dio_interval), sizeof(node->max_dio_interval));
+		}
+	}
+
+	last_dio_timestamp = timestamp;
 }
 
 
@@ -296,4 +310,8 @@ int node_get_dao_seq(const di_node_t *node) {
 
 double node_get_max_dao_interval(const di_node_t *node) {
 	return node->max_dao_interval;
+}
+
+double node_get_max_dio_interval(const di_node_t *node) {
+	return node->max_dio_interval;
 }
