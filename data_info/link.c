@@ -6,6 +6,7 @@
 
 #include "link.h"
 #include "../data_collector/rpl_event_callbacks.h"
+#include "rpl_data.h"
 
 struct di_link {
 	di_link_key_t key;
@@ -20,6 +21,7 @@ struct di_link {
 };
 
 static void link_set_changed(di_link_t *link);
+static void link_update_old_field(const di_link_t *link, int field_offset, int field_size);
 
 size_t link_sizeof() {
 	return sizeof(di_link_t);
@@ -57,9 +59,7 @@ void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent
 bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count) {
 	link->last_update = time;
 	link->packet_count += added_packet_count;
-	//link_set_changed(link);
-
-	//No update here, managed by has_changed mechanism
+	link_update_old_field(link, offsetof(di_link_t, packet_count), sizeof(link->packet_count));
 
 	return true;
 }
@@ -68,6 +68,16 @@ static void link_set_changed(di_link_t *link) {
 	if(link->has_changed == false)
 		rpl_event_link(link, RET_Updated);
 	link->has_changed = true;
+}
+
+static void link_update_old_field(const di_link_t *link, int field_offset, int field_size) {
+		di_link_t **versionned_node_ptr;
+		hash_container_ptr container = rpldata_get_links(rpldata_get_wsn_last_version());
+		if(container) {
+			versionned_node_ptr = (di_link_t**)hash_value(container, hash_key_make(link->key.ref), HVM_FailIfNonExistant, NULL);
+			if(versionned_node_ptr)
+				memcpy((char*)(*versionned_node_ptr) + field_offset, (char*)link + field_offset, field_size);
+		}
 }
 
 di_link_t *link_dup(const di_link_t *link) {

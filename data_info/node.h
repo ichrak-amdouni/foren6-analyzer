@@ -45,11 +45,16 @@ void node_set_rank(di_node_t *node, uint16_t rank);
 void node_set_grounded(di_node_t *node, bool grounded);
 void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref);
 void node_set_user_data(di_node_t *node, void *data);
+void node_add_packet_count(di_node_t *node, int count);
 
 bool node_has_changed(di_node_t *node);
 void node_reset_changed(di_node_t *node);
 
 void node_update_ip(di_node_t *node, const di_prefix_t *prefix);
+
+void node_set_dtsn(di_node_t *node, int dtsn);
+void node_set_dao_seq(di_node_t *node, int dao_seq);
+void node_update_dao_interval(di_node_t *node, double timestamp);
 
 const di_node_key_t *node_get_key(const di_node_t *node);
 addr_wpan_t node_get_mac64(const di_node_t *node);
@@ -62,6 +67,11 @@ uint16_t node_get_rank(const di_node_t *node);
 bool node_get_grounded(const di_node_t *node);
 const di_dodag_ref_t * node_get_dodag(const di_node_t *node);
 void *node_get_user_data(const di_node_t *node);
+int node_get_packet_count(const di_node_t *node);
+
+int node_get_dtsn(const di_node_t *node);
+int node_get_dao_seq(const di_node_t *node);
+double node_get_max_dao_interval(const di_node_t *node);
 
 
 #ifdef	__cplusplus
