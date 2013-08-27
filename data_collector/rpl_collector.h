@@ -14,10 +14,18 @@
 extern "C" {
 #endif
 
-void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_address, struct in6_addr *source_address, struct in6_addr *destination_address, rpl_dio_t* dio, rpl_dio_opt_config_t* dodag_config, rpl_dio_opt_metric_t* metric, rpl_dio_opt_prefix_t* prefix, rpl_dio_opt_route_t* route_info);
-void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_address, struct in6_addr *source_address, struct in6_addr *destination_address, rpl_dao_t* dao, rpl_dao_opt_target_t* target, rpl_dao_opt_transit_t *transit);
-void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_address, struct in6_addr *source_address, struct in6_addr *destination_address, rpl_dis_opt_info_req_t *request);
-void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_address, struct in6_addr *source_address, struct in6_addr *destination_address, rpl_hop_by_hop_opt_t* rpl_info);
+typedef struct packet_info {
+	addr_wpan_t src_wpan_address;
+	addr_wpan_t dst_wpan_address;
+	addr_ipv6_t src_ip_address;
+	addr_ipv6_t dst_ip_address;
+	double timestamp;
+} packet_info_t;
+
+void rpl_collector_parse_dio(packet_info_t pkt_info, rpl_dio_t* dio, rpl_dio_opt_config_t* dodag_config, rpl_dio_opt_metric_t* metric, rpl_dio_opt_prefix_t* prefix, rpl_dio_opt_route_t* route_info);
+void rpl_collector_parse_dao(packet_info_t pkt_info, rpl_dao_t* dao, rpl_dao_opt_target_t* target, rpl_dao_opt_transit_t *transit);
+void rpl_collector_parse_dis(packet_info_t pkt_info, rpl_dis_opt_info_req_t *request);
+void rpl_collector_parse_data(packet_info_t pkt_info, rpl_hop_by_hop_opt_t* rpl_info);
 
 #ifdef	__cplusplus
 }

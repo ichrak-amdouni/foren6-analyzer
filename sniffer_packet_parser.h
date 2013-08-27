@@ -53,7 +53,7 @@ typedef struct rpl_dio {
 	uint16_t rank;
 	bool grounded;
 	di_rpl_mop_e mode_of_operation;
-	uint8_t dstn;
+	uint8_t dtsn;
 	struct in6_addr dodagid;
 } rpl_dio_t;
 

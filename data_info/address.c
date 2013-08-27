@@ -96,9 +96,13 @@ addr_wpan_t addr_get_mac64_from_int_id(uint64_t int_id) {
 int addr_compare_ip(const addr_ipv6_t *a, const addr_ipv6_t *b) {
 	int res;
 
-	res = a->__in6_u.__u6_addr32[0] - a->__in6_u.__u6_addr32[0];
+	res = a->__in6_u.__u6_addr32[0] - b->__in6_u.__u6_addr32[0];
 	if(res) return res;
-	return a->__in6_u.__u6_addr32[1] - a->__in6_u.__u6_addr32[1];
+	res = a->__in6_u.__u6_addr32[1] - b->__in6_u.__u6_addr32[1];
+	if(res) return res;
+	res = a->__in6_u.__u6_addr32[2] - b->__in6_u.__u6_addr32[2];
+	if(res) return res;
+	return a->__in6_u.__u6_addr32[3] - b->__in6_u.__u6_addr32[3];
 }
 
 int addr_compare_wpan(const addr_wpan_t *a, const addr_wpan_t *b) {

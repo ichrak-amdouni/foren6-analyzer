@@ -68,12 +68,8 @@ typedef struct rpl_packet_data {
 typedef struct rpl_packet_content {
 	int packet_id;
 	rpl_packet_type_e type;
-	double timestamp;
 	bool is_bad;
-	uint64_t src_wpan_address;
-	uint64_t dst_wpan_address;
-	struct in6_addr src_ip_address;
-	struct in6_addr dst_ip_address;
+	packet_info_t pkt_info;
 	union {
 		rpl_packet_dis_t dis;
 		rpl_packet_dio_t dio;
@@ -133,26 +129,26 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 		if(!strcmp(nameStr, "frame.number")) {
 			current_packet.packet_id = strtol(showStr, NULL, 10)-1;  //wireshark's first packet is number 1
 		} else if(!strcmp(nameStr, "frame.time_relative")) {
-			current_packet.timestamp = strtod(showStr, NULL);
+			current_packet.pkt_info.timestamp = strtod(showStr, NULL);
 		}
 	} else if(!strcmp(nameStr, "icmpv6.checksum_bad") && !strcmp(showStr, "1")) {
 		current_packet.is_bad = true;
 	} else if(current_packet.type == RPT_None || current_packet.type == RPT_RplUnknown || current_packet.type == RPT_Data) {
 		if(!strcmp(nameStr, "wpan.src64")) {
 			uint64_t addr = strtoull(valueStr, NULL, 16);
-			current_packet.src_wpan_address = htobe64(addr);
+			current_packet.pkt_info.src_wpan_address = htobe64(addr);
 		} else if(!strcmp(nameStr, "wpan.dst64")) {
 			uint64_t addr = strtoull(valueStr, NULL, 16);
-			current_packet.dst_wpan_address = htobe64(addr);
+			current_packet.pkt_info.dst_wpan_address = htobe64(addr);
 		} else if(!strcmp(nameStr, "wpan.dst_addr64")) {
 			uint64_t addr = strtoull(valueStr, NULL, 16);
-			current_packet.dst_wpan_address = htobe64(addr);
+			current_packet.pkt_info.dst_wpan_address = htobe64(addr);
 		} else if(!strcmp(nameStr, "ipv6.src")) {
-			 inet_pton(AF_INET6, showStr, &current_packet.src_ip_address);
+			 inet_pton(AF_INET6, showStr, &current_packet.pkt_info.src_ip_address);
 			 if(current_packet.type == RPT_None)
 				 current_packet.type = RPT_Data;
 		} else if(!strcmp(nameStr, "ipv6.dst")) {
-			 inet_pton(AF_INET6, showStr, &current_packet.dst_ip_address);
+			 inet_pton(AF_INET6, showStr, &current_packet.pkt_info.dst_ip_address);
 			 if(current_packet.type == RPT_None)
 				 current_packet.type = RPT_Data;
 		} else if(!strcmp(nameStr, "icmpv6.type") && valueInt == ICMPV6_RPL_TYPE) {
@@ -211,8 +207,8 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 					current_packet.dio.dio.grounded = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.dio.flag.mop"))
 					current_packet.dio.dio.mode_of_operation = valueInt;
-				else if(!strcmp(nameStr, "icmpv6.rpl.dio.dstn"))
-					current_packet.dio.dio.dstn = valueInt;
+				else if(!strcmp(nameStr, "icmpv6.rpl.dio.dtsn"))
+					current_packet.dio.dio.dtsn = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.dio.dagid"))
 					inet_pton(AF_INET6, showStr, &current_packet.dio.dio.dodagid);
 
@@ -362,20 +358,12 @@ static void rpl_parser_end_packet() {
 		rpl_event_packet(current_packet.packet_id);
 		switch(current_packet.type) {
 			case RPT_DIS:
-				rpl_collector_parse_dis(
-						current_packet.src_wpan_address,
-						current_packet.dst_wpan_address,
-						&current_packet.src_ip_address,
-						&current_packet.dst_ip_address,
+				rpl_collector_parse_dis(current_packet.pkt_info,
 						(current_packet.dis.has_info)? &current_packet.dis.info : NULL);
 				break;
 
 			case RPT_DIO:
-				rpl_collector_parse_dio(
-						current_packet.src_wpan_address,
-						current_packet.dst_wpan_address,
-						&current_packet.src_ip_address,
-						&current_packet.dst_ip_address,
+				rpl_collector_parse_dio(current_packet.pkt_info,
 						&current_packet.dio.dio,
 						(current_packet.dio.has_config)? &current_packet.dio.config : NULL,
 						(current_packet.dio.has_metric)? &current_packet.dio.metric : NULL,
@@ -384,22 +372,14 @@ static void rpl_parser_end_packet() {
 				break;
 
 			case RPT_DAO:
-				rpl_collector_parse_dao(
-						current_packet.src_wpan_address,
-						current_packet.dst_wpan_address,
-						&current_packet.src_ip_address,
-						&current_packet.dst_ip_address,
+				rpl_collector_parse_dao(current_packet.pkt_info,
 						&current_packet.dao.dao,
 						(current_packet.dao.has_target)? &current_packet.dao.target : NULL,
 						(current_packet.dao.has_transit)? &current_packet.dao.transit : NULL);
 				break;
 
 			case RPT_Data:
-				rpl_collector_parse_data(
-						current_packet.src_wpan_address,
-						current_packet.dst_wpan_address,
-						&current_packet.src_ip_address,
-						&current_packet.dst_ip_address,
+				rpl_collector_parse_data(current_packet.pkt_info,
 						(current_packet.data.has_hop_info)? &current_packet.data.hop_info : NULL);
 				break;
 
@@ -410,6 +390,6 @@ static void rpl_parser_end_packet() {
 			case RPT_None:
 				break;
 		}
-		rpl_event_commit_changed_objects(current_packet.packet_id, current_packet.timestamp);
+		rpl_event_commit_changed_objects(current_packet.packet_id, current_packet.pkt_info.timestamp);
 	}
 }

@@ -15,8 +15,7 @@
 #include "../data_info/metric.h"
 #include "../data_info/rpl_data.h"
 
-void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_address,
-		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
+void rpl_collector_parse_dio(packet_info_t pkt_info,
 		rpl_dio_t* dio,
 		rpl_dio_opt_config_t* dodag_config,
 		rpl_dio_opt_metric_t* metric,
@@ -35,9 +34,10 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 
 	//Get node, dodag and rpl_instance using their keys. If the requested object does not exist, created it.
 	di_node_ref_t node_ref;
-	node_ref_init(&node_ref, src_wpan_address);
+	node_ref_init(&node_ref, pkt_info.src_wpan_address);
 	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
 	node_add_packet_count(node, 1);
+	node_set_dtsn(node, dio->dtsn);
 
 	di_dodag_ref_t dodag_ref;
 	dodag_ref_init(&dodag_ref, dio->dodagid, dio->version_number);
@@ -101,8 +101,7 @@ void rpl_collector_parse_dio(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	}
 }
 
-void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_address,
-		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
+void rpl_collector_parse_dao(packet_info_t pkt_info,
 		rpl_dao_t* dao,
 		rpl_dao_opt_target_t* target,
 		rpl_dao_opt_transit_t *transit)
@@ -123,11 +122,11 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	//fprintf(stderr, "Received DAO\n");
 
 	di_node_ref_t node_ref;
-	node_ref_init(&node_ref, src_wpan_address);
+	node_ref_init(&node_ref, pkt_info.src_wpan_address);
 	child = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &child_created);
 	node_add_packet_count(child, 1);
 
-	node_ref_init(&node_ref, dst_wpan_address);
+	node_ref_init(&node_ref, pkt_info.dst_wpan_address);
 	parent = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &parent_created);
 
 	di_rpl_instance_ref_t rpl_instance_ref;
@@ -186,11 +185,15 @@ void rpl_collector_parse_dao(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 		} else {	//No-path DAO
 			node_del_route(parent, &route, node_get_mac64(child));
 		}
+
+		if(addr_compare_ip(&target->target, node_get_global_ip(child)) == 0) {
+			node_set_dao_seq(child, dao->dao_sequence);
+			node_update_dao_interval(child, pkt_info.timestamp);
+		}
 	}
 }
 
-void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_address,
-		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
+void rpl_collector_parse_dis(packet_info_t pkt_info,
 		rpl_dis_opt_info_req_t *request)
 {
 	bool node_created;
@@ -199,13 +202,12 @@ void rpl_collector_parse_dis(uint64_t src_wpan_address, uint64_t dst_wpan_addres
 	//fprintf(stderr, "Received DIS\n");
 
 	di_node_ref_t node_ref;
-	node_ref_init(&node_ref, src_wpan_address);
+	node_ref_init(&node_ref, pkt_info.src_wpan_address);
 	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);  //nothing to do with the node, but be sure it exists in the node list
 	node_add_packet_count(node, 1);
 }
 
-void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_address,
-		struct in6_addr *src_ip_address, struct in6_addr *dst_ip_address,
+void rpl_collector_parse_data(packet_info_t pkt_info,
 		rpl_hop_by_hop_opt_t* rpl_info)
 {
 	di_node_t *src, *dst = NULL;
@@ -217,7 +219,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 	//fprintf(stderr, "Received Data\n");
 
 	di_node_ref_t node_ref;
-	node_ref_init(&node_ref, src_wpan_address);
+	node_ref_init(&node_ref, pkt_info.src_wpan_address);
 	src = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &src_created);
 	node_add_packet_count(src, 1);
 
@@ -227,8 +229,8 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 		//src->rank = rpl_info->sender_rank;
 	}
 
-	if(dst_wpan_address != 0 && dst_wpan_address != ADDR_MAC64_BROADCAST) {
-		node_ref_init(&node_ref, dst_wpan_address);
+	if(pkt_info.dst_wpan_address != 0 && pkt_info.dst_wpan_address != ADDR_MAC64_BROADCAST) {
+		node_ref_init(&node_ref, pkt_info.dst_wpan_address);
 		dst = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &dst_created);
 
 		/* Add the parent node to the parents list of the child node if not already done */
@@ -244,7 +246,7 @@ void rpl_collector_parse_data(uint64_t src_wpan_address, uint64_t dst_wpan_addre
 				di_prefix_t route;
 				route.expiration_time = 0;
 				route.length = 128;
-				route.prefix = *src_ip_address;
+				route.prefix = pkt_info.src_ip_address;
 				node_add_route(dst, &route, node_get_mac64(src));
 			}
 		}

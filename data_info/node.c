@@ -23,6 +23,8 @@ struct di_node {
 	uint16_t rank;				//Via DIO
 	di_metric_t metric;		//Usually ETX, via DIO with metric
 	bool grounded;				//If true, can propagate packet to the root node.
+	int latest_dao_sequence;
+	int latest_dtsn;
 
 	di_dodag_ref_t dodag;
 
@@ -31,6 +33,7 @@ struct di_node {
 
 	//statistics
 	int packet_count;
+	double max_dao_interval;
 };
 
 static uint16_t last_simple_id = 0;
@@ -51,6 +54,9 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->is_custom_global_address = false;
 	node->is_custom_local_address = false;
 	node->packet_count = 0;
+	node->max_dao_interval = 0;
+	node->latest_dao_sequence = 0;
+	node->latest_dtsn = 0;
 	node->has_changed = true;
 
 	last_simple_id++;
@@ -201,6 +207,31 @@ void node_reset_changed(di_node_t *node) {
 	node->has_changed = false;
 }
 
+void node_set_dtsn(di_node_t *node, int dtsn) {
+	node->latest_dtsn = dtsn;
+	node_update_old_field(node, offsetof(di_node_t, latest_dtsn), sizeof(node->latest_dtsn));
+}
+
+void node_set_dao_seq(di_node_t *node, int dao_seq) {
+	node->latest_dao_sequence = dao_seq;
+	node_update_old_field(node, offsetof(di_node_t, latest_dao_sequence), sizeof(node->latest_dao_sequence));
+}
+
+void node_update_dao_interval(di_node_t *node, double timestamp) {
+	static double last_dao_timestamp = 0;
+
+	if(last_dao_timestamp) {
+		double interval = timestamp - last_dao_timestamp;
+		if(!node->max_dao_interval || (node->max_dao_interval < interval)) {
+			node->max_dao_interval = interval;
+			node_update_old_field(node, offsetof(di_node_t, max_dao_interval), sizeof(node->max_dao_interval));
+			fprintf(stderr, "Update DAO interval for node %llx to %f\n", node->key.ref.wpan_address, node->max_dao_interval);
+		}
+	}
+
+	last_dao_timestamp = timestamp;
+}
+
 
 const di_node_key_t *node_get_key(const di_node_t *node) {
 	return &node->key;
@@ -251,4 +282,16 @@ void *node_get_user_data(const di_node_t *node) {
 
 int node_get_packet_count(const di_node_t *node) {
 	return node->packet_count;
+}
+
+int node_get_dtsn(const di_node_t *node) {
+	return node->latest_dtsn;
+}
+
+int node_get_dao_seq(const di_node_t *node) {
+	return node->latest_dao_sequence;
+}
+
+double node_get_max_dao_interval(const di_node_t *node) {
+	return node->max_dao_interval;
 }
