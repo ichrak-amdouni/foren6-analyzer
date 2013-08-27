@@ -83,10 +83,6 @@ di_node_t *node_dup(const di_node_t *node) {
 	return new_node;
 }
 
-void node_update_from(di_node_t *dst_node, const di_node_t *src_node) {
-	*dst_node = *src_node;
-}
-
 void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version) {
 	memset(key, 0, sizeof(di_node_key_t));
 
