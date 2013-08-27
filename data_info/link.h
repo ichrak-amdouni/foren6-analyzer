@@ -32,10 +32,11 @@ typedef struct di_link_key {
 size_t link_sizeof();
 
 void link_init(void *data, const void *key, size_t key_size);
+void link_destroy(void *data);
 
 void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent, uint32_t version);
 void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent);
-di_link_t *link_dup(di_link_t *link);
+di_link_t *link_dup(const di_link_t *link);
 
 void link_set_key(di_link_t *link, di_link_key_t *key);
 void link_set_metric(di_link_t *link, const di_metric_t *metric);
@@ -50,8 +51,6 @@ time_t link_get_last_update(const di_link_t *link);
 uint32_t link_get_packet_count(const di_link_t *link);
 const di_metric_t* link_get_metric(const di_link_t *link);
 void *link_get_user_data(const di_link_t *link);
-
-
 
 
 #ifdef	__cplusplus

@@ -44,6 +44,8 @@ uint32_t rpldata_wsn_version_get_packet_count(uint32_t version);
 
 uint32_t rpldata_get_wsn_last_version();
 
+void rpldata_clear();
+
 #ifdef	__cplusplus
 }
 #endif

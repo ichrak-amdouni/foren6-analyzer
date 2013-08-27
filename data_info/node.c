@@ -55,7 +55,13 @@ void node_init(void *data, const void *key, size_t key_size) {
 	rpl_event_node(node, RET_Created);
 }
 
-di_node_t *node_dup(di_node_t *node) {
+void node_destroy(void *data) {
+	di_node_t *node = (di_node_t*) data;
+
+	route_destroy(&node->routes);
+}
+
+di_node_t *node_dup(const di_node_t *node) {
 	di_node_t *new_node;
 
 	new_node = malloc(sizeof(di_node_t));

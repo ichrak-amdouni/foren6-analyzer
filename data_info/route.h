@@ -29,7 +29,8 @@ di_route_el_t *route_add(di_route_list_t *list, di_prefix_t route_prefix, addr_w
 bool route_remove(di_route_list_t *list, di_prefix_t route_prefix, addr_wpan_t via_node);
 bool route_del_all_outdated(di_route_list_t *list);
 
-di_route_list_t route_dup(di_route_list_t *routes);
+di_route_list_t route_dup(const di_route_list_t *routes);
+void route_destroy(di_route_list_t *routes);
 
 #ifdef	__cplusplus
 }

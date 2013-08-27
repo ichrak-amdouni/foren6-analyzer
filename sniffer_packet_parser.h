@@ -131,6 +131,7 @@ void sniffer_parser_init();
 void sniffer_parser_parse_data(const unsigned char* data, int len, struct timeval timestamp);
 
 int sniffer_parser_get_packet_count();
+void sniffer_parser_pause_parser(bool pause);
 
 
 #ifdef	__cplusplus

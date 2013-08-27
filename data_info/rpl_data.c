@@ -32,6 +32,7 @@ typedef struct di_rpl_wsn_state {
 
 typedef struct di_rpl_object_el {
 	void *object;
+	void (*destroy)(void *data);
 	struct di_rpl_object_el* next;
 	struct di_rpl_object_el* prev;
 } di_rpl_object_el_t, *di_rpl_object_list_t;
@@ -59,8 +60,10 @@ uint32_t wsn_last_version = 0;
 
 
 void rpldata_init() {
-	wsn_version_array_size = 256;
-	wsn_versions = malloc(wsn_version_array_size*sizeof(di_rpl_wsn_state_t));
+	if(wsn_version_array_size < 256) {
+		wsn_version_array_size = 256;
+		wsn_versions = realloc(wsn_versions, wsn_version_array_size*sizeof(di_rpl_wsn_state_t));
+	}
 
 	collected_data.nodes = hash_create(sizeof(hash_container_ptr), NULL);
 	collected_data.dodags = hash_create(sizeof(hash_container_ptr), NULL);
@@ -81,6 +84,13 @@ void rpldata_init() {
 
 	hash_ptr = hash_create(sizeof(di_link_t*), NULL);
 	hash_add(collected_data.links, hash_key_make(working_version), &hash_ptr, NULL, HAM_NoCheck, NULL);
+
+
+	node_last_version = 0;
+	dodag_last_version = 0;
+	rpl_instance_last_version = 0;
+	link_last_version = 0;
+	wsn_last_version = 0;
 
 	wsn_versions[0].node_version = 0;
 	wsn_versions[0].dodag_version = 0;
@@ -261,7 +271,7 @@ uint32_t rpldata_add_link_version() {
 	return new_version;
 }
 
-void *rpldata_get_object(hash_container_ptr container, size_t object_size, void (*onInit)(void *data, const void *key, size_t key_size), hash_key_t key, hash_value_mode_e value_mode, bool *was_created) {
+void *rpldata_get_object(hash_container_ptr container, size_t object_size, void (*onInit)(void *data, const void *key, size_t key_size), void (*onDestroy)(void *data), hash_key_t key, hash_value_mode_e value_mode, bool *was_created) {
 	bool already_existing;
 	void *new_node;
 	void **new_node_ptr;
@@ -280,6 +290,7 @@ void *rpldata_get_object(hash_container_ptr container, size_t object_size, void 
 
 		di_rpl_object_el_t *node_el = calloc(1, sizeof(di_rpl_object_el_t));
 		node_el->object = new_node;
+		node_el->destroy = onDestroy;
 
 		DL_APPEND(allocated_objects.nodes, node_el);
 		hash_add(container, key, &new_node, NULL, HAM_NoCheck, NULL);
@@ -291,19 +302,19 @@ void *rpldata_get_object(hash_container_ptr container, size_t object_size, void 
 }
 
 di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e value_mode, bool *was_created) {
-	return rpldata_get_object(rpldata_get_nodes(0), node_sizeof(), &node_init, hash_key_make(*node_ref), value_mode, was_created);
+	return rpldata_get_object(rpldata_get_nodes(0), node_sizeof(), &node_init, &node_destroy, hash_key_make(*node_ref), value_mode, was_created);
 }
 
 di_dodag_t *rpldata_get_dodag(const di_dodag_ref_t *dodag_ref, hash_value_mode_e value_mode, bool *was_created) {
-	return rpldata_get_object(rpldata_get_dodags(0), dodag_sizeof(), &dodag_init, hash_key_make(*dodag_ref), value_mode, was_created);
+	return rpldata_get_object(rpldata_get_dodags(0), dodag_sizeof(), &dodag_init, &dodag_destroy, hash_key_make(*dodag_ref), value_mode, was_created);
 }
 
 di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_ref_t *rpl_instance_ref, hash_value_mode_e value_mode, bool *was_created) {
-	return rpldata_get_object(rpldata_get_rpl_instances(0), rpl_instance_sizeof(), &rpl_instance_init, hash_key_make(*rpl_instance_ref), value_mode, was_created);
+	return rpldata_get_object(rpldata_get_rpl_instances(0), rpl_instance_sizeof(), &rpl_instance_init, &rpl_instance_destroy, hash_key_make(*rpl_instance_ref), value_mode, was_created);
 }
 
 di_link_t *rpldata_get_link(const di_link_ref_t *link_ref, hash_value_mode_e value_mode, bool *was_created) {
-	return rpldata_get_object(rpldata_get_links(0), link_sizeof(), &link_init, hash_key_make(*link_ref), value_mode, was_created);
+	return rpldata_get_object(rpldata_get_links(0), link_sizeof(), &link_init, &link_destroy, hash_key_make(*link_ref), value_mode, was_created);
 }
 
 di_link_t *rpldata_del_link(const di_link_ref_t *link_ref) {
@@ -383,4 +394,51 @@ uint32_t rpldata_get_link_last_version() {
 
 uint32_t rpldata_get_wsn_last_version() {
 	return wsn_last_version;
+}
+
+void rpldata_clear_objects(hash_container_ptr container, void (*onDestroy)(void *data)) {
+	hash_iterator_ptr itVersion, itVersionEnd, itObject, itObjectEnd;
+
+	itVersion = hash_begin(NULL, NULL);
+	itVersionEnd = hash_begin(NULL, NULL);
+	itObject = hash_begin(NULL, NULL);
+	itObjectEnd = hash_begin(NULL, NULL);
+
+	for(hash_begin(container, itVersion), hash_end(container, itVersionEnd); !hash_it_equ(itVersion, itVersionEnd); hash_it_inc(itVersion)) {
+		hash_container_ptr objects = *(hash_container_ptr*) hash_it_value(itVersion);
+
+		for(hash_begin(objects, itObject), hash_end(objects, itObjectEnd); !hash_it_equ(itObject, itObjectEnd);) {
+			hash_it_delete_value(itObject);
+		}
+		hash_destroy(objects);
+	}
+	hash_destroy(container);
+
+	hash_it_destroy(itObjectEnd);
+	hash_it_destroy(itObject);
+	hash_it_destroy(itVersionEnd);
+	hash_it_destroy(itVersion);
+}
+
+void rpldata_clear() {
+	sniffer_parser_pause_parser(true);
+
+	di_rpl_object_el_t *object_el, *tmp;
+
+	DL_FOREACH_SAFE(allocated_objects.nodes, object_el, tmp) {
+		object_el->destroy(object_el->object);
+		DL_DELETE(allocated_objects.nodes, object_el);
+		free(object_el->object);
+		object_el->object = 0;
+		free(object_el);
+	}
+
+	rpldata_clear_objects(collected_data.nodes, &node_destroy);
+	rpldata_clear_objects(collected_data.dodags, &dodag_destroy);
+	rpldata_clear_objects(collected_data.links, &link_destroy);
+	rpldata_clear_objects(collected_data.rpl_instances, &rpl_instance_destroy);
+
+	rpldata_init();
+
+	sniffer_parser_pause_parser(false);
 }

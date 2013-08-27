@@ -43,7 +43,13 @@ void dodag_init(void *data, const void *key, size_t key_size) {
 	rpl_event_dodag(dodag, RET_Created);
 }
 
-di_dodag_t *dodag_dup(di_dodag_t *dodag) {
+void dodag_destroy(void *data) {
+	di_dodag_t *dodag = (di_dodag_t*) data;
+
+	hash_destroy(dodag->nodes);
+}
+
+di_dodag_t *dodag_dup(const di_dodag_t *dodag) {
 	di_dodag_t *new_dodag;
 
 	new_dodag = malloc(sizeof(di_dodag_t));

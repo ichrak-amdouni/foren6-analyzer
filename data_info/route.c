@@ -56,7 +56,7 @@ bool route_del_all_outdated(di_route_list_t *list) {
 	return false;
 }
 
-di_route_list_t route_dup(di_route_list_t *routes) {
+di_route_list_t route_dup(const di_route_list_t *routes) {
 	di_route_list_t new_routes = NULL;
 	di_route_el_t *route, *new_route, *last_route;
 	
@@ -73,4 +73,13 @@ di_route_list_t route_dup(di_route_list_t *routes) {
 	}
 	
 	return new_routes;
+}
+
+void route_destroy(di_route_list_t *routes) {
+	di_route_el_t *route, *tmp;
+
+	LL_FOREACH_SAFE(*routes, route, tmp) {
+		LL_DELETE(*routes, route);
+		free(route);
+	}
 }
