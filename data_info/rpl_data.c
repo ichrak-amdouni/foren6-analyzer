@@ -440,5 +440,7 @@ void rpldata_clear() {
 
 	rpldata_init();
 
+	rpl_event_clear();
+
 	sniffer_parser_pause_parser(false);
 }

@@ -176,3 +176,8 @@ void rpl_event_process_events(int wsn_version) {
 		DL_DELETE(head, event);
 	}
 }
+
+void rpl_event_clear() {
+	if(event_callbacks.onClearEvent)
+		event_callbacks.onClearEvent();
+}
