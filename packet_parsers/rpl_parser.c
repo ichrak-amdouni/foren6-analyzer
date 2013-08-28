@@ -5,6 +5,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <locale.h>
 
 #include "rpl_parser.h"
 #include "parser_register.h"
@@ -129,7 +130,9 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 		if(!strcmp(nameStr, "frame.number")) {
 			current_packet.packet_id = strtol(showStr, NULL, 10)-1;  //wireshark's first packet is number 1
 		} else if(!strcmp(nameStr, "frame.time_relative")) {
+			char* oldlocale = setlocale(LC_NUMERIC, "C");
 			current_packet.pkt_info.timestamp = strtod(showStr, NULL);
+			setlocale(LC_NUMERIC, oldlocale);
 		}
 	} else if(!strcmp(nameStr, "icmpv6.checksum_bad") && !strcmp(showStr, "1")) {
 		current_packet.is_bad = true;
