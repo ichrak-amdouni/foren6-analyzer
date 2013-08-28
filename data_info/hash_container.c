@@ -4,6 +4,9 @@
 #include "../uthash.h"
 #include "pthread.h"
 #include <stdio.h>
+#ifdef __APPLE__
+#include "pthread_spin_lock_shim.h"
+#endif
 
 typedef struct hash_container_el {
 	void *data;
