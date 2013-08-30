@@ -159,7 +159,7 @@ void desc_poll_process_events() {
 	sigprocmask(SIG_UNBLOCK, &x, NULL);
 
 	//No descriptor to poll, just wait and return (to avoid wasting cpu time)
-	if(maxfd == -1) {
+	if(maxfd < 0) {
 		usleep(100000);
 		return;
 	}

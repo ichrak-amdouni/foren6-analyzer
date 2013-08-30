@@ -71,13 +71,16 @@ static void link_set_changed(di_link_t *link) {
 }
 
 static void link_update_old_field(const di_link_t *link, int field_offset, int field_size) {
-		di_link_t **versionned_node_ptr;
-		hash_container_ptr container = rpldata_get_links(rpldata_get_wsn_last_version());
+	di_link_t **versionned_link_ptr;
+	int version = rpldata_get_wsn_last_version();
+	if(version) {
+		hash_container_ptr container = rpldata_get_links(version);
 		if(container) {
-			versionned_node_ptr = (di_link_t**)hash_value(container, hash_key_make(link->key.ref), HVM_FailIfNonExistant, NULL);
-			if(versionned_node_ptr)
-				memcpy((char*)(*versionned_node_ptr) + field_offset, (char*)link + field_offset, field_size);
+			versionned_link_ptr = (di_link_t**)hash_value(container, hash_key_make(link->key.ref), HVM_FailIfNonExistant, NULL);
+			if(versionned_link_ptr && *versionned_link_ptr != link)
+				memcpy((char*)(*versionned_link_ptr) + field_offset, (char*)link + field_offset, field_size);
 		}
+	}
 }
 
 di_link_t *link_dup(const di_link_t *link) {

@@ -193,13 +193,16 @@ static void node_set_changed(di_node_t *node) {
 }
 
 static void node_update_old_field(const di_node_t *node, int field_offset, int field_size) {
-		di_node_t **versionned_node_ptr;
-		hash_container_ptr container = rpldata_get_nodes(rpldata_get_wsn_last_version());
+	di_node_t **versionned_node_ptr;
+	int version = rpldata_get_wsn_last_version();
+	if(version) {
+		hash_container_ptr container = rpldata_get_nodes(version);
 		if(container) {
 			versionned_node_ptr = (di_node_t**)hash_value(container, hash_key_make(node->key.ref), HVM_FailIfNonExistant, NULL);
-			if(versionned_node_ptr)
+			if(versionned_node_ptr && *versionned_node_ptr != node)
 				memcpy((char*)(*versionned_node_ptr) + field_offset, (char*)node + field_offset, field_size);
 		}
+	}
 }
 
 bool node_has_changed(di_node_t *node) {
