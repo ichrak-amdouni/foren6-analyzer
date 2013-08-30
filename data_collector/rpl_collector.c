@@ -225,10 +225,8 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 	src = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &src_created);
 	node_add_packet_count(src, 1);
 
-	if(!rpl_info || rpl_info->sender_rank == 0) {
-		//src->global_address = *src_ip_address;
-	} else if(rpl_info) {
-		//src->rank = rpl_info->sender_rank;
+	if(rpl_info) {
+		node_set_rank(src, rpl_info->sender_rank);
 	}
 
 	if(pkt_info.dst_wpan_address != 0 && pkt_info.dst_wpan_address != ADDR_MAC64_BROADCAST) {
@@ -250,6 +248,12 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 				route.length = 128;
 				route.prefix = pkt_info.src_ip_address;
 				node_add_route(dst, &route, node_get_mac64(src));
+
+				if(rpl_info->sender_rank < node_get_rank(dst))
+					node_add_upward_error(src);
+			} else {
+				if(rpl_info->sender_rank > node_get_rank(dst))
+					node_add_downward_error(src);
 			}
 		}
 	}

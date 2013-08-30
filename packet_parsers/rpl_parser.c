@@ -338,7 +338,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 				else if(!strcmp(nameStr, "ipv6.opt.rpl.instance_id"))
 					current_packet.data.hop_info.rpl_instance_id = valueInt;
 				else if(!strcmp(nameStr, "ipv6.opt.rpl.sender_rank")) {
-					current_packet.data.hop_info.sender_rank = valueInt;
+					current_packet.data.hop_info.sender_rank = ((valueInt & 0xFF00) >> 8) | ((valueInt & 0xFF) << 8);
 				} else option_check = false;
 				if(option_check)
 					current_packet.data.has_hop_info = true;

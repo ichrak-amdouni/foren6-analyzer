@@ -35,6 +35,8 @@ struct di_node {
 	int packet_count;
 	double max_dao_interval;
 	double max_dio_interval;
+	int upward_rank_error;
+	int downward_rank_error;
 };
 
 static uint16_t last_simple_id = 0;
@@ -251,6 +253,16 @@ void node_update_dio_interval(di_node_t *node, double timestamp) {
 	last_dio_timestamp = timestamp;
 }
 
+void node_add_upward_error(di_node_t *node) {
+	node->upward_rank_error++;
+	node_update_old_field(node, offsetof(di_node_t, upward_rank_error), sizeof(node->upward_rank_error));
+}
+
+void node_add_downward_error(di_node_t *node) {
+	node->downward_rank_error++;
+	node_update_old_field(node, offsetof(di_node_t, downward_rank_error), sizeof(node->downward_rank_error));
+}
+
 
 const di_node_key_t *node_get_key(const di_node_t *node) {
 	return &node->key;
@@ -317,4 +329,12 @@ double node_get_max_dao_interval(const di_node_t *node) {
 
 double node_get_max_dio_interval(const di_node_t *node) {
 	return node->max_dio_interval;
+}
+
+int node_get_upward_error_count(const di_node_t *node) {
+	return node->upward_rank_error;
+}
+
+int node_get_downward_error_count(const di_node_t *node) {
+	return node->downward_rank_error;
 }
