@@ -263,6 +263,16 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 				route.prefix = pkt_info.src_ip_address;
 				node_add_route(dst, &route, node_get_mac64(src));
 
+				//Check if the parent is in the child routing table, in that case, there might be a routing loop
+				di_route_list_t route_table = node_get_routes(src);
+				di_route_el_t *route_el;
+				LL_FOREACH(route_table, route_el) {
+					if(addr_compare_ip(&route_el->route_prefix.prefix, node_get_global_ip(dst)) == 0) {
+						node_add_route_error(src);
+						break;
+					}
+				}
+
 				if(rpl_info->sender_rank < node_get_rank(dst))
 					node_add_upward_error(src);
 			} else {
