@@ -15,6 +15,8 @@
 #include "../data_info/metric.h"
 #include "../data_info/rpl_data.h"
 
+#include "../utlist.h"
+
 void rpl_collector_parse_dio(packet_info_t pkt_info,
 		rpl_dio_t* dio,
 		rpl_dio_opt_config_t* dodag_config,
@@ -159,6 +161,18 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 		link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(child)}, (di_node_ref_t){node_get_mac64(parent)});
 		new_link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
 		link_update(new_link, time(NULL), 1);
+
+
+		//Check if the parent is in the child routing table, in that case, there might be a routing loop
+		di_route_list_t route_table = node_get_routes(child);
+		di_route_el_t *route;
+		LL_FOREACH(route_table, route) {
+			if(addr_compare_ip(&route->route_prefix.prefix, node_get_global_ip(parent)) == 0) {
+				node_add_route_error(child);
+				break;
+			}
+		}
+
 		//link_set_metric(new_link, node_get_metric(child));
 	} else if(transit && transit->path_lifetime == 0) {
 		//No-Path DAO

@@ -37,6 +37,7 @@ struct di_node {
 	double max_dio_interval;
 	int upward_rank_error;
 	int downward_rank_error;
+	int route_loop_error;
 };
 
 static uint16_t last_simple_id = 0;
@@ -182,7 +183,6 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
 }
 
 void node_add_packet_count(di_node_t *node, int count) {
-
 	node->packet_count += count;
 
 	node_update_old_field(node, offsetof(di_node_t, packet_count), sizeof(node->packet_count));
@@ -255,12 +255,17 @@ void node_update_dio_interval(di_node_t *node, double timestamp) {
 
 void node_add_upward_error(di_node_t *node) {
 	node->upward_rank_error++;
-	node_update_old_field(node, offsetof(di_node_t, upward_rank_error), sizeof(node->upward_rank_error));
+	node_set_changed(node);
 }
 
 void node_add_downward_error(di_node_t *node) {
 	node->downward_rank_error++;
-	node_update_old_field(node, offsetof(di_node_t, downward_rank_error), sizeof(node->downward_rank_error));
+	node_set_changed(node);
+}
+
+void node_add_route_error(di_node_t *node) {
+	node->route_loop_error++;
+	node_set_changed(node);
 }
 
 
@@ -337,4 +342,8 @@ int node_get_upward_error_count(const di_node_t *node) {
 
 int node_get_downward_error_count(const di_node_t *node) {
 	return node->downward_rank_error;
+}
+
+int node_get_route_error_count(const di_node_t *node) {
+	return node->route_loop_error;
 }
