@@ -90,6 +90,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 
 	if(dodag_config) {
 		di_dodag_config_t config;
+		memset(&config, 0, sizeof(config));
 		config.auth_enabled = dodag_config->auth_enabled;
 		config.default_lifetime = dodag_config->default_lifetime;
 		config.dio_interval_max = dodag_config->dio_interval_max;

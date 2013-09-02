@@ -39,6 +39,7 @@ void dodag_init(void *data, const void *key, size_t key_size) {
 	dodag->nodes = hash_create(sizeof(di_node_ref_t), NULL);
 	dodag->rpl_instance.rpl_instance = -1;
 	dodag->key.ref = *(di_dodag_ref_t*)key;
+	memset(&dodag->config, 0, sizeof(dodag->config));
 	dodag->has_changed = true;
 	rpl_event_dodag(dodag, RET_Created);
 }
