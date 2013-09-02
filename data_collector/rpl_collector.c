@@ -276,6 +276,12 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 				if(rpl_info->sender_rank < node_get_rank(dst))
 					node_add_upward_error(src);
 			} else {
+				di_prefix_t route;
+				route.expiration_time = 0;
+				route.length = 128;
+				route.prefix = pkt_info.dst_ip_address;
+				node_add_route(src, &route, node_get_mac64(dst));
+
 				if(rpl_info->sender_rank > node_get_rank(dst))
 					node_add_downward_error(src);
 			}
