@@ -42,6 +42,8 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	node_set_dtsn(node, dio->dtsn);
 	node_update_dio_interval(node, pkt_info.timestamp);
 
+	node_set_local_ip(node, pkt_info.src_ip_address);
+
 	di_dodag_ref_t dodag_ref;
 	dodag_ref_init(&dodag_ref, dio->dodagid, dio->version_number);
 	dodag = rpldata_get_dodag(&dodag_ref, HVM_CreateIfNonExistant, &dodag_created);
@@ -53,21 +55,15 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	rpl_instance_add_dodag(rpl_instance, dodag);
 
 	//Manage new version of DODAG
-	if(node_get_dodag(node) && node_get_dodag(node)->version < dio->version_number) {
-		//The node had a DODAG with a older version, remove it from the old DODAG and add it to the new one
-		di_dodag_t *previous_dodag;
-		di_dodag_ref_t previous_dodag_ref;
+	const di_dodag_ref_t* oldDodag = node_get_dodag(node);
+	if(oldDodag && oldDodag->version < 0)
+		oldDodag = NULL;
 
-		dodag_ref_init(&previous_dodag_ref, node_get_dodag(node)->dodagid, node_get_dodag(node)->version);
-		previous_dodag = rpldata_get_dodag(&previous_dodag_ref, HVM_FailIfNonExistant, NULL);
-		assert(previous_dodag != NULL);
-		dodag_del_node(previous_dodag, node);
-
-		dodag_add_node(dodag, node);
-	} else if(node_get_dodag(node) == NULL) {
-		//The node was not attached to a dodag, so add to it
-		dodag_add_node(dodag, node);
+	if(oldDodag && (addr_compare_ip(&oldDodag->dodagid, &dio->dodagid) == 0 || oldDodag->version > dio->version_number)) {
+		node_add_dodag_version_error(node);
 	}
+
+	dodag_add_node(dodag, node);
 
 	node_set_rank(node, dio->rank);
 	node_set_grounded(node, dio->grounded);
@@ -112,14 +108,11 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 {
 
 	di_node_t *child, *parent;
-	di_dodag_t *dodag;
-	di_rpl_instance_t *rpl_instance;
 	di_link_t *new_link = NULL;
 	di_link_t *old_link = NULL;
 
 	bool child_created = false;
 	bool parent_created = false;
-	bool dodag_created = false;
 	bool rpl_instance_created = false;
 	bool link_created = false;
 
@@ -130,28 +123,29 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	child = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &child_created);
 	node_add_packet_count(child, 1);
 
+	node_set_local_ip(child, pkt_info.src_ip_address);
+
 	node_ref_init(&node_ref, pkt_info.dst_wpan_address);
 	parent = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &parent_created);
 
 	di_rpl_instance_ref_t rpl_instance_ref;
 	rpl_instance_ref_init(&rpl_instance_ref, dao->rpl_instance_id);
-	rpl_instance = rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
+	rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
+
+	if(addr_compare_ip(node_get_local_ip(parent), &pkt_info.dst_ip_address) != 0) {
+		node_add_ip_mismatch_error(parent);
+	}
 
 
 	if(dao->dodagid_present && node_get_dodag(child)) {
-		di_dodag_ref_t dodag_ref;
-		dodag_ref_init(&dodag_ref, node_get_dodag(child)->dodagid, node_get_dodag(child)->version);
-		dodag = rpldata_get_dodag(&dodag_ref, HVM_CreateIfNonExistant, &dodag_created);
-
-		rpl_instance_add_dodag(rpl_instance, dodag);
-
-		//assert(!memcmp(node_get_dodag(child), &dodag_get_key(dodag)->ref, sizeof(di_dodag_ref_t)));
-		//assert(!addr_is_ip_any(*node_get_global_ip(child)));
-
-		dodag_add_node(dodag, child);
-		dodag_add_node(dodag, parent);
-	} else {
-		dodag = NULL;
+		const di_dodag_ref_t *dodag_ref = node_get_dodag(parent);
+		if(addr_compare_ip(&dao->dodagid, &dodag_ref->dodagid) == 0) {
+			di_dodag_t *dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
+			assert(dodag);
+			dodag_add_node(dodag, child);
+		} else {
+			//dodagid mismatch
+		}
 	}
 
 	if(transit && transit->path_lifetime > 0) {
@@ -221,6 +215,8 @@ void rpl_collector_parse_dis(packet_info_t pkt_info,
 	node_ref_init(&node_ref, pkt_info.src_wpan_address);
 	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);  //nothing to do with the node, but be sure it exists in the node list
 	node_add_packet_count(node, 1);
+
+	node_set_local_ip(node, pkt_info.src_ip_address);
 }
 
 void rpl_collector_parse_data(packet_info_t pkt_info,

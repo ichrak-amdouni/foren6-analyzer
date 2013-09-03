@@ -35,9 +35,12 @@ struct di_node {
 	int packet_count;
 	double max_dao_interval;
 	double max_dio_interval;
-	int upward_rank_error;
-	int downward_rank_error;
-	int route_loop_error;
+	int upward_rank_errors;
+	int downward_rank_errors;
+	int route_loop_errors;
+
+	int ip_mismatch_errors;
+	int dodag_version_decrease_errors;
 };
 
 static uint16_t last_simple_id = 0;
@@ -114,6 +117,7 @@ void node_set_key(di_node_t *node, const di_node_key_t *key) {
 void node_set_local_ip(di_node_t *node, addr_ipv6_t address) {
 	if(addr_compare_ip(&node->local_address, &address)) {
 		node->local_address = address;
+		node->is_custom_local_address = true;
 		node_set_changed(node);
 	}
 }
@@ -121,6 +125,7 @@ void node_set_local_ip(di_node_t *node, addr_ipv6_t address) {
 void node_set_global_ip(di_node_t *node, addr_ipv6_t address) {
 	if(addr_compare_ip(&node->global_address, &address)) {
 		node->global_address = address;
+		node->is_custom_global_address = true;
 		node_set_changed(node);
 	}
 }
@@ -161,7 +166,6 @@ void node_set_grounded(di_node_t *node, bool grounded) {
 }
 
 void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref) {
-	assert(dodag_ref->version >= 0);
 	if(memcmp(&node->dodag, dodag_ref, sizeof(di_dodag_ref_t))) {
 		node->dodag = *dodag_ref;
 		node_set_changed(node);
@@ -254,17 +258,27 @@ void node_update_dio_interval(di_node_t *node, double timestamp) {
 }
 
 void node_add_upward_error(di_node_t *node) {
-	node->upward_rank_error++;
+	node->upward_rank_errors++;
 	node_set_changed(node);
 }
 
 void node_add_downward_error(di_node_t *node) {
-	node->downward_rank_error++;
+	node->downward_rank_errors++;
 	node_set_changed(node);
 }
 
 void node_add_route_error(di_node_t *node) {
-	node->route_loop_error++;
+	node->route_loop_errors++;
+	node_set_changed(node);
+}
+
+void node_add_dodag_version_error(di_node_t *node) {
+	node->dodag_version_decrease_errors++;
+	node_set_changed(node);
+}
+
+void node_add_ip_mismatch_error(di_node_t *node) {
+	node->ip_mismatch_errors++;
 	node_set_changed(node);
 }
 
@@ -337,13 +351,21 @@ double node_get_max_dio_interval(const di_node_t *node) {
 }
 
 int node_get_upward_error_count(const di_node_t *node) {
-	return node->upward_rank_error;
+	return node->upward_rank_errors;
 }
 
 int node_get_downward_error_count(const di_node_t *node) {
-	return node->downward_rank_error;
+	return node->downward_rank_errors;
 }
 
 int node_get_route_error_count(const di_node_t *node) {
-	return node->route_loop_error;
+	return node->route_loop_errors;
+}
+
+int node_get_dodag_version_error_count(const di_node_t *node) {
+	return node->dodag_version_decrease_errors;
+}
+
+int node_get_ip_mismatch_error_count(const di_node_t *node) {
+	return node->ip_mismatch_errors;
 }
