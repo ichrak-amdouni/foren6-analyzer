@@ -63,22 +63,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 		node_add_dodag_version_error(node);
 	}
 
-
-	if(oldDodag && (addr_compare_ip(&oldDodag->dodagid, &dio->dodagid) != 0 || oldDodag->version != dio->version_number)) {
-		//The node had a DODAG with a different version or a different dodag, remove it from the old DODAG and add it to the new one
-		di_dodag_t *previous_dodag;
-		di_dodag_ref_t previous_dodag_ref;
-
-		dodag_ref_init(&previous_dodag_ref, oldDodag->dodagid, oldDodag->version);
-		previous_dodag = rpldata_get_dodag(&previous_dodag_ref, HVM_FailIfNonExistant, NULL);
-		assert(previous_dodag != NULL);
-		dodag_del_node(previous_dodag, node);
-
-		dodag_add_node(dodag, node);
-	} else if(oldDodag == NULL) {
-		//The node was not attached to a dodag, so add to it
-		dodag_add_node(dodag, node);
-	}
+	dodag_add_node(dodag, node);
 
 	node_set_rank(node, dio->rank);
 	node_set_grounded(node, dio->grounded);
@@ -123,14 +108,11 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 {
 
 	di_node_t *child, *parent;
-	di_dodag_t *dodag;
-	di_rpl_instance_t *rpl_instance;
 	di_link_t *new_link = NULL;
 	di_link_t *old_link = NULL;
 
 	bool child_created = false;
 	bool parent_created = false;
-	bool dodag_created = false;
 	bool rpl_instance_created = false;
 	bool link_created = false;
 
@@ -148,7 +130,7 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 
 	di_rpl_instance_ref_t rpl_instance_ref;
 	rpl_instance_ref_init(&rpl_instance_ref, dao->rpl_instance_id);
-	rpl_instance = rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
+	rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
 
 	if(addr_compare_ip(node_get_local_ip(parent), &pkt_info.dst_ip_address) != 0) {
 		node_add_ip_mismatch_error(parent);
@@ -156,20 +138,14 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 
 
 	if(dao->dodagid_present && node_get_dodag(child)) {
-		di_dodag_ref_t dodag_ref;
-		dodag_ref_init(&dodag_ref, node_get_dodag(child)->dodagid, node_get_dodag(child)->version);
-		dodag = rpldata_get_dodag(&dodag_ref, HVM_FailIfNonExistant, &dodag_created);
-		assert(dodag != NULL);
-
-		rpl_instance_add_dodag(rpl_instance, dodag);
-
-		assert(!memcmp(node_get_dodag(child), &dodag_get_key(dodag)->ref, sizeof(di_dodag_ref_t)));
-		assert(!addr_is_ip_any(*node_get_global_ip(child)));
-
-		dodag_add_node(dodag, child);
-		dodag_add_node(dodag, parent);
-	} else {
-		dodag = NULL;
+		const di_dodag_ref_t *dodag_ref = node_get_dodag(parent);
+		if(addr_compare_ip(&dao->dodagid, &dodag_ref->dodagid) == 0) {
+			di_dodag_t *dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
+			assert(dodag);
+			dodag_add_node(dodag, child);
+		} else {
+			//dodagid mismatch
+		}
 	}
 
 	if(transit && transit->path_lifetime > 0) {

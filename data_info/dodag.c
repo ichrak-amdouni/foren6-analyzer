@@ -122,6 +122,21 @@ void dodag_set_rpl_instance(di_dodag_t *dodag, const di_rpl_instance_ref_t* rpl_
 
 void dodag_add_node(di_dodag_t *dodag, di_node_t *node) {
 	bool was_already_in_dodag = false;
+	const di_dodag_ref_t *previous_dodag_ref = node_get_dodag(node);
+
+	if(previous_dodag_ref && previous_dodag_ref->version >= 0 &&
+	  (previous_dodag_ref->version != dodag->key.ref.version || memcmp(&previous_dodag_ref->dodagid, &dodag->key.ref.dodagid, sizeof(addr_ipv6_t)))
+	  )
+	{
+		di_dodag_t *previous_dodag;
+
+		previous_dodag = rpldata_get_dodag(previous_dodag_ref, HVM_FailIfNonExistant, NULL);
+		if(previous_dodag == NULL) {
+			fprintf(stderr, "Node old dodag does not exist\n");
+		} else {
+			dodag_del_node(previous_dodag, node);
+		}
+	}
 
 	hash_add(dodag->nodes, hash_key_make(node_get_key(node)->ref), &node_get_key(node)->ref, NULL, HAM_OverwriteIfExists, &was_already_in_dodag);
 
@@ -130,9 +145,7 @@ void dodag_add_node(di_dodag_t *dodag, di_node_t *node) {
 		node_update_ip(node, &dodag->prefix);
 		dodag_set_changed(dodag);
 	} else {
-		assert(!memcmp(&node_get_dodag(node)->dodagid, &dodag->key.ref.dodagid, sizeof(addr_ipv6_t)));
-		if(node_get_dodag(node)->version < dodag->key.ref.version)
-			node_set_dodag(node, &dodag->key.ref);
+		assert(previous_dodag_ref->version == dodag->key.ref.version && !memcmp(&previous_dodag_ref->dodagid, &dodag->key.ref.dodagid, sizeof(addr_ipv6_t)));
 	}
 }
 
