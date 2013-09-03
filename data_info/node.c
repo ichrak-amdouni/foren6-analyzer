@@ -161,7 +161,6 @@ void node_set_grounded(di_node_t *node, bool grounded) {
 }
 
 void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref) {
-	assert(dodag_ref->version >= 0);
 	if(memcmp(&node->dodag, dodag_ref, sizeof(di_dodag_ref_t))) {
 		node->dodag = *dodag_ref;
 		node_set_changed(node);

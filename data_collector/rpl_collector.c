@@ -53,18 +53,27 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	rpl_instance_add_dodag(rpl_instance, dodag);
 
 	//Manage new version of DODAG
-	if(node_get_dodag(node) && node_get_dodag(node)->version < dio->version_number) {
-		//The node had a DODAG with a older version, remove it from the old DODAG and add it to the new one
+	const di_dodag_ref_t* oldDodag = node_get_dodag(node);
+	if(oldDodag && oldDodag->version < 0)
+		oldDodag = NULL;
+
+	if(oldDodag && (addr_compare_ip(&oldDodag->dodagid, &dio->dodagid) == 0 || oldDodag->version > dio->version_number)) {
+		//dodag version decreased !
+	}
+
+
+	if(oldDodag && (addr_compare_ip(&oldDodag->dodagid, &dio->dodagid) != 0 || oldDodag->version != dio->version_number)) {
+		//The node had a DODAG with a different version or a different dodag, remove it from the old DODAG and add it to the new one
 		di_dodag_t *previous_dodag;
 		di_dodag_ref_t previous_dodag_ref;
 
-		dodag_ref_init(&previous_dodag_ref, node_get_dodag(node)->dodagid, node_get_dodag(node)->version);
+		dodag_ref_init(&previous_dodag_ref, oldDodag->dodagid, oldDodag->version);
 		previous_dodag = rpldata_get_dodag(&previous_dodag_ref, HVM_FailIfNonExistant, NULL);
 		assert(previous_dodag != NULL);
 		dodag_del_node(previous_dodag, node);
 
 		dodag_add_node(dodag, node);
-	} else if(node_get_dodag(node) == NULL) {
+	} else if(oldDodag == NULL) {
 		//The node was not attached to a dodag, so add to it
 		dodag_add_node(dodag, node);
 	}
