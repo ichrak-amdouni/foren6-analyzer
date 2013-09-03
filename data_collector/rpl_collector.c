@@ -141,13 +141,12 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	if(dao->dodagid_present && node_get_dodag(child)) {
 		di_dodag_ref_t dodag_ref;
 		dodag_ref_init(&dodag_ref, node_get_dodag(child)->dodagid, node_get_dodag(child)->version);
-		dodag = rpldata_get_dodag(&dodag_ref, HVM_FailIfNonExistant, &dodag_created);
-		assert(dodag != NULL);
+		dodag = rpldata_get_dodag(&dodag_ref, HVM_CreateIfNonExistant, &dodag_created);
 
 		rpl_instance_add_dodag(rpl_instance, dodag);
 
-		assert(!memcmp(node_get_dodag(child), &dodag_get_key(dodag)->ref, sizeof(di_dodag_ref_t)));
-		assert(!addr_is_ip_any(*node_get_global_ip(child)));
+		//assert(!memcmp(node_get_dodag(child), &dodag_get_key(dodag)->ref, sizeof(di_dodag_ref_t)));
+		//assert(!addr_is_ip_any(*node_get_global_ip(child)));
 
 		dodag_add_node(dodag, child);
 		dodag_add_node(dodag, parent);
