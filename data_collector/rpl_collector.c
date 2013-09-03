@@ -42,6 +42,8 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	node_set_dtsn(node, dio->dtsn);
 	node_update_dio_interval(node, pkt_info.timestamp);
 
+	node_set_local_ip(node, pkt_info.src_ip_address);
+
 	di_dodag_ref_t dodag_ref;
 	dodag_ref_init(&dodag_ref, dio->dodagid, dio->version_number);
 	dodag = rpldata_get_dodag(&dodag_ref, HVM_CreateIfNonExistant, &dodag_created);
@@ -58,7 +60,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 		oldDodag = NULL;
 
 	if(oldDodag && (addr_compare_ip(&oldDodag->dodagid, &dio->dodagid) == 0 || oldDodag->version > dio->version_number)) {
-		//dodag version decreased !
+		node_add_dodag_version_error(node);
 	}
 
 
@@ -139,12 +141,18 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	child = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &child_created);
 	node_add_packet_count(child, 1);
 
+	node_set_local_ip(child, pkt_info.src_ip_address);
+
 	node_ref_init(&node_ref, pkt_info.dst_wpan_address);
 	parent = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &parent_created);
 
 	di_rpl_instance_ref_t rpl_instance_ref;
 	rpl_instance_ref_init(&rpl_instance_ref, dao->rpl_instance_id);
 	rpl_instance = rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
+
+	if(addr_compare_ip(node_get_local_ip(parent), &pkt_info.dst_ip_address) != 0) {
+		node_add_ip_mismatch_error(parent);
+	}
 
 
 	if(dao->dodagid_present && node_get_dodag(child)) {
@@ -231,6 +239,8 @@ void rpl_collector_parse_dis(packet_info_t pkt_info,
 	node_ref_init(&node_ref, pkt_info.src_wpan_address);
 	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);  //nothing to do with the node, but be sure it exists in the node list
 	node_add_packet_count(node, 1);
+
+	node_set_local_ip(node, pkt_info.src_ip_address);
 }
 
 void rpl_collector_parse_data(packet_info_t pkt_info,
