@@ -133,18 +133,18 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
 
 	if(addr_compare_ip(node_get_local_ip(parent), &pkt_info.dst_ip_address) != 0) {
-		node_add_ip_mismatch_error(parent);
+		node_add_ip_mismatch_error(child);
 	}
 
 
 	if(dao->dodagid_present && node_get_dodag(child)) {
 		const di_dodag_ref_t *dodag_ref = node_get_dodag(parent);
-		if(addr_compare_ip(&dao->dodagid, &dodag_ref->dodagid) == 0) {
+		if(dodag_ref && addr_compare_ip(&dao->dodagid, &dodag_ref->dodagid) == 0) {
 			di_dodag_t *dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
 			assert(dodag);
 			dodag_add_node(dodag, child);
 		} else {
-			//dodagid mismatch
+			node_add_dodag_mismatch_error(child);
 		}
 	}
 

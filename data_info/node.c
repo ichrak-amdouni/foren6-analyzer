@@ -33,14 +33,15 @@ struct di_node {
 
 	//statistics
 	int packet_count;
-	double max_dao_interval;
-	double max_dio_interval;
-	int upward_rank_errors;
-	int downward_rank_errors;
-	int route_loop_errors;
+	double max_dao_interval;  //maximum interval seen between 2 DAO packets
+	double max_dio_interval;  //maximum interval seen between 2 DIO packets
+	int upward_rank_errors;   //incremented when data trafic goes from a node to it's parent in the case of the parent has a greater rank than the child
+	int downward_rank_errors; //incremented when data trafic goes from a node to a child where the child have a smaller rank than the parent
+	int route_loop_errors;    //incremented when a node choose a parent that is in it's routing table
 
-	int ip_mismatch_errors;
-	int dodag_version_decrease_errors;
+	int ip_mismatch_errors;   //incremented when a DAO message is sent to a node with the wrong IP<=>WPAN addresses association
+	int dodag_version_decrease_errors;  //incremented when a DIO message contain a dodag version smaller than the known version
+	int dodag_mismatch_errors; //incremented when a DAO is sent to a parent with the dodagid in the DAO packet different from the parent's dodag
 };
 
 static uint16_t last_simple_id = 0;
@@ -282,6 +283,11 @@ void node_add_ip_mismatch_error(di_node_t *node) {
 	node_set_changed(node);
 }
 
+void node_add_dodag_mismatch_error(di_node_t *node) {
+	node->dodag_mismatch_errors++;
+	node_set_changed(node);
+}
+
 
 const di_node_key_t *node_get_key(const di_node_t *node) {
 	return &node->key;
@@ -368,4 +374,8 @@ int node_get_dodag_version_error_count(const di_node_t *node) {
 
 int node_get_ip_mismatch_error_count(const di_node_t *node) {
 	return node->ip_mismatch_errors;
+}
+
+int node_get_dodag_mismatch_error_count(const di_node_t *node) {
+	return node->dodag_mismatch_errors;
 }

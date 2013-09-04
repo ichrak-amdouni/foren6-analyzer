@@ -61,6 +61,7 @@ void node_add_downward_error(di_node_t *node);
 void node_add_route_error(di_node_t *node);
 void node_add_dodag_version_error(di_node_t *node);
 void node_add_ip_mismatch_error(di_node_t *node);
+void node_add_dodag_mismatch_error(di_node_t *node);
 
 const di_node_key_t *node_get_key(const di_node_t *node);
 addr_wpan_t node_get_mac64(const di_node_t *node);
@@ -84,6 +85,7 @@ int node_get_downward_error_count(const di_node_t *node);
 int node_get_route_error_count(const di_node_t *node);
 int node_get_dodag_version_error_count(const di_node_t *node);
 int node_get_ip_mismatch_error_count(const di_node_t *node);
+int node_get_dodag_mismatch_error_count(const di_node_t *node);
 
 
 #ifdef	__cplusplus
