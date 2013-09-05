@@ -88,7 +88,6 @@ static interface_el_t *interfacemgr_register_from_shared_obj(const char* filenam
 		return NULL;
 	} else if(interface_version < RECOMMENDED_CAPTURE_VERSION) {
 		fprintf(stderr, "Warning: interface file %s has a deprecated version: %d\n", filename, interface_version);
-		return NULL;
 	}
 
 	dlerror(); //clear errors
