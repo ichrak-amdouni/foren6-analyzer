@@ -12,6 +12,8 @@
 #include "../sniffer_packet_parser.h"
 
 #define LAST_PACKET_NUMBER 100
+#define MINIMAL_CAPTURE_VERSION 0
+#define RECOMMENDED_CAPTURE_VERSION 1
 
 static pthread_mutex_t packet_reception_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -62,13 +64,32 @@ interface_t *interfacemgr_get(const char *name) {
 static interface_el_t *interfacemgr_register_from_shared_obj(const char* filename) {
 	void* handle;
 	const char* error;
+	interface_version_function_t interface_get_version;
 	interface_register_function_t interface_register;
 	interface_t interface_description;
 	interface_el_t *interface_element;
 
+	int interface_version;
+
 	handle = dlopen(filename, RTLD_NOW);
 	if(handle == NULL)
 		return NULL;
+
+	dlerror(); //clear errors
+	*(void**)(&interface_get_version) = dlsym(handle, "interface_get_version");
+	if((error = dlerror()) || interface_get_version == NULL) {
+		interface_version = 0;
+	} else {
+		interface_version = interface_get_version();
+	}
+
+	if(interface_version < MINIMAL_CAPTURE_VERSION) {
+		fprintf(stderr, "Can't register interface file %s: too old version: %d\n", filename, interface_version);
+		return NULL;
+	} else if(interface_version < RECOMMENDED_CAPTURE_VERSION) {
+		fprintf(stderr, "Warning: interface file %s has a deprecated version: %d\n", filename, interface_version);
+		return NULL;
+	}
 
 	dlerror(); //clear errors
 	*(void**)(&interface_register) = dlsym(handle, "interface_register");

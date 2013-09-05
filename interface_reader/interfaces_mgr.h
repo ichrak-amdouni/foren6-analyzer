@@ -40,6 +40,7 @@ typedef struct interface {
 } interface_t;
 
 typedef void (*interface_enum_function_t)(const char* interface_name);
+typedef int (*interface_version_function_t)();
 typedef interface_t (*interface_register_function_t)();
 
 interface_t *interfacemgr_get(const char *name);
