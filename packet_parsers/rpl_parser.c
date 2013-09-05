@@ -129,7 +129,7 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 	if(valueStr == NULL) {
 		if(!strcmp(nameStr, "frame.number")) {
 			current_packet.packet_id = strtol(showStr, NULL, 10)-1;  //wireshark's first packet is number 1
-		} else if(!strcmp(nameStr, "frame.time_relative")) {
+		} else if(!strcmp(nameStr, "frame.time_epoch")) {
 			char* oldlocale = setlocale(LC_NUMERIC, "C");
 			current_packet.pkt_info.timestamp = strtod(showStr, NULL);
 			setlocale(LC_NUMERIC, oldlocale);

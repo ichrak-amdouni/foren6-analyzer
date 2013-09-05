@@ -1,6 +1,6 @@
 #include "rpl_packet_parser.h"
 #include "descriptor_poll.h"
-#include "interface_reader/interfaces_register.h"
+#include "interface_reader/interfaces_mgr.h"
 #include "sniffer_packet_parser.h"
 
 void rpl_tool_set_callbacks(rpl_event_callbacks_t *callbacks) {
@@ -18,5 +18,5 @@ void rpl_tool_cleanup() {
 }
 
 interface_t *rpl_tool_get_interface(const char* name) {
-	return interface_get(name);
+	return interfacemgr_get(name);
 }

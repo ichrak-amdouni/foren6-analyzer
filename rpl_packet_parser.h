@@ -10,7 +10,7 @@
 
 #include "data_info/rpl_data.h"
 #include "data_collector/rpl_event_callbacks.h"
-#include "interface_reader/interfaces_register.h"
+#include "interface_reader/interfaces_mgr.h"
 
 #ifdef	__cplusplus
 extern "C" {
