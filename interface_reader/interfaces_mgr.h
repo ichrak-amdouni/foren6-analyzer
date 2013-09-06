@@ -18,6 +18,7 @@ extern "C" {
 
 typedef struct ifinstance {
 	void *interface_data;
+	const char *target; //for information only, not used
 
 	//For timestamp sync
 	struct timeval delta_to_parent;
@@ -45,7 +46,7 @@ typedef interface_t (*interface_register_function_t)();
 
 interface_t *interfacemgr_get(const char *name);
 
-ifinstance_t* interfacemgr_create_handle();
+ifinstance_t* interfacemgr_create_handle(const char* target);
 void interfacemgr_destroy_handle(ifinstance_t *handle);
 
 struct timeval interfacemgr_get_absolute_timestamp(const ifinstance_t* iface, struct timeval packet_timestamp);

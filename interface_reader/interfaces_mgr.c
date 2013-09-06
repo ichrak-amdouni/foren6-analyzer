@@ -15,7 +15,10 @@
 #define MINIMAL_CAPTURE_VERSION 0
 #define RECOMMENDED_CAPTURE_VERSION 1
 
+#define debug_printf(format, ...) fprintf(stderr, "PktSync: "format, ## __VA_ARGS__)
+
 static pthread_mutex_t packet_reception_mutex = PTHREAD_MUTEX_INITIALIZER;
+int number_of_timebase = 0;
 
 typedef ifinstance_t* ifinstance_list_t;
 
@@ -122,19 +125,28 @@ static interface_el_t *interfacemgr_add(interface_t *interface) {
 	return interface_element;
 }
 
-ifinstance_t* interfacemgr_create_handle() {
+ifinstance_t* interfacemgr_create_handle(const char *target) {
 	ifreader_t handle = calloc(1, sizeof(struct ifinstance));
 
+	number_of_timebase++;
 
 	handle->last_packets = hash_create(sizeof(struct packet_data), NULL);
 	handle->first_packet = true;
+	handle->target = strdup(target);
 
 	LL_PREPEND(interface_handles, handle);
+
+	debug_printf("New iface: %s, nb root = %d\n", target, number_of_timebase);
 
 	return handle;
 }
 
 void interfacemgr_destroy_handle(ifinstance_t* handle) {
+	if(handle->parent == 0)
+		number_of_timebase--;
+
+	debug_printf("Del iface: %s, nb root = %d\n", handle->target, number_of_timebase);
+
 	LL_DELETE(interface_handles, handle);
 	hash_destroy(handle->last_packets);
 	free(handle);
@@ -187,6 +199,8 @@ void interfacemgr_rebase_parent(ifinstance_t* iface) {
 	}
 
 	if(p != iface) {
+		if(iface->parent != p)
+			debug_printf("Rebasing %s to parent %s\n", iface->target, p->target);
 		iface->parent = p;
 		iface->delta_to_parent = res;
 	}
@@ -202,14 +216,20 @@ void interfacemgr_sync_time(ifinstance_t* iface1, struct timeval packet_timestam
 	if(root1 == root2)
 		return;
 
+	debug_printf("Timesync %s with %s\n", iface1->target, iface2->target);
+
+	number_of_timebase--;
 
 	if(!iface1->parent && !iface2->parent) {
+		debug_printf("  setting %s as parent of %s\n", iface2->target, iface1->target);
 		iface1->parent = iface2;
 		timersub(&packet_timestamp2, &packet_timestamp1, &iface1->delta_to_parent);
 	} else if(!iface1->parent && iface2->parent) {
+		debug_printf("  setting %s as parent of %s\n", iface2->target, iface1->target);
 		iface1->parent = iface2;
 		timersub(&packet_timestamp2, &packet_timestamp1, &iface1->delta_to_parent);
 	} else if(iface1->parent && !iface2->parent) {
+		debug_printf("  setting %s as parent of %s\n", iface1->target, iface2->target);
 		iface2->parent = iface1;
 		timersub(&packet_timestamp1, &packet_timestamp2, &iface2->delta_to_parent);
 	} else {
@@ -218,17 +238,26 @@ void interfacemgr_sync_time(ifinstance_t* iface1, struct timeval packet_timestam
 
 		timersub(&packet_timestamp1, &packet_timestamp2, &parent_delta);
 
+		debug_printf("  Merging trees %s (%s) %s (%s)\n", iface1->target, root1->target, iface2->target, root2->target);
+
 		//Merge synchronisation trees by switch parents of a tree
 		for(child = iface1, p = iface2, old_parent = iface2->parent; p != 0;) {
+			if(p->parent)
+				debug_printf("  changing %s: parent switch from %s to %s\n", p->target, p->parent->target, child->target);
+			else debug_printf("  changing root %s: parent set to %s\n", p->target, child->target);
 			p->parent = child;
 
 			temp = p->delta_to_parent;
 			p->delta_to_parent = parent_delta;
 			timersub(&zero, &temp, &parent_delta); //parent_delta = -temp
 
+
 			child = p;
 			p = old_parent;
-			old_parent = p->parent;
+			if(p)
+				old_parent = p->parent;
+			else
+				old_parent = 0;
 		}
 	}
 }
@@ -327,5 +356,15 @@ struct packet_data *interfacemgr_get_old_packet(ifinstance_t* iface, const unsig
 	hash_it_destroy(it);
 
 	return old_pkt;
+}
+
+void interfacemgr_dump_timesync_state() {
+	ifinstance_t *interface_instance;
+
+	LL_FOREACH(interface_handles, interface_instance) {
+		debug_printf("Iface %s:\n", interface_instance->target);
+		debug_printf("  delta: %ld.%06ld\n", interface_instance->delta_to_parent.tv_sec, interface_instance->delta_to_parent.tv_usec);
+		debug_printf("  parent: %s\n\n", (interface_instance->parent == 0)? "none" : interface_instance->parent->target);
+	}
 }
 
