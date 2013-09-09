@@ -1,0 +1,22 @@
+Source: librplanalyzer
+Priority: extra
+Maintainer: Alexis Murzeau <am@lt-amurzeau.cetic.be>
+Build-Depends: debhelper (>= 8.0.0), libc6-dev (>= 2.3.6-6~), libexpat1-dev (>= 2.0.1), libpcap0.8-dev (>= 0.9.8)
+Standards-Version: 3.9.3
+Section: libs
+
+Package: librplanalyzer-dev
+Section: libdevel
+Architecture: any
+Depends: librplanalyzer1 (= ${binary:Version})
+Suggests: librplcapture-pcap, librplcapture-snif
+Description: RPL Analyzer - core library (development headers)
+ This library provide the analyzer which gather WSN data from captured packets.
+ This packet provide development headers.
+
+Package: librplanalyzer1
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, tshark
+Description: RPL Analyzer - core library
+ This library provide the analyzer which gather WSN data from captured packets.
