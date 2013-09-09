@@ -8,13 +8,13 @@ Section: libs
 Package: librplanalyzer-dev
 Section: libdevel
 Architecture: any
-Depends: librplanalyzer1 (= ${binary:Version})
+Depends: librplanalyzer (= ${binary:Version})
 Suggests: librplcapture-pcap, librplcapture-snif
 Description: RPL Analyzer - core library (development headers)
  This library provide the analyzer which gather WSN data from captured packets.
  This packet provide development headers.
 
-Package: librplanalyzer1
+Package: librplanalyzer
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, tshark
