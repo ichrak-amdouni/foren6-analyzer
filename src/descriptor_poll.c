@@ -24,6 +24,7 @@ static bool stop_thread;
 static desc_poll_info_t *poll_data[SELECT_FD_NUM] = {0};
 static int poll_number = 0;
 static pthread_mutex_t poll_mutex;
+static int last_lock_line;
 static int poll_abort_pipe[2];
 
 static void *desc_poll_run(void* data);
@@ -43,6 +44,7 @@ void desc_poll_init() {
 	poll_number = 0;
 
 	pthread_mutex_init(&poll_mutex, NULL);
+	last_lock_line = __LINE__;
 	stop_thread = false;
 
 	pthread_create(&poll_thread, NULL, &desc_poll_run, NULL);
@@ -79,6 +81,7 @@ bool desc_poll_add(int fd, ready_callback callback, void* user_data) {
 
 	sigprocmask(SIG_BLOCK, &x, NULL);
 	pthread_mutex_lock(&poll_mutex);
+	last_lock_line = __LINE__;
 	for(i = 0; i < SELECT_FD_NUM; i++) {
 		if(poll_data[i] == NULL) {
 			poll_data[i] = data;
@@ -113,6 +116,7 @@ void desc_poll_del(int fd) {
 
 	sigprocmask(SIG_BLOCK, &x, NULL);
 	pthread_mutex_lock(&poll_mutex);
+	last_lock_line = __LINE__;
 	for(i = 0; i < SELECT_FD_NUM; i++) {
 		if(poll_data[i] && poll_data[i]->fd == fd) {
 			break;
@@ -148,6 +152,7 @@ void desc_poll_process_events() {
 
 	sigprocmask(SIG_BLOCK, &x, NULL);
 	pthread_mutex_lock(&poll_mutex);
+	last_lock_line = __LINE__;
 	for(maxfd = -1, i = 0; i < SELECT_FD_NUM; i++) {
 		if(poll_data[i]) {
 			FD_SET(poll_data[i]->fd, &read_set);
@@ -175,6 +180,7 @@ void desc_poll_process_events() {
 	else if(retval > 0) {
 		sigprocmask(SIG_BLOCK, &x, NULL);
 		pthread_mutex_lock(&poll_mutex);
+		last_lock_line = __LINE__;
 		for(i = 0; i < SELECT_FD_NUM; i++) {
 			if(poll_data[i] && FD_ISSET(poll_data[i]->fd, &read_set)) {
 				desc_poll_info_t *current_info = poll_data[i];
@@ -184,6 +190,7 @@ void desc_poll_process_events() {
 				pthread_mutex_unlock(&poll_mutex);
 				current_info->callback(fd, user_data);
 				pthread_mutex_lock(&poll_mutex);
+				last_lock_line = __LINE__;
 			}
 		}
 		pthread_mutex_unlock(&poll_mutex);

@@ -266,8 +266,10 @@ void interfacemgr_process_packet(ifinstance_t* iface, const unsigned char* data,
 	pthread_mutex_lock(&packet_reception_mutex);
 
 	//Ignore empty packets and non-data packets
-	if((len <= 0) || ((data[0] & 0x03) != 1))
+	if((len <= 0) || ((data[0] & 0x03) != 1)) {
+		pthread_mutex_unlock(&packet_reception_mutex);
 		return;
+	}
 
 	if(interfacemgr_check_duplicate_packet(iface, data, len, timestamp)) {
 		pthread_mutex_unlock(&packet_reception_mutex);
