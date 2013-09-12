@@ -28,10 +28,17 @@ typedef struct pcaprec_hdr_s {
 } pcaprec_hdr_t;
 
 pcap_file_t pcap_parser_open(const char *filename) {
+	FILE *fileptr;
 	pcaprec_hdr_t header;
-	struct pcap_file* file = malloc(sizeof(struct pcap_file));
+	struct pcap_file* file;
 
-	file->file = fopen(filename, "rb");
+	fileptr = fopen(filename, "rb");
+	if(fileptr == NULL)
+		return NULL;
+
+	file = malloc(sizeof(struct pcap_file));
+	file->file = fileptr;
+
 	fseek(file->file, sizeof(pcap_hdr_t), SEEK_SET);
 
 	file->packet_count = 0;

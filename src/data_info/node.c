@@ -29,10 +29,11 @@ struct di_node {
 	di_dodag_ref_t dodag;
 
 	bool has_changed;
-	void *user_data;
 
 	//statistics
 	int packet_count;
+	double last_dao_timestamp;
+	double last_dio_timestamp;
 	double max_dao_interval;  //maximum interval seen between 2 DAO packets
 	double max_dio_interval;  //maximum interval seen between 2 DIO packets
 	int upward_rank_errors;   //incremented when data trafic goes from a node to it's parent in the case of the parent has a greater rank than the child
@@ -62,7 +63,10 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->is_custom_global_address = false;
 	node->is_custom_local_address = false;
 	node->packet_count = 0;
+	node->last_dao_timestamp = 0;
+	node->last_dio_timestamp = 0;
 	node->max_dao_interval = 0;
+	node->max_dio_interval = 0;
 	node->latest_dao_sequence = 0;
 	node->latest_dtsn = 0;
 	node->has_changed = true;
@@ -173,10 +177,6 @@ void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref) {
 	}
 }
 
-void node_set_user_data(di_node_t *node, void *data) {
-	node->user_data = data;
-}
-
 void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
 	if(!node->is_custom_global_address) {
 		addr_ipv6_t ip = addr_get_global_ip_from_mac64(*prefix, node->key.ref.wpan_address);
@@ -231,31 +231,28 @@ void node_set_dao_seq(di_node_t *node, int dao_seq) {
 }
 
 void node_update_dao_interval(di_node_t *node, double timestamp) {
-	static double last_dao_timestamp = 0;
 
-	if(last_dao_timestamp) {
-		double interval = timestamp - last_dao_timestamp;
+	if(node->last_dao_timestamp) {
+		double interval = timestamp - node->last_dao_timestamp;
 		if(!node->max_dao_interval || (node->max_dao_interval < interval)) {
 			node->max_dao_interval = interval;
 			node_update_old_field(node, offsetof(di_node_t, max_dao_interval), sizeof(node->max_dao_interval));
 		}
 	}
 
-	last_dao_timestamp = timestamp;
+	node->last_dao_timestamp = timestamp;
 }
 
 void node_update_dio_interval(di_node_t *node, double timestamp) {
-	static double last_dio_timestamp = 0;
-
-	if(last_dio_timestamp) {
-		double interval = timestamp - last_dio_timestamp;
+	if(node->last_dio_timestamp) {
+		double interval = timestamp - node->last_dio_timestamp;
 		if(!node->max_dio_interval || (node->max_dio_interval < interval)) {
 			node->max_dio_interval = interval;
 			node_update_old_field(node, offsetof(di_node_t, max_dio_interval), sizeof(node->max_dio_interval));
 		}
 	}
 
-	last_dio_timestamp = timestamp;
+	node->last_dio_timestamp = timestamp;
 }
 
 void node_add_upward_error(di_node_t *node) {
@@ -330,10 +327,6 @@ const di_dodag_ref_t * node_get_dodag(const di_node_t *node) {
 		return &node->dodag;
 
 	return NULL;
-}
-
-void *node_get_user_data(const di_node_t *node) {
-	return node->user_data;
 }
 
 int node_get_packet_count(const di_node_t *node) {

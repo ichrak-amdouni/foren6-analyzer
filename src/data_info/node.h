@@ -44,7 +44,6 @@ void node_set_metric(di_node_t* node, const di_metric_t* metric);
 void node_set_rank(di_node_t *node, uint16_t rank);
 void node_set_grounded(di_node_t *node, bool grounded);
 void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref);
-void node_set_user_data(di_node_t *node, void *data);
 void node_add_packet_count(di_node_t *node, int count);
 
 bool node_has_changed(di_node_t *node);
@@ -73,7 +72,6 @@ const di_metric_t* node_get_metric(const di_node_t* node);
 uint16_t node_get_rank(const di_node_t *node);
 bool node_get_grounded(const di_node_t *node);
 const di_dodag_ref_t * node_get_dodag(const di_node_t *node);
-void *node_get_user_data(const di_node_t *node);
 int node_get_packet_count(const di_node_t *node);
 
 int node_get_dtsn(const di_node_t *node);
