@@ -245,7 +245,8 @@ static void sniffer_parser_reset() {
 	struct tm *current_time;
 	time_t cur_time = time(NULL);
 	current_time = localtime(&cur_time);
-	sprintf(outpcap_name, "out_%02d%02d%04d-%02d%02d%02d-%d.pcap", current_time->tm_mday, current_time->tm_mon, current_time->tm_year + 1900, current_time->tm_hour, current_time->tm_min, current_time->tm_sec, getpid());
+//	sprintf(outpcap_name, "out_%02d%02d%04d-%02d%02d%02d-%d.pcap", current_time->tm_mday, current_time->tm_mon, current_time->tm_year + 1900, current_time->tm_hour, current_time->tm_min, current_time->tm_sec, getpid());
+	sprintf(outpcap_name, "out.pcap");
 	pd_out = pcap_open_dead(DLT_IEEE802_15_4, 255);
 	pdumper_out = pcap_dump_open(pd_out, outpcap_name);
 
