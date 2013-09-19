@@ -174,7 +174,6 @@ uint32_t rpldata_add_node_version() {
 		}
 		hash_add(new_version_container, hash_key_make(node_ref), &new_node, NULL, HAM_NoCheck, NULL);
 	}
-	printf("nv: %d, e:%d\n", new_version, node_last_version_has_errors);
 	hash_add(collected_data.nodes, hash_key_make(new_version), &new_version_container, NULL, HAM_NoCheck, NULL);
 
 	hash_it_destroy(it);
