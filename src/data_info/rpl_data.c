@@ -28,6 +28,8 @@ typedef struct di_rpl_wsn_state {
 
 	double timestamp;
 	uint32_t packet_id;
+
+	uint32_t has_errors;
 } di_rpl_wsn_state_t;
 
 typedef struct di_rpl_object_el {
@@ -51,6 +53,8 @@ uint32_t node_last_version = 0;
 uint32_t dodag_last_version = 0;
 uint32_t rpl_instance_last_version = 0;
 uint32_t link_last_version = 0;
+
+di_node_t *last_node = NULL;
 
 di_rpl_allocated_objects_t allocated_objects;
 
@@ -91,6 +95,8 @@ void rpldata_init() {
 	rpl_instance_last_version = 0;
 	link_last_version = 0;
 	wsn_last_version = 0;
+
+	last_node = NULL;
 
 	wsn_versions[0].node_version = 0;
 	wsn_versions[0].dodag_version = 0;
@@ -161,6 +167,8 @@ uint32_t rpldata_add_node_version() {
 		if(node_has_changed(node)) {
 			node_reset_changed(node);
 			new_node = node_dup(node);
+			node_fill_delta(new_node, last_node);
+			last_node = new_node;
 		} else {
 			new_node = *(di_node_t**)hash_value(last_container, hash_key_make(node_ref), HVM_FailIfNonExistant, NULL);//*/node;
 		}
@@ -344,6 +352,8 @@ void rpldata_wsn_create_version(int packed_id, double timestamp) {
 
 	wsn_versions[wsn_last_version].timestamp = timestamp;
 	wsn_versions[wsn_last_version].packet_id = packed_id;
+	if ( last_node != NULL ) wsn_versions[wsn_last_version].has_errors = node_get_has_errors(last_node);
+	else wsn_versions[wsn_last_version].has_errors = 0;
 
 	if(node_last_version)
 		wsn_versions[wsn_last_version].node_version = node_last_version;
@@ -374,6 +384,12 @@ uint32_t rpldata_wsn_version_get_packet_count(uint32_t version) {
 	if(version == 0)
 		version = wsn_last_version;
 	return wsn_versions[version].packet_id;
+}
+
+uint32_t rpldata_wsn_version_get_has_errors(uint32_t version) {
+    if(version == 0)
+        version = wsn_last_version;
+    return wsn_versions[version].has_errors;
 }
 
 uint32_t rpldata_get_node_last_version() {

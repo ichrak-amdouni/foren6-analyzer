@@ -43,6 +43,17 @@ struct di_node {
 	int ip_mismatch_errors;   //incremented when a DAO message is sent to a node with the wrong IP<=>WPAN addresses association
 	int dodag_version_decrease_errors;  //incremented when a DIO message contain a dodag version smaller than the known version
 	int dodag_mismatch_errors; //incremented when a DAO is sent to a parent with the dodagid in the DAO packet different from the parent's dodag
+
+    //delta
+	int upward_rank_errors_delta;
+    int downward_rank_errors_delta;
+    int route_loop_errors_delta;
+
+    int ip_mismatch_errors_delta;
+    int dodag_version_decrease_errors_delta;
+    int dodag_mismatch_errors_delta;
+
+    int has_errors;
 };
 
 static uint16_t last_simple_id = 0;
@@ -93,6 +104,20 @@ di_node_t *node_dup(const di_node_t *node) {
 	new_node->routes = route_dup(&node->routes);
 
 	return new_node;
+}
+
+void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
+    if ( ! prev_node ) return;
+    node->upward_rank_errors_delta = node->upward_rank_errors - prev_node->upward_rank_errors;
+    node->downward_rank_errors_delta = node->downward_rank_errors - prev_node->downward_rank_errors;
+    node->route_loop_errors_delta = node->route_loop_errors - prev_node->route_loop_errors;
+
+    node->ip_mismatch_errors_delta = node->ip_mismatch_errors - prev_node->ip_mismatch_errors;
+    node->dodag_version_decrease_errors_delta = node->dodag_version_decrease_errors - prev_node->dodag_version_decrease_errors;
+    node->dodag_mismatch_errors_delta = node->dodag_mismatch_errors - prev_node->dodag_mismatch_errors;
+
+    node->has_errors = node->upward_rank_errors_delta + node->downward_rank_errors_delta + node->route_loop_errors_delta +
+        node->ip_mismatch_errors_delta + node->dodag_version_decrease_errors_delta + node->dodag_mismatch_errors_delta;
 }
 
 void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version) {
@@ -371,4 +396,32 @@ int node_get_ip_mismatch_error_count(const di_node_t *node) {
 
 int node_get_dodag_mismatch_error_count(const di_node_t *node) {
 	return node->dodag_mismatch_errors;
+}
+
+int node_get_upward_error_delta(const di_node_t *node) {
+    return node->upward_rank_errors_delta;
+}
+
+int node_get_downward_error_delta(const di_node_t *node) {
+    return node->downward_rank_errors_delta;
+}
+
+int node_get_route_error_delta(const di_node_t *node) {
+    return node->route_loop_errors_delta;
+}
+
+int node_get_dodag_version_error_delta(const di_node_t *node) {
+    return node->dodag_version_decrease_errors_delta;
+}
+
+int node_get_ip_mismatch_error_delta(const di_node_t *node) {
+    return node->ip_mismatch_errors_delta;
+}
+
+int node_get_dodag_mismatch_error_delta(const di_node_t *node) {
+    return node->dodag_mismatch_errors_delta;
+}
+
+int node_get_has_errors(const di_node_t *node) {
+    return node->has_errors;
 }

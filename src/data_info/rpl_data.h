@@ -41,6 +41,7 @@ uint32_t rpldata_add_link_version();
 void rpldata_wsn_create_version(int packed_id, double timestamp);
 double rpldata_wsn_version_get_timestamp(uint32_t version);
 uint32_t rpldata_wsn_version_get_packet_count(uint32_t version);
+uint32_t rpldata_wsn_version_get_has_errors(uint32_t version);
 
 uint32_t rpldata_get_wsn_last_version();
 
