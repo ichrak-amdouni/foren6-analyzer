@@ -16,6 +16,10 @@
 extern "C" {
 #endif
 
+typedef struct analyzer_callbacks {
+    void (*onErrorEvent)(char const * errorMessage);
+} analyzer_callbacks_t;
+
 	/**
 	 * Initialize the analyzer.
      * @param name the name of a registered interface reader, or the shared object file that provide the needed interface
@@ -33,6 +37,13 @@ extern "C" {
      */
 	void rpl_tool_set_callbacks(rpl_event_callbacks_t *callbacks);
 
+    /**
+     * Set callback to call when analyzer events are triggered (like error reporting)
+     * @param callbacks
+     */
+	void rpl_tool_set_analyzer_callbacks(analyzer_callbacks_t * callbacks);
+
+	void rpl_tool_report_error(char const *  error_message);
 
 #ifdef	__cplusplus
 }
