@@ -54,14 +54,13 @@ uint32_t dodag_last_version = 0;
 uint32_t rpl_instance_last_version = 0;
 uint32_t link_last_version = 0;
 
-di_node_t *last_node = NULL;
-
 di_rpl_allocated_objects_t allocated_objects;
 
 di_rpl_wsn_state_t *wsn_versions = 0;
 uint32_t wsn_version_array_size = 0;
 uint32_t wsn_last_version = 0;
 
+uint32_t node_last_version_has_errors = 0;
 
 void rpldata_init() {
 	if(wsn_version_array_size < 256) {
@@ -96,13 +95,12 @@ void rpldata_init() {
 	link_last_version = 0;
 	wsn_last_version = 0;
 
-	last_node = NULL;
-
 	wsn_versions[0].node_version = 0;
 	wsn_versions[0].dodag_version = 0;
 	wsn_versions[0].rpl_instance_version = 0;
 	wsn_versions[0].links_version = 0;
 	wsn_versions[0].timestamp = 0;
+	wsn_versions[0].has_errors = 0;
 }
 
 hash_container_ptr rpldata_get_nodes(uint32_t version) {
@@ -154,7 +152,7 @@ uint32_t rpldata_add_node_version() {
 	node_last_version++;
 	uint32_t new_version = node_last_version;
 	uint32_t old_version = new_version-1;
-
+	node_last_version_has_errors = 0;
 	hash_container_ptr new_version_container = hash_create(sizeof(di_node_t*), NULL);
 	hash_container_ptr working_container = rpldata_get_nodes(0);
 	hash_container_ptr last_container = *(hash_container_ptr*)hash_value(collected_data.nodes, hash_key_make(old_version), HVM_FailIfNonExistant, NULL);
@@ -163,18 +161,20 @@ uint32_t rpldata_add_node_version() {
 		di_node_t **node_ptr = hash_it_value(it);
 		di_node_t *node = (node_ptr)? *node_ptr : NULL;
 		di_node_ref_t node_ref = node_get_key(node)->ref;
+		di_node_t **last_node_ptr = (di_node_t**)hash_value(last_container, hash_key_make(node_ref), HVM_FailIfNonExistant, NULL);
+		di_node_t *last_node = last_node_ptr ? *last_node_ptr : NULL;
 		di_node_t *new_node;
 		if(node_has_changed(node)) {
 			node_reset_changed(node);
 			new_node = node_dup(node);
 			node_fill_delta(new_node, last_node);
-			last_node = new_node;
+			node_last_version_has_errors += node_get_has_errors(new_node);
 		} else {
-			new_node = *(di_node_t**)hash_value(last_container, hash_key_make(node_ref), HVM_FailIfNonExistant, NULL);//*/node;
+			new_node = last_node;
 		}
 		hash_add(new_version_container, hash_key_make(node_ref), &new_node, NULL, HAM_NoCheck, NULL);
 	}
-
+	printf("nv: %d, e:%d\n", new_version, node_last_version_has_errors);
 	hash_add(collected_data.nodes, hash_key_make(new_version), &new_version_container, NULL, HAM_NoCheck, NULL);
 
 	hash_it_destroy(it);
@@ -352,8 +352,8 @@ void rpldata_wsn_create_version(int packed_id, double timestamp) {
 
 	wsn_versions[wsn_last_version].timestamp = timestamp;
 	wsn_versions[wsn_last_version].packet_id = packed_id;
-	if ( last_node != NULL ) wsn_versions[wsn_last_version].has_errors = node_get_has_errors(last_node);
-	else wsn_versions[wsn_last_version].has_errors = 0;
+	wsn_versions[wsn_last_version].has_errors = node_last_version_has_errors;
+	node_last_version_has_errors = 0;
 
 	if(node_last_version)
 		wsn_versions[wsn_last_version].node_version = node_last_version;

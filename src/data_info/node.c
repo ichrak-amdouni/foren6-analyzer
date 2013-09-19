@@ -82,6 +82,26 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->latest_dtsn = 0;
 	node->has_changed = true;
 
+	//statistics
+	node->upward_rank_errors = 0;
+	node->downward_rank_errors = 0;
+	node->route_loop_errors = 0;
+
+	node->ip_mismatch_errors = 0;
+	node->dodag_version_decrease_errors = 0;
+	node->dodag_mismatch_errors = 0;
+
+	//delta
+	node->upward_rank_errors_delta = 0;
+	node->downward_rank_errors_delta = 0;
+	node->route_loop_errors_delta = 0;
+
+	node->ip_mismatch_errors_delta = 0;
+	node->dodag_version_decrease_errors_delta = 0;
+	node->dodag_mismatch_errors_delta = 0;
+
+	node->has_errors = 0;
+
 	last_simple_id++;
 	node->simple_id = last_simple_id;
 
@@ -117,7 +137,7 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     node->dodag_mismatch_errors_delta = node->dodag_mismatch_errors - prev_node->dodag_mismatch_errors;
 
     node->has_errors = node->upward_rank_errors_delta + node->downward_rank_errors_delta + node->route_loop_errors_delta +
-        node->ip_mismatch_errors_delta + node->dodag_version_decrease_errors_delta + node->dodag_mismatch_errors_delta;
+        node->ip_mismatch_errors_delta + /*node->dodag_version_decrease_errors_delta +*/ node->dodag_mismatch_errors_delta;
 }
 
 void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version) {
