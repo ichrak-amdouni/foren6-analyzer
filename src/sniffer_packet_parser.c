@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <time.h>
 
+#include "rpl_packet_parser.h"
 #include "sniffer_packet_parser.h"
 #include "descriptor_poll.h"
 #include "packet_parsers/parser_register.h"
@@ -51,6 +52,7 @@ static void process_events(int fd, void* data);
 static void sniffer_parser_reset();
 static bool spawn_piped_process(const char* command, char* const arguments[], int *pid, int *process_input_pipe, int *process_output_pipe);
 static void tshark_exited();
+static void child_exited();
 
 static void parse_xml_start_element(void *data, const char *el, const char **attr);
 static void parse_xml_end_element(void *data, const char *el);
@@ -184,8 +186,11 @@ static void parse_xml_end_element(void *data, const char *el) {
  * Reset tshark and parser
  */
 static void sniffer_parser_reset() {
-	if(tshark_pid)
+	if(tshark_pid) {
+	    signal(SIGPIPE, SIG_IGN);
+	    signal(SIGCHLD, SIG_IGN);
 		kill(tshark_pid, SIGKILL);	//Kill old tshark process to avoid multiple spawned processes at the same time
+	}
 
 /*
  Closed by pcap_dump_close(pdumper);
@@ -220,6 +225,9 @@ static void sniffer_parser_reset() {
 
 	packet_count = 0;
 
+	signal(SIGPIPE, &tshark_exited);
+    signal(SIGCHLD, &child_exited);
+
 #ifdef USE_NEW_TSHARK
 	if(spawn_piped_process("tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-2", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
 #else
@@ -252,8 +260,6 @@ static void sniffer_parser_reset() {
 
 	dissected_packet_parser = XML_ParserCreate(NULL);
 	XML_SetElementHandler(dissected_packet_parser, &parse_xml_start_element, &parse_xml_end_element);
-
-	signal(SIGPIPE, &tshark_exited);
 
 	desc_poll_add(pipe_tshark_stdout, &process_events, NULL);
 }
@@ -291,7 +297,6 @@ static bool spawn_piped_process(const char* command, char* const arguments[], in
 
 		result = execvp(command, arguments);
 		perror("Failed to spawn process");
-
 		exit(result);
 	} else if(child_pid > 0) {
 		close(stdin_pipe[PIPE_READ]);
@@ -323,8 +328,20 @@ static bool spawn_piped_process(const char* command, char* const arguments[], in
 static void tshark_exited() {
 	/* Prevent spawn flood */
 	signal(SIGPIPE, SIG_IGN);
-	sniffer_parser_reset_requested = true;
-	fprintf(stderr, "tshark exited, parser reset requested\n");
+    signal(SIGCHLD, SIG_IGN);
+    tshark_pid = 0;
+	//sniffer_parser_reset_requested = true;
+    //fprintf(stderr, "tshark exited, parser reset requested\n");
+	fprintf(stderr, "tshark exited\n");
+    rpl_tool_report_error("Could not start tshark");
+}
+
+static void child_exited() {
+    int status;
+    pid_t pid = wait(&status);
+    if ( pid == tshark_pid ) {
+        tshark_exited();
+    }
 }
 
 static bool check_duplicate_packet(const unsigned char* data, int len) {
