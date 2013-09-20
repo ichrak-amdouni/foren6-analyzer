@@ -52,7 +52,6 @@ static void process_events(int fd, void* data);
 static void sniffer_parser_reset();
 static bool spawn_piped_process(const char* command, char* const arguments[], int *pid, int *process_input_pipe, int *process_output_pipe);
 static void tshark_exited();
-static void child_exited();
 
 static void parse_xml_start_element(void *data, const char *el, const char **attr);
 static void parse_xml_end_element(void *data, const char *el);
@@ -66,7 +65,7 @@ void sniffer_parser_init() {
 		.sa_flags = SA_NOCLDWAIT
 	};
 	/* prevent zombie child */
-	sigaction(SIGCHLD, &sigchld_action, NULL);
+	//sigaction(SIGCHLD, &sigchld_action, NULL);
 	pthread_mutex_init(&new_packet_mutex, NULL);
 	pthread_mutex_init(&state_lock, NULL);
 
@@ -188,7 +187,6 @@ static void parse_xml_end_element(void *data, const char *el) {
 static void sniffer_parser_reset() {
 	if(tshark_pid) {
 	    signal(SIGPIPE, SIG_IGN);
-	    signal(SIGCHLD, SIG_IGN);
 		kill(tshark_pid, SIGKILL);	//Kill old tshark process to avoid multiple spawned processes at the same time
 	}
 
@@ -226,7 +224,6 @@ static void sniffer_parser_reset() {
 	packet_count = 0;
 
 	signal(SIGPIPE, &tshark_exited);
-    signal(SIGCHLD, &child_exited);
 
 #ifdef USE_NEW_TSHARK
 	if(spawn_piped_process("tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-2", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
@@ -328,20 +325,11 @@ static bool spawn_piped_process(const char* command, char* const arguments[], in
 static void tshark_exited() {
 	/* Prevent spawn flood */
 	signal(SIGPIPE, SIG_IGN);
-    signal(SIGCHLD, SIG_IGN);
     tshark_pid = 0;
 	//sniffer_parser_reset_requested = true;
     //fprintf(stderr, "tshark exited, parser reset requested\n");
 	fprintf(stderr, "tshark exited\n");
     rpl_tool_report_error("Could not start tshark");
-}
-
-static void child_exited() {
-    int status;
-    pid_t pid = wait(&status);
-    if ( pid == tshark_pid ) {
-        tshark_exited();
-    }
 }
 
 static bool check_duplicate_packet(const unsigned char* data, int len) {
