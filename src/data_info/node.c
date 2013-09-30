@@ -45,10 +45,20 @@ struct di_node {
 	int dodag_mismatch_errors; //incremented when a DAO is sent to a parent with the dodagid in the DAO packet different from the parent's dodag
 
     //delta
+    bool global_address_delta;
+    int rank_delta;
+    int metric_delta;
+    bool grounded_delta;
+    int latest_dao_sequence_delta;
+    int latest_dtsn_delta;
+
+    int packet_count_delta;
+	bool max_dao_interval_delta;
+	bool max_dio_interval_delta;
+
 	int upward_rank_errors_delta;
     int downward_rank_errors_delta;
     int route_loop_errors_delta;
-
     int ip_mismatch_errors_delta;
     int dodag_version_decrease_errors_delta;
     int dodag_mismatch_errors_delta;
@@ -92,7 +102,18 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->dodag_mismatch_errors = 0;
 
 	//delta
-	node->upward_rank_errors_delta = 0;
+	node->global_address_delta = 0;
+	node->rank_delta = 0;
+	node->metric_delta = 0;
+	node->grounded_delta = 0;
+	node->latest_dao_sequence_delta = 0;
+	node->latest_dtsn_delta = 0;
+
+	node->packet_count_delta = 0;
+	node->max_dao_interval_delta = 0;
+	node->max_dio_interval_delta = 0;
+
+    node->upward_rank_errors_delta = 0;
 	node->downward_rank_errors_delta = 0;
 	node->route_loop_errors_delta = 0;
 
@@ -123,11 +144,24 @@ di_node_t *node_dup(const di_node_t *node) {
 	memcpy(new_node, node, sizeof(di_node_t));
 	new_node->routes = route_dup(&node->routes);
 
+	new_node->packet_count_delta = 0;
+
 	return new_node;
 }
 
 void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     if ( ! prev_node ) return;
+    node->global_address_delta = addr_compare_ip(&node->global_address, &prev_node->global_address) != 0;
+    node->rank_delta = node->rank - prev_node->rank;
+    node->metric_delta = node->metric.value != prev_node->metric.value;
+    node->grounded_delta = node->grounded != prev_node->grounded;
+    node->latest_dao_sequence_delta = node->latest_dao_sequence - prev_node->latest_dao_sequence;
+    node->latest_dtsn_delta = node->latest_dtsn - prev_node->latest_dtsn;
+
+    //node->packet_count_delta = node->packet_count - prev_node->packet_count;
+    node->max_dao_interval_delta = node->max_dao_interval - prev_node->max_dao_interval;
+    node->max_dio_interval_delta = node->max_dio_interval - prev_node->max_dio_interval;
+
     node->upward_rank_errors_delta = node->upward_rank_errors - prev_node->upward_rank_errors;
     node->downward_rank_errors_delta = node->downward_rank_errors - prev_node->downward_rank_errors;
     node->route_loop_errors_delta = node->route_loop_errors - prev_node->route_loop_errors;
@@ -234,8 +268,10 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
 
 void node_add_packet_count(di_node_t *node, int count) {
 	node->packet_count += count;
+    node->packet_count_delta += count;
 
 	node_update_old_field(node, offsetof(di_node_t, packet_count), sizeof(node->packet_count));
+    node_update_old_field(node, offsetof(di_node_t, packet_count_delta), sizeof(node->packet_count_delta));
 }
 
 static void node_set_changed(di_node_t *node) {
@@ -267,12 +303,14 @@ void node_reset_changed(di_node_t *node) {
 
 void node_set_dtsn(di_node_t *node, int dtsn) {
 	node->latest_dtsn = dtsn;
-	node_update_old_field(node, offsetof(di_node_t, latest_dtsn), sizeof(node->latest_dtsn));
+	//node_update_old_field(node, offsetof(di_node_t, latest_dtsn), sizeof(node->latest_dtsn));
+	node_set_changed(node);
 }
 
 void node_set_dao_seq(di_node_t *node, int dao_seq) {
 	node->latest_dao_sequence = dao_seq;
-	node_update_old_field(node, offsetof(di_node_t, latest_dao_sequence), sizeof(node->latest_dao_sequence));
+	//node_update_old_field(node, offsetof(di_node_t, latest_dao_sequence), sizeof(node->latest_dao_sequence));
+    node_set_changed(node);
 }
 
 void node_update_dao_interval(di_node_t *node, double timestamp) {
@@ -281,11 +319,12 @@ void node_update_dao_interval(di_node_t *node, double timestamp) {
 		double interval = timestamp - node->last_dao_timestamp;
 		if(!node->max_dao_interval || (node->max_dao_interval < interval)) {
 			node->max_dao_interval = interval;
-			node_update_old_field(node, offsetof(di_node_t, max_dao_interval), sizeof(node->max_dao_interval));
+			//node_update_old_field(node, offsetof(di_node_t, max_dao_interval), sizeof(node->max_dao_interval));
 		}
 	}
 
 	node->last_dao_timestamp = timestamp;
+    node_set_changed(node);
 }
 
 void node_update_dio_interval(di_node_t *node, double timestamp) {
@@ -293,11 +332,12 @@ void node_update_dio_interval(di_node_t *node, double timestamp) {
 		double interval = timestamp - node->last_dio_timestamp;
 		if(!node->max_dio_interval || (node->max_dio_interval < interval)) {
 			node->max_dio_interval = interval;
-			node_update_old_field(node, offsetof(di_node_t, max_dio_interval), sizeof(node->max_dio_interval));
+			//node_update_old_field(node, offsetof(di_node_t, max_dio_interval), sizeof(node->max_dio_interval));
 		}
 	}
 
 	node->last_dio_timestamp = timestamp;
+    node_set_changed(node);
 }
 
 void node_add_upward_error(di_node_t *node) {
@@ -416,6 +456,42 @@ int node_get_ip_mismatch_error_count(const di_node_t *node) {
 
 int node_get_dodag_mismatch_error_count(const di_node_t *node) {
 	return node->dodag_mismatch_errors;
+}
+
+bool node_get_global_address_delta(const di_node_t *node) {
+  return node->global_address_delta;
+}
+
+int node_get_rank_delta(const di_node_t *node) {
+  return node->rank_delta;
+}
+
+int node_get_metric_delta(const di_node_t *node) {
+  return node->metric_delta;
+}
+
+bool node_get_grounded_delta(const di_node_t *node) {
+  return node->grounded_delta;
+}
+
+int node_get_latest_dao_sequence_delta(const di_node_t *node) {
+  return node->latest_dao_sequence_delta;
+}
+
+int node_get_latest_dtsn_delta(const di_node_t *node) {
+  return node->latest_dtsn_delta;
+}
+
+int node_get_packet_count_delta(const di_node_t *node) {
+  return node->packet_count_delta;
+}
+
+bool node_get_max_dao_interval_delta(const di_node_t *node) {
+  return node->max_dao_interval_delta;
+}
+
+bool node_get_max_dio_interval_delta(const di_node_t *node) {
+  return node->max_dio_interval_delta;
 }
 
 int node_get_upward_error_delta(const di_node_t *node) {

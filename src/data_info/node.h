@@ -86,6 +86,17 @@ int node_get_dodag_version_error_count(const di_node_t *node);
 int node_get_ip_mismatch_error_count(const di_node_t *node);
 int node_get_dodag_mismatch_error_count(const di_node_t *node);
 
+bool node_get_global_address_delta(const di_node_t *node);
+int node_get_rank_delta(const di_node_t *node);
+int node_get_metric_delta(const di_node_t *node);
+bool node_get_grounded_delta(const di_node_t *node);
+int node_get_latest_dao_sequence_delta(const di_node_t *node);
+int node_get_latest_dtsn_delta(const di_node_t *node);
+
+int node_get_packet_count_delta(const di_node_t *node);
+bool node_get_max_dao_interval_delta(const di_node_t *node);
+bool node_get_max_dio_interval_delta(const di_node_t *node);
+
 int node_get_upward_error_delta(const di_node_t *node);
 int node_get_downward_error_delta(const di_node_t *node);
 int node_get_route_error_delta(const di_node_t *node);
