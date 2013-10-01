@@ -31,7 +31,7 @@ size_t node_sizeof();
 
 void node_init(void *data, const void *key, size_t key_size);
 void node_destroy(void *data);
-di_node_t *node_dup(const di_node_t *node);
+di_node_t *node_dup(di_node_t *node);
 void node_fill_delta(di_node_t *node, di_node_t const *prev_node);
 
 void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version);
@@ -86,6 +86,7 @@ int node_get_dodag_version_error_count(const di_node_t *node);
 int node_get_ip_mismatch_error_count(const di_node_t *node);
 int node_get_dodag_mismatch_error_count(const di_node_t *node);
 
+bool node_get_local_address_delta(const di_node_t *node);
 bool node_get_global_address_delta(const di_node_t *node);
 int node_get_rank_delta(const di_node_t *node);
 int node_get_metric_delta(const di_node_t *node);
@@ -103,6 +104,8 @@ int node_get_route_error_delta(const di_node_t *node);
 int node_get_dodag_version_error_delta(const di_node_t *node);
 int node_get_ip_mismatch_error_delta(const di_node_t *node);
 int node_get_dodag_mismatch_error_delta(const di_node_t *node);
+
+bool node_get_routes_delta(const di_node_t *node);
 
 int node_get_has_errors(const di_node_t *node);
 

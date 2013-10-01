@@ -45,6 +45,7 @@ struct di_node {
 	int dodag_mismatch_errors; //incremented when a DAO is sent to a parent with the dodagid in the DAO packet different from the parent's dodag
 
     //delta
+    bool local_address_delta;
     bool global_address_delta;
     int rank_delta;
     int metric_delta;
@@ -62,6 +63,8 @@ struct di_node {
     int ip_mismatch_errors_delta;
     int dodag_version_decrease_errors_delta;
     int dodag_mismatch_errors_delta;
+
+    bool routes_delta;
 
     int has_errors;
 };
@@ -102,6 +105,7 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->dodag_mismatch_errors = 0;
 
 	//delta
+    node->local_address_delta = 0;
 	node->global_address_delta = 0;
 	node->rank_delta = 0;
 	node->metric_delta = 0;
@@ -121,6 +125,8 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->dodag_version_decrease_errors_delta = 0;
 	node->dodag_mismatch_errors_delta = 0;
 
+	node->routes_delta = 0;
+
 	node->has_errors = 0;
 
 	last_simple_id++;
@@ -137,20 +143,25 @@ void node_destroy(void *data) {
 	route_destroy(&node->routes);
 }
 
-di_node_t *node_dup(const di_node_t *node) {
+di_node_t *node_dup(di_node_t *node) {
 	di_node_t *new_node;
 
 	new_node = malloc(sizeof(di_node_t));
 	memcpy(new_node, node, sizeof(di_node_t));
 	new_node->routes = route_dup(&node->routes);
 
+	//packet_count_delta is filled in by node_update_old_field
 	new_node->packet_count_delta = 0;
+
+	//routes_delta is not computed in fill_delta but on the fly
+	node->routes_delta = false;
 
 	return new_node;
 }
 
 void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     if ( ! prev_node ) return;
+    node->local_address_delta = addr_compare_ip(&node->local_address, &prev_node->local_address) != 0;
     node->global_address_delta = addr_compare_ip(&node->global_address, &prev_node->global_address) != 0;
     node->rank_delta = node->rank - prev_node->rank;
     node->metric_delta = node->metric.value != prev_node->metric.value;
@@ -219,13 +230,16 @@ void node_add_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_
 	route_add(&node->routes, *route_prefix, via_node, false, &route_already_existing);
 
 	if(route_already_existing == false) {
+	    node->routes_delta = true;
 		node_set_changed(node);
 	}
 }
 
 void node_del_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node) {
-	if(route_remove(&node->routes, *route_prefix, via_node))
+	if(route_remove(&node->routes, *route_prefix, via_node)) {
+	    node->routes_delta = true;
 		node_set_changed(node);
+	}
 }
 
 void node_set_metric(di_node_t* node, const di_metric_t* metric) {
@@ -458,6 +472,10 @@ int node_get_dodag_mismatch_error_count(const di_node_t *node) {
 	return node->dodag_mismatch_errors;
 }
 
+bool node_get_local_address_delta(const di_node_t *node) {
+  return node->local_address_delta;
+}
+
 bool node_get_global_address_delta(const di_node_t *node) {
   return node->global_address_delta;
 }
@@ -516,6 +534,10 @@ int node_get_ip_mismatch_error_delta(const di_node_t *node) {
 
 int node_get_dodag_mismatch_error_delta(const di_node_t *node) {
     return node->dodag_mismatch_errors_delta;
+}
+
+bool node_get_routes_delta(const di_node_t *node) {
+    return node->routes_delta;
 }
 
 int node_get_has_errors(const di_node_t *node) {
