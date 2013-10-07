@@ -132,6 +132,7 @@ ifinstance_t* interfacemgr_create_handle(const char *target) {
 
 	handle->last_packets = hash_create(sizeof(struct packet_data), NULL);
 	handle->first_packet = true;
+	handle->ethernet = false;
 	handle->target = strdup(target);
 
 	LL_PREPEND(interface_handles, handle);
@@ -266,7 +267,7 @@ void interfacemgr_process_packet(ifinstance_t* iface, const unsigned char* data,
 	pthread_mutex_lock(&packet_reception_mutex);
 
 	//Ignore empty packets and non-data packets
-	if((len <= 0) || ((data[0] & 0x03) != 1)) {
+	if (len <= 0 || (data[0] & 0x03) != 1) {
 		pthread_mutex_unlock(&packet_reception_mutex);
 		return;
 	}
@@ -294,8 +295,9 @@ void interfacemgr_process_packet(ifinstance_t* iface, const unsigned char* data,
 			packet_was_already_received = true;
 	}
 
-	if(!packet_was_already_received)
+	if(!packet_was_already_received) {
 		sniffer_parser_parse_data(data, len , interfacemgr_get_absolute_timestamp(iface, timestamp));
+	}
 
 	pthread_mutex_unlock(&packet_reception_mutex);
 }

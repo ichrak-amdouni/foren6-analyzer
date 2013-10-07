@@ -25,6 +25,7 @@ typedef struct ifinstance {
 	struct ifinstance *parent;
 	hash_container_ptr last_packets;
 	bool first_packet;
+	bool ethernet;
 
 	//for lists
 	struct ifinstance* next;
