@@ -14,17 +14,11 @@
 
 #include "rpl_instance_type.h"
 #include "dodag_type.h"
+#include "rpl_def.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-typedef enum tag_di_rpl_mop_e {
-	RDMOP_NoDownwardRoute,
-	RDMOP_NonStoring,
-	RDMOP_StoringWithoutMulticast,
-	RDMOP_StoringWithMulticast
-} di_rpl_mop_e;
 
 typedef struct {
 	int16_t rpl_instance;				//Via DIO, DAO

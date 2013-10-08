@@ -12,7 +12,7 @@ struct di_node {
 	di_node_key_t key;
 	uint16_t simple_id;
 
-    di_dodag_config_t dodag_config;               //Via DIO config option
+	rpl_dodag_config_t dodag_config;               //Via DIO config option
     di_dodag_config_delta_t dodag_config_delta;
 
 	bool is_custom_local_address;
@@ -214,8 +214,8 @@ void node_set_key(di_node_t *node, const di_node_key_t *key) {
 	}
 }
 
-void node_set_dodag_config(di_node_t *node, const di_dodag_config_t *config) {
-    if(memcmp(&node->dodag_config, config, sizeof(di_dodag_config_t))) {
+void node_set_dodag_config(di_node_t *node, const rpl_dodag_config_t *config) {
+    if(memcmp(&node->dodag_config, config, sizeof(rpl_dodag_config_t))) {
         node->dodag_config = *config;
         node_set_changed(node);
     }
@@ -237,7 +237,7 @@ void node_set_global_ip(di_node_t *node, addr_ipv6_t address) {
 	}
 }
 
-void node_add_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node) {
+void node_add_route(di_node_t *node, const di_route_t *route_prefix, addr_wpan_t via_node) {
 	bool route_already_existing = false;
 	route_add(&node->routes, *route_prefix, via_node, false, &route_already_existing);
 
@@ -247,7 +247,7 @@ void node_add_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_
 	}
 }
 
-void node_del_route(di_node_t *node, const di_prefix_t *route_prefix, addr_wpan_t via_node) {
+void node_del_route(di_node_t *node, const di_route_t *route_prefix, addr_wpan_t via_node) {
 	if(route_remove(&node->routes, *route_prefix, via_node)) {
 	    node->routes_delta = true;
 		node_set_changed(node);
@@ -409,7 +409,7 @@ uint16_t node_get_simple_id(const di_node_t *node) {
 	return node->simple_id;
 }
 
-const di_dodag_config_t *node_get_dodag_config(const di_node_t *node) {
+const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node) {
     return &node->dodag_config;
 }
 

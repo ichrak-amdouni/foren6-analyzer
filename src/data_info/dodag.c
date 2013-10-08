@@ -12,10 +12,10 @@ struct di_dodag {
 	di_dodag_key_t key;				//Via DIO & DAO for dodagid and via DIO for version
 
 	//Configuration
-	di_dodag_config_t config;				//Via DIO config option
-    di_dodag_config_t config_delta;
+	rpl_dodag_config_t config;				//Via DIO config option
+    di_dodag_config_delta_t config_delta;
 
-	di_prefix_t prefix;						//Via DIO prefix option
+    rpl_prefix_t prefix_info;						//Via DIO prefix option
 
 	di_rpl_instance_ref_t rpl_instance;		//Via DIO, DAO
 
@@ -82,21 +82,21 @@ void dodag_set_key(di_dodag_t *dodag, const di_dodag_key_t *key) {
 	}
 }
 
-void dodag_set_config(di_dodag_t *dodag, const di_dodag_config_t *config) {
-	if(memcmp(&dodag->config, config, sizeof(di_dodag_config_t))) {
+void dodag_set_config(di_dodag_t *dodag, const rpl_dodag_config_t *config) {
+	if(memcmp(&dodag->config, config, sizeof(rpl_dodag_config_t))) {
 		dodag->config = *config;
 		dodag_set_changed(dodag);
 	}
 }
 
-void dodag_set_prefix(di_dodag_t *dodag, const di_prefix_t *prefix) {
+void dodag_set_prefix(di_dodag_t *dodag, const rpl_prefix_t *prefix) {
 	hash_iterator_ptr it, itend;
 
 
-	if(dodag->prefix.length == prefix->length && !addr_compare_ip_len(&dodag->prefix.prefix, &prefix->prefix, prefix->length))
+	if(dodag->prefix_info.prefix.length == prefix->prefix.length && !addr_compare_ip_len(&dodag->prefix_info.prefix.prefix, &prefix->prefix.prefix, prefix->prefix.length))
 		return;	//Same prefix, nothing to change
 
-	dodag->prefix = *prefix;
+	dodag->prefix_info = *prefix;
 
 	it = hash_begin(dodag->nodes, NULL);
 	itend = hash_end(dodag->nodes, NULL);
@@ -105,7 +105,7 @@ void dodag_set_prefix(di_dodag_t *dodag, const di_prefix_t *prefix) {
 		di_node_t *node = rpldata_get_node(hash_it_value(it), HVM_FailIfNonExistant, NULL);
 		assert(node != NULL);
 		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
-		node_update_ip(node, prefix);
+		node_update_ip(node, &prefix->prefix);
 	}
 
 	hash_it_destroy(it);
@@ -143,7 +143,7 @@ void dodag_add_node(di_dodag_t *dodag, di_node_t *node) {
 
 	if(was_already_in_dodag == false) {
 		node_set_dodag(node, &dodag->key.ref);
-		node_update_ip(node, &dodag->prefix);
+		node_update_ip(node, &dodag->prefix_info.prefix);
 		dodag_set_changed(dodag);
 	} else {
 		assert(previous_dodag_ref->version == dodag->key.ref.version && !memcmp(&previous_dodag_ref->dodagid, &dodag->key.ref.dodagid, sizeof(addr_ipv6_t)));
@@ -177,7 +177,7 @@ void dodag_reset_changed(di_dodag_t *dodag) {
 	dodag->has_changed = false;
 }
 
-void dodag_config_compare(const di_dodag_config_t *left, const di_dodag_config_t *right, di_dodag_config_delta_t *delta) {
+void dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right, di_dodag_config_delta_t *delta) {
     if ( left == NULL || right == NULL || delta == NULL ) return;
     delta->auth_enabled = right->auth_enabled != left->auth_enabled;
     delta->path_control_size = right->path_control_size != left->path_control_size;
@@ -195,12 +195,12 @@ const di_dodag_key_t *dodag_get_key(const di_dodag_t *dodag) {
 	return &dodag->key;
 }
 
-const di_dodag_config_t *dodag_get_config(const di_dodag_t *dodag) {
+const rpl_dodag_config_t *dodag_get_config(const di_dodag_t *dodag) {
 	return &dodag->config;
 }
 
-const di_prefix_t *dodag_get_prefix(const di_dodag_t *dodag) {
-	return &dodag->prefix;
+const rpl_prefix_t *dodag_get_prefix(const di_dodag_t *dodag) {
+	return &dodag->prefix_info;
 }
 
 const di_rpl_instance_ref_t *dodag_get_rpl_instance(const di_dodag_t *dodag) {

@@ -48,7 +48,7 @@ typedef struct rpl_packet_dio {
 	bool has_route;
 	bool has_metric;
 	rpl_dio_opt_config_t config;
-	rpl_dio_opt_prefix_t prefix;
+	rpl_dio_opt_prefix_t prefix_info;
 	rpl_dio_opt_route_t  route;
 	rpl_dio_opt_metric_t metric;
 } rpl_packet_dio_t;
@@ -268,19 +268,19 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 				//Prefix option
 				option_check = true;
 				if(!strcmp(nameStr, "icmpv6.rpl.opt.prefix.flag.l"))
-					current_packet.dio.prefix.on_link = valueInt;
+					current_packet.dio.prefix_info.on_link = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.opt.prefix.preferred_lifetime"))
-					current_packet.dio.prefix.preferred_lifetime = valueInt;
+					current_packet.dio.prefix_info.preferred_lifetime = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.opt.prefix.valid_lifetime"))
-					current_packet.dio.prefix.valid_lifetime = valueInt;
+					current_packet.dio.prefix_info.valid_lifetime = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.opt.prefix.length"))
-					current_packet.dio.prefix.prefix_bit_length = valueInt;
+					current_packet.dio.prefix_info.prefix.length = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.opt.config.flag.a"))
-					current_packet.dio.prefix.auto_address_config = valueInt;
+					current_packet.dio.prefix_info.auto_address_config = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.opt.config.flag.r"))
-					current_packet.dio.prefix.router_address = valueInt;
+					current_packet.dio.prefix_info.router_address = valueInt;
 				else if(!strcmp(nameStr, "icmpv6.rpl.opt.prefix"))
-					inet_pton(AF_INET6, showStr, &current_packet.dio.prefix.prefix);
+					inet_pton(AF_INET6, showStr, &current_packet.dio.prefix_info.prefix.prefix);
 				else option_check = false;
 				if(option_check)
 					current_packet.dio.has_prefix = true;
@@ -370,7 +370,7 @@ static void rpl_parser_end_packet() {
 						&current_packet.dio.dio,
 						(current_packet.dio.has_config)? &current_packet.dio.config : NULL,
 						(current_packet.dio.has_metric)? &current_packet.dio.metric : NULL,
-						(current_packet.dio.has_prefix)? &current_packet.dio.prefix : NULL,
+						(current_packet.dio.has_prefix)? &current_packet.dio.prefix_info : NULL,
 						(current_packet.dio.has_route)?  &current_packet.dio.route  : NULL);
 				break;
 

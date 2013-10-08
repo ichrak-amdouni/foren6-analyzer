@@ -27,7 +27,6 @@ typedef uint64_t addr_wpan_t;
 typedef struct di_prefix {
 	uint8_t length;
 	addr_ipv6_t prefix;
-	time_t expiration_time;
 } di_prefix_t;
 
 typedef struct wpan_addr_list {

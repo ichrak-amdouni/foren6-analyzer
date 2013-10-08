@@ -70,12 +70,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	rpl_instance_set_mop(rpl_instance, dio->mode_of_operation);
 
 	if(prefix) {
-		di_prefix_t dodag_prefix;
-		dodag_prefix.length = prefix->prefix_bit_length;
-		dodag_prefix.prefix = prefix->prefix;
-		dodag_prefix.expiration_time = 0;
-		//dodag->prefix.expiration_time = time(NULL) + prefix->preferred_lifetime;
-		dodag_set_prefix(dodag, &dodag_prefix);
+		dodag_set_prefix(dodag, prefix);
 	}
 	if(metric && metric->type == RDOMT_ETX) {
 		di_metric_t metric_value = {metric_get_type("ETX"), metric->value};
@@ -85,7 +80,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	}
 
 	if(dodag_config) {
-		di_dodag_config_t config;
+	    rpl_dodag_config_t config;
 		memset(&config, 0, sizeof(config));
 		config.auth_enabled = dodag_config->auth_enabled;
 		config.default_lifetime = dodag_config->default_lifetime;
@@ -162,7 +157,7 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 		di_route_list_t route_table = node_get_routes(child);
 		di_route_el_t *route;
 		LL_FOREACH(route_table, route) {
-			if(addr_compare_ip(&route->route_prefix.prefix, node_get_global_ip(parent)) == 0) {
+			if(addr_compare_ip(&route->target.prefix, node_get_global_ip(parent)) == 0) {
 				node_add_route_error(child);
 				break;
 			}
@@ -186,7 +181,7 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	}
 
 	if(target && transit) {
-		di_prefix_t route;
+	  di_route_t route;
 		route.expiration_time = transit->path_lifetime;
 		route.length = target->target_bit_length;
 		route.prefix = target->target;
@@ -254,7 +249,7 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 				link_update(link, time(NULL), 1);
 				//link_set_metric(new_link, node_get_metric(src));
 
-				di_prefix_t route;
+				di_route_t route;
 				route.expiration_time = 0;
 				route.length = 128;
 				route.prefix = pkt_info.src_ip_address;
@@ -264,7 +259,7 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 				di_route_list_t route_table = node_get_routes(src);
 				di_route_el_t *route_el;
 				LL_FOREACH(route_table, route_el) {
-					if(addr_compare_ip(&route_el->route_prefix.prefix, node_get_global_ip(dst)) == 0) {
+					if(addr_compare_ip(&route_el->target.prefix, node_get_global_ip(dst)) == 0) {
 						node_add_route_error(src);
 						break;
 					}
@@ -273,7 +268,7 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 				if(rpl_info->sender_rank < node_get_rank(dst))
 					node_add_upward_error(src);
 			} else {
-				di_prefix_t route;
+			    di_route_t route;
 				route.expiration_time = 0;
 				route.length = 128;
 				route.prefix = pkt_info.dst_ip_address;
