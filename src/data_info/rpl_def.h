@@ -149,6 +149,34 @@ typedef struct rpl_hop_by_hop_opt {
     uint16_t sender_rank;
 } rpl_hop_by_hop_opt_t;
 
+
+// DELTA
+
+typedef struct rpl_dodag_config_delta {
+    bool auth_enabled;
+    bool path_control_size;
+    bool dio_interval_min;
+    bool dio_interval_max;
+    bool dio_redundancy_constant;
+    bool max_rank_inc;
+    bool min_hop_rank_inc;
+    bool default_lifetime;
+    bool lifetime_unit;
+    bool objective_function;
+} rpl_dodag_config_delta_t;
+
+typedef struct rpl_prefix_delta {
+    bool prefix;
+    bool on_link;
+    bool auto_address_config;
+    bool router_address;
+    bool valid_lifetime;
+    bool preferred_lifetime;
+} rpl_prefix_delta_t;
+
+void rpl_dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right, rpl_dodag_config_delta_t *delta);
+void rpl_prefix_compare(const rpl_prefix_t *left, const rpl_prefix_t *right, rpl_prefix_delta_t *delta);
+
 #ifdef  __cplusplus
 }
 #endif

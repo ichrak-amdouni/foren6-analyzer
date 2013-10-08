@@ -20,19 +20,6 @@
 extern "C" {
 #endif
 
-typedef struct di_dodag_config_delta {
-    bool auth_enabled;
-    bool path_control_size;
-    bool dio_interval_min;
-    bool dio_interval_max;
-    bool dio_redundancy_constant;
-    bool max_rank_inc;
-    bool min_hop_rank_inc;
-    bool default_lifetime;
-    bool lifetime_unit;
-    bool objective_function;
-} di_dodag_config_delta_t;
-
 typedef struct di_dodag_ref {
 	addr_ipv6_t dodagid;				//Via DIO, DAO
 	int16_t version;					//Via DIO
@@ -60,8 +47,6 @@ void dodag_set_user_data(di_dodag_t *dodag, void *user_data);
 
 bool dodag_has_changed(di_dodag_t *dodag);
 void dodag_reset_changed(di_dodag_t *dodag);
-
-void dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right, di_dodag_config_delta_t *delta);
 
 const di_dodag_key_t *dodag_get_key(const di_dodag_t *dodag);
 const rpl_dodag_config_t *dodag_get_config(const di_dodag_t *dodag);

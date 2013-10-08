@@ -71,6 +71,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 
 	if(prefix) {
 		dodag_set_prefix(dodag, prefix);
+		node_set_dodag_prefix_info(node, prefix);
 	}
 	if(metric && metric->type == RDOMT_ETX) {
 		di_metric_t metric_value = {metric_get_type("ETX"), metric->value};
@@ -92,8 +93,8 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 		config.min_hop_rank_inc = dodag_config->min_hop_rank_inc;
 		config.objective_function = dodag_config->objective_function;
 		config.path_control_size = dodag_config->path_control_size;
-		dodag_set_config(dodag, &config);
-		node_set_dodag_config(node, &config);
+		dodag_set_config(dodag, dodag_config);
+		node_set_dodag_config(node, dodag_config);
 	}
 }
 

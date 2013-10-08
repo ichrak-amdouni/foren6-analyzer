@@ -48,6 +48,8 @@ int addr_compare_ip(const addr_ipv6_t *a, const addr_ipv6_t *b);
 int addr_compare_wpan(const addr_wpan_t *a, const addr_wpan_t *b);
 int addr_compare_ip_len(const addr_ipv6_t *a, const addr_ipv6_t *b, int bit_len);	//Compare len bits
 
+int prefix_compare(const di_prefix_t *a, const di_prefix_t *b);
+
 bool addr_is_ip_any(addr_ipv6_t address);
 bool addr_is_ip_multicast(addr_ipv6_t address);
 bool addr_is_ip_local(addr_ipv6_t address);

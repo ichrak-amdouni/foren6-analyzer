@@ -138,6 +138,14 @@ int addr_compare_ip_len(const addr_ipv6_t *a, const addr_ipv6_t *b, int bit_len)
 	} else return res;
 }
 
+int prefix_compare(const di_prefix_t *a, const di_prefix_t *b) {
+    if ( a->length == b->length && !addr_compare_ip_len(&a->prefix, &b->prefix, a->length)) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
 bool addr_is_ip_any(addr_ipv6_t address) {
 	static const addr_ipv6_t any_address = {{{0}}};
 

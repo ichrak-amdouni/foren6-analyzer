@@ -47,6 +47,7 @@ void node_set_grounded(di_node_t *node, bool grounded);
 void node_set_dodag(di_node_t *node, const di_dodag_ref_t *dodag_ref);
 void node_add_packet_count(di_node_t *node, int count);
 void node_set_dodag_config(di_node_t *node, const rpl_dodag_config_t *config);
+void node_set_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *prefix_info);
 
 bool node_has_changed(di_node_t *node);
 void node_reset_changed(di_node_t *node);
@@ -77,7 +78,9 @@ const di_dodag_ref_t * node_get_dodag(const di_node_t *node);
 int node_get_packet_count(const di_node_t *node);
 
 const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node);
-const di_dodag_config_delta_t *node_get_dodag_config_delta(const di_node_t *node);
+const rpl_dodag_config_delta_t *node_get_dodag_config_delta(const di_node_t *node);
+const rpl_prefix_t *node_get_dodag_prefix_info(const di_node_t *node);
+const rpl_prefix_delta_t *node_get_dodag_prefix_info_delta(const di_node_t *node);
 
 int node_get_dtsn(const di_node_t *node);
 int node_get_dao_seq(const di_node_t *node);

@@ -13,7 +13,10 @@ struct di_node {
 	uint16_t simple_id;
 
 	rpl_dodag_config_t dodag_config;               //Via DIO config option
-    di_dodag_config_delta_t dodag_config_delta;
+	rpl_dodag_config_delta_t dodag_config_delta;
+
+	rpl_prefix_t dodag_prefix_info;                //Via DIO config option
+    rpl_prefix_delta_t dodag_prefix_info_delta;
 
 	bool is_custom_local_address;
 	addr_ipv6_t local_address;
@@ -172,7 +175,8 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     node->latest_dao_sequence_delta = node->latest_dao_sequence - prev_node->latest_dao_sequence;
     node->latest_dtsn_delta = node->latest_dtsn - prev_node->latest_dtsn;
 
-    dodag_config_compare( &prev_node->dodag_config, &node->dodag_config, &node->dodag_config_delta);
+    rpl_dodag_config_compare( &prev_node->dodag_config, &node->dodag_config, &node->dodag_config_delta);
+    rpl_prefix_compare( &prev_node->dodag_prefix_info, &node->dodag_prefix_info, &node->dodag_prefix_info_delta);
 
     //node->packet_count_delta = node->packet_count - prev_node->packet_count;
     node->max_dao_interval_delta = node->max_dao_interval - prev_node->max_dao_interval;
@@ -217,6 +221,14 @@ void node_set_key(di_node_t *node, const di_node_key_t *key) {
 void node_set_dodag_config(di_node_t *node, const rpl_dodag_config_t *config) {
     if(memcmp(&node->dodag_config, config, sizeof(rpl_dodag_config_t))) {
         node->dodag_config = *config;
+        node_set_changed(node);
+    }
+}
+
+void node_set_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *prefix_info) {
+    if(memcmp(&node->dodag_prefix_info, prefix_info, sizeof(rpl_prefix_t))) {
+        node->dodag_prefix_info = *prefix_info;
+        node_update_ip(node, &prefix_info->prefix);
         node_set_changed(node);
     }
 }
@@ -413,8 +425,16 @@ const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node) {
     return &node->dodag_config;
 }
 
-const di_dodag_config_delta_t *node_get_dodag_config_delta(const di_node_t *node) {
+const rpl_dodag_config_delta_t *node_get_dodag_config_delta(const di_node_t *node) {
     return &node->dodag_config_delta;
+}
+
+const rpl_prefix_t *node_get_dodag_prefix_info(const di_node_t *node) {
+    return &node->dodag_prefix_info;
+}
+
+const rpl_prefix_delta_t *node_get_dodag_prefix_info_delta(const di_node_t *node) {
+    return &node->dodag_prefix_info_delta;
 }
 
 const addr_ipv6_t* node_get_local_ip(const di_node_t *node) {

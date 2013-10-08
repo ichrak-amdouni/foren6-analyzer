@@ -13,7 +13,7 @@ struct di_dodag {
 
 	//Configuration
 	rpl_dodag_config_t config;				//Via DIO config option
-    di_dodag_config_delta_t config_delta;
+	rpl_dodag_config_delta_t config_delta;
 
     rpl_prefix_t prefix_info;						//Via DIO prefix option
 
@@ -105,7 +105,7 @@ void dodag_set_prefix(di_dodag_t *dodag, const rpl_prefix_t *prefix) {
 		di_node_t *node = rpldata_get_node(hash_it_value(it), HVM_FailIfNonExistant, NULL);
 		assert(node != NULL);
 		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
-		node_update_ip(node, &prefix->prefix);
+		//node_update_ip(node, &prefix->prefix);
 	}
 
 	hash_it_destroy(it);
@@ -143,7 +143,7 @@ void dodag_add_node(di_dodag_t *dodag, di_node_t *node) {
 
 	if(was_already_in_dodag == false) {
 		node_set_dodag(node, &dodag->key.ref);
-		node_update_ip(node, &dodag->prefix_info.prefix);
+		//node_update_ip(node, &dodag->prefix_info.prefix);
 		dodag_set_changed(dodag);
 	} else {
 		assert(previous_dodag_ref->version == dodag->key.ref.version && !memcmp(&previous_dodag_ref->dodagid, &dodag->key.ref.dodagid, sizeof(addr_ipv6_t)));
@@ -175,20 +175,6 @@ bool dodag_has_changed(di_dodag_t *dodag) {
 
 void dodag_reset_changed(di_dodag_t *dodag) {
 	dodag->has_changed = false;
-}
-
-void dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right, di_dodag_config_delta_t *delta) {
-    if ( left == NULL || right == NULL || delta == NULL ) return;
-    delta->auth_enabled = right->auth_enabled != left->auth_enabled;
-    delta->path_control_size = right->path_control_size != left->path_control_size;
-    delta->dio_interval_min = right->dio_interval_min != left->dio_interval_min;
-    delta->dio_interval_max = right->dio_interval_max != left->dio_interval_max;
-    delta->dio_redundancy_constant = right->dio_redundancy_constant != left->dio_redundancy_constant;
-    delta->max_rank_inc = right->max_rank_inc != left->max_rank_inc;
-    delta->min_hop_rank_inc = right->min_hop_rank_inc != left->min_hop_rank_inc;
-    delta->default_lifetime = right->default_lifetime != left->default_lifetime;
-    delta->lifetime_unit = right->lifetime_unit != left->lifetime_unit;
-    delta->objective_function = right->objective_function != left->objective_function;
 }
 
 const di_dodag_key_t *dodag_get_key(const di_dodag_t *dodag) {
