@@ -12,6 +12,9 @@ struct di_node {
 	di_node_key_t key;
 	uint16_t simple_id;
 
+    di_dodag_config_t dodag_config;               //Via DIO config option
+    di_dodag_config_delta_t dodag_config_delta;
+
 	bool is_custom_local_address;
 	addr_ipv6_t local_address;
 
@@ -169,6 +172,8 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     node->latest_dao_sequence_delta = node->latest_dao_sequence - prev_node->latest_dao_sequence;
     node->latest_dtsn_delta = node->latest_dtsn - prev_node->latest_dtsn;
 
+    dodag_config_compare( &prev_node->dodag_config, &node->dodag_config, &node->dodag_config_delta);
+
     //node->packet_count_delta = node->packet_count - prev_node->packet_count;
     node->max_dao_interval_delta = node->max_dao_interval - prev_node->max_dao_interval;
     node->max_dio_interval_delta = node->max_dio_interval - prev_node->max_dio_interval;
@@ -207,6 +212,13 @@ void node_set_key(di_node_t *node, const di_node_key_t *key) {
 
 		node_set_changed(node);
 	}
+}
+
+void node_set_dodag_config(di_node_t *node, const di_dodag_config_t *config) {
+    if(memcmp(&node->dodag_config, config, sizeof(di_dodag_config_t))) {
+        node->dodag_config = *config;
+        node_set_changed(node);
+    }
 }
 
 void node_set_local_ip(di_node_t *node, addr_ipv6_t address) {
@@ -395,6 +407,14 @@ addr_wpan_t node_get_mac64(const di_node_t *node) {
 
 uint16_t node_get_simple_id(const di_node_t *node) {
 	return node->simple_id;
+}
+
+const di_dodag_config_t *node_get_dodag_config(const di_node_t *node) {
+    return &node->dodag_config;
+}
+
+const di_dodag_config_delta_t *node_get_dodag_config_delta(const di_node_t *node) {
+    return &node->dodag_config_delta;
 }
 
 const addr_ipv6_t* node_get_local_ip(const di_node_t *node) {

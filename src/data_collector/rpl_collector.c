@@ -98,6 +98,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 		config.objective_function = dodag_config->objective_function;
 		config.path_control_size = dodag_config->path_control_size;
 		dodag_set_config(dodag, &config);
+		node_set_dodag_config(node, &config);
 	}
 }
 
