@@ -35,53 +35,46 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	bool rpl_instance_created;
 
 	//Get node, dodag and rpl_instance using their keys. If the requested object does not exist, created it.
-	di_node_ref_t node_ref;
-	node_ref_init(&node_ref, pkt_info.src_wpan_address);
-	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
-	node_add_packet_count(node, 1);
-	node_update_dio_interval(node, pkt_info.timestamp);
-
-	node_set_local_ip(node, pkt_info.src_ip_address);
-
-	di_dodag_ref_t dodag_ref;
-	dodag_ref_init(&dodag_ref, dio->dodagid, dio->version_number);
-	dodag = rpldata_get_dodag(&dodag_ref, HVM_CreateIfNonExistant, &dodag_created);
 
 	di_rpl_instance_ref_t rpl_instance_ref;
-	rpl_instance_ref_init(&rpl_instance_ref, dio->rpl_instance_id);
-	rpl_instance = rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
+    rpl_instance_ref_init(&rpl_instance_ref, dio->rpl_instance_id);
+    rpl_instance = rpldata_get_rpl_instance(&rpl_instance_ref, HVM_CreateIfNonExistant, &rpl_instance_created);
 
-	rpl_instance_add_dodag(rpl_instance, dodag);
+    di_dodag_ref_t dodag_ref;
+    dodag_ref_init(&dodag_ref, dio->dodagid, dio->version_number);
+    dodag = rpldata_get_dodag(&dodag_ref, HVM_CreateIfNonExistant, &dodag_created);
 
-	//Manage new version of DODAG
-	const di_dodag_ref_t* oldDodag = node_get_dodag(node);
-	if(oldDodag && oldDodag->version < 0)
-		oldDodag = NULL;
+    di_node_ref_t node_ref;
+	node_ref_init(&node_ref, pkt_info.src_wpan_address);
+	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
 
-	if(oldDodag && (addr_compare_ip(&oldDodag->dodagid, &dio->dodagid) == 0 || oldDodag->version > dio->version_number)) {
-		node_add_dodag_version_error(node);
-	}
+    dodag_add_node(dodag, node);
 
-	dodag_add_node(dodag, node);
+    if (dio->rank == 0 || dio->rank == 256) {
+        //Only update instance and DODAG if it comes from a RPL Root or Virtual Root
+        rpl_instance_add_dodag(rpl_instance, dodag);
+        rpl_instance_set_mop(rpl_instance, dio->mode_of_operation);
 
-	node_set_instance_config(node, dio);
-	rpl_instance_set_mop(rpl_instance, dio->mode_of_operation);
+        if(prefix) {
+            dodag_set_prefix(dodag, prefix);
+        }
+        if(dodag_config) {
+            dodag_set_config(dodag, dodag_config);
+        }
+    }
 
-	if(prefix) {
-		dodag_set_prefix(dodag, prefix);
-	}
-    node_set_dodag_prefix_info(node, prefix);
-	if(metric && metric->type == RDOMT_ETX) {
-		di_metric_t metric_value = {metric_get_type("ETX"), metric->value};
-		node_set_metric(node, &metric_value);
-	} else if(metric) {
-		fprintf(stderr, "Warning: metric is not ETX (%d)!\n", metric->type);
-	}
-
-	if(dodag_config) {
-		dodag_set_config(dodag, dodag_config);
-	}
+    node_add_packet_count(node, 1);
+	node_update_dio_interval(node, pkt_info.timestamp);
+	node_set_local_ip(node, pkt_info.src_ip_address);
+    node_set_instance_config(node, dio);
     node_set_dodag_config(node, dodag_config);
+    node_set_dodag_prefix_info(node, prefix);
+    if(metric && metric->type == RDOMT_ETX) {
+        di_metric_t metric_value = {metric_get_type("ETX"), metric->value};
+        node_set_metric(node, &metric_value);
+    } else if(metric) {
+        fprintf(stderr, "Warning: metric is not ETX (%d)!\n", metric->type);
+    }
 }
 
 void rpl_collector_parse_dao(packet_info_t pkt_info,

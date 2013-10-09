@@ -23,6 +23,7 @@ struct di_node {
 	bool has_dodag_prefix_info;
 	rpl_prefix_t dodag_prefix_info;                //Via DIO prefix option
     rpl_prefix_delta_t dodag_prefix_info_delta;
+    rpl_prefix_delta_t actual_dodag_prefix_info_delta;
 
 	bool is_custom_local_address;
 	addr_ipv6_t local_address;
@@ -79,7 +80,6 @@ struct di_node {
 };
 
 static uint16_t last_simple_id = 0;
-static void node_set_changed(di_node_t *node);
 static void node_update_old_field(const di_node_t *node, int field_offset, int field_size);
 
 size_t node_sizeof() {
@@ -174,6 +174,16 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     rpl_instance_config_compare( node_get_instance_config(prev_node), node_get_instance_config(node), &node->instance_config_delta);
     rpl_dodag_config_compare( node_get_dodag_config(prev_node), node_get_dodag_config(node), &node->dodag_config_delta);
     rpl_prefix_compare( node_get_dodag_prefix_info(prev_node), node_get_dodag_prefix_info(node), &node->dodag_prefix_info_delta);
+
+    rpl_prefix_t const * dodag_prefix_info = NULL;
+    di_dodag_ref_t const * dodag_ref = node_get_dodag(node);
+    if (dodag_ref) {
+        di_dodag_t const * dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
+        if ( dodag ) {
+            dodag_prefix_info = dodag_get_prefix(dodag);
+        }
+    }
+    rpl_prefix_compare( dodag_prefix_info, node_get_dodag_prefix_info(node), &node->actual_dodag_prefix_info_delta);
 
     //node->packet_count_delta = node->packet_count - prev_node->packet_count;
     node->max_dao_interval_delta = node->max_dao_interval - prev_node->max_dao_interval;
@@ -333,7 +343,7 @@ void node_add_packet_count(di_node_t *node, int count) {
     node_update_old_field(node, offsetof(di_node_t, packet_count_delta), sizeof(node->packet_count_delta));
 }
 
-static void node_set_changed(di_node_t *node) {
+void node_set_changed(di_node_t *node) {
 	if(node->has_changed == false)
 		rpl_event_node(node, RET_Updated);
 	node->has_changed = true;
@@ -476,6 +486,10 @@ const rpl_prefix_t *node_get_dodag_prefix_info(const di_node_t *node) {
 
 const rpl_prefix_delta_t *node_get_dodag_prefix_info_delta(const di_node_t *node) {
     return &node->dodag_prefix_info_delta;
+}
+
+const rpl_prefix_delta_t *node_get_actual_dodag_prefix_info_delta(const di_node_t *node) {
+    return &node->actual_dodag_prefix_info_delta;
 }
 
 const addr_ipv6_t* node_get_local_ip(const di_node_t *node) {

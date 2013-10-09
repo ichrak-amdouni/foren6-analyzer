@@ -32,6 +32,7 @@ size_t node_sizeof();
 void node_init(void *data, const void *key, size_t key_size);
 void node_destroy(void *data);
 di_node_t *node_dup(di_node_t *node);
+void node_set_changed(di_node_t *node);
 void node_fill_delta(di_node_t *node, di_node_t const *prev_node);
 
 void node_key_init(di_node_key_t *key, addr_wpan_t wpan_address, uint32_t version);
@@ -81,6 +82,7 @@ const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node);
 const rpl_dodag_config_delta_t *node_get_dodag_config_delta(const di_node_t *node);
 const rpl_prefix_t *node_get_dodag_prefix_info(const di_node_t *node);
 const rpl_prefix_delta_t *node_get_dodag_prefix_info_delta(const di_node_t *node);
+const rpl_prefix_delta_t *node_get_actual_dodag_prefix_info_delta(const di_node_t *node);
 
 int node_get_dao_seq(const di_node_t *node);
 double node_get_max_dao_interval(const di_node_t *node);

@@ -106,6 +106,8 @@ void dodag_set_prefix(di_dodag_t *dodag, const rpl_prefix_t *prefix) {
 		assert(node != NULL);
 		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
 		//node_update_ip(node, &prefix->prefix);
+		//Force nodes update so they compare again their configuration against the dodag
+		node_set_changed(node);
 	}
 
 	hash_it_destroy(it);
