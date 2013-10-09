@@ -69,8 +69,8 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 
 	if(prefix) {
 		dodag_set_prefix(dodag, prefix);
-		node_set_dodag_prefix_info(node, prefix);
 	}
+    node_set_dodag_prefix_info(node, prefix);
 	if(metric && metric->type == RDOMT_ETX) {
 		di_metric_t metric_value = {metric_get_type("ETX"), metric->value};
 		node_set_metric(node, &metric_value);
@@ -80,8 +80,8 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 
 	if(dodag_config) {
 		dodag_set_config(dodag, dodag_config);
-		node_set_dodag_config(node, dodag_config);
 	}
+    node_set_dodag_config(node, dodag_config);
 }
 
 void rpl_collector_parse_dao(packet_info_t pkt_info,
