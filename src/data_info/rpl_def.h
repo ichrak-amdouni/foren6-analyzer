@@ -69,7 +69,7 @@ typedef struct rpl_dodag_config {
 
 
 //DIO
-typedef struct rpl_dio {
+typedef struct rpl_instance_config {
     uint8_t rpl_instance_id;
     uint8_t version_number;
     uint16_t rank;
@@ -77,7 +77,10 @@ typedef struct rpl_dio {
     di_rpl_mop_e mode_of_operation;
     uint8_t dtsn;
     struct in6_addr dodagid;
-} rpl_dio_t;
+} rpl_instance_config_t;
+
+//RPL instance config is the same as DIO
+typedef struct rpl_instance_config rpl_dio_t;
 
 //Metric configuration is the same as DIO metric option
 typedef struct rpl_metric rpl_dio_opt_metric_t;
@@ -152,7 +155,19 @@ typedef struct rpl_hop_by_hop_opt {
 
 // DELTA
 
+typedef struct rpl_instance_config_delta {
+    bool has_changed;
+    bool rpl_instance_id;
+    bool version_number;
+    bool rank;
+    bool grounded;
+    bool mode_of_operation;
+    bool dtsn;
+    bool dodagid;
+} rpl_instance_config_delta_t;
+
 typedef struct rpl_dodag_config_delta {
+    bool has_changed;
     bool auth_enabled;
     bool path_control_size;
     bool dio_interval_min;
@@ -166,6 +181,7 @@ typedef struct rpl_dodag_config_delta {
 } rpl_dodag_config_delta_t;
 
 typedef struct rpl_prefix_delta {
+    bool has_changed;
     bool prefix;
     bool on_link;
     bool auto_address_config;
@@ -174,6 +190,7 @@ typedef struct rpl_prefix_delta {
     bool preferred_lifetime;
 } rpl_prefix_delta_t;
 
+void rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_instance_config_t *right, rpl_instance_config_delta_t *delta);
 void rpl_dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right, rpl_dodag_config_delta_t *delta);
 void rpl_prefix_compare(const rpl_prefix_t *left, const rpl_prefix_t *right, rpl_prefix_delta_t *delta);
 

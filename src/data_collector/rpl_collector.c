@@ -39,7 +39,6 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	node_ref_init(&node_ref, pkt_info.src_wpan_address);
 	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);
 	node_add_packet_count(node, 1);
-	node_set_dtsn(node, dio->dtsn);
 	node_update_dio_interval(node, pkt_info.timestamp);
 
 	node_set_local_ip(node, pkt_info.src_ip_address);
@@ -65,8 +64,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 
 	dodag_add_node(dodag, node);
 
-	node_set_rank(node, dio->rank);
-	node_set_grounded(node, dio->grounded);
+	node_set_instance_config(node, dio);
 	rpl_instance_set_mop(rpl_instance, dio->mode_of_operation);
 
 	if(prefix) {
@@ -81,18 +79,6 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	}
 
 	if(dodag_config) {
-	    rpl_dodag_config_t config;
-		memset(&config, 0, sizeof(config));
-		config.auth_enabled = dodag_config->auth_enabled;
-		config.default_lifetime = dodag_config->default_lifetime;
-		config.dio_interval_max = dodag_config->dio_interval_max;
-		config.dio_interval_min = dodag_config->dio_interval_min;
-		config.dio_redundancy_constant = dodag_config->dio_redundancy_constant;
-		config.lifetime_unit = dodag_config->lifetime_unit;
-		config.max_rank_inc = dodag_config->max_rank_inc;
-		config.min_hop_rank_inc = dodag_config->min_hop_rank_inc;
-		config.objective_function = dodag_config->objective_function;
-		config.path_control_size = dodag_config->path_control_size;
 		dodag_set_config(dodag, dodag_config);
 		node_set_dodag_config(node, dodag_config);
 	}

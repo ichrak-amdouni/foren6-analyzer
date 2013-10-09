@@ -12,10 +12,13 @@ struct di_node {
 	di_node_key_t key;
 	uint16_t simple_id;
 
-	rpl_dodag_config_t dodag_config;               //Via DIO config option
+    rpl_instance_config_t instance_config;               //Via DIO
+    rpl_instance_config_delta_t instance_config_delta;
+
+    rpl_dodag_config_t dodag_config;               //Via DIO config option
 	rpl_dodag_config_delta_t dodag_config_delta;
 
-	rpl_prefix_t dodag_prefix_info;                //Via DIO config option
+	rpl_prefix_t dodag_prefix_info;                //Via DIO prefix option
     rpl_prefix_delta_t dodag_prefix_info_delta;
 
 	bool is_custom_local_address;
@@ -53,11 +56,8 @@ struct di_node {
     //delta
     bool local_address_delta;
     bool global_address_delta;
-    int rank_delta;
     int metric_delta;
-    bool grounded_delta;
     int latest_dao_sequence_delta;
-    int latest_dtsn_delta;
 
     int packet_count_delta;
 	bool max_dao_interval_delta;
@@ -98,7 +98,6 @@ void node_init(void *data, const void *key, size_t key_size) {
 	node->max_dao_interval = 0;
 	node->max_dio_interval = 0;
 	node->latest_dao_sequence = 0;
-	node->latest_dtsn = 0;
 	node->has_changed = true;
 
 	//statistics
@@ -113,11 +112,8 @@ void node_init(void *data, const void *key, size_t key_size) {
 	//delta
     node->local_address_delta = 0;
 	node->global_address_delta = 0;
-	node->rank_delta = 0;
 	node->metric_delta = 0;
-	node->grounded_delta = 0;
 	node->latest_dao_sequence_delta = 0;
-	node->latest_dtsn_delta = 0;
 
 	node->packet_count_delta = 0;
 	node->max_dao_interval_delta = 0;
@@ -169,12 +165,10 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     if ( ! prev_node ) return;
     node->local_address_delta = addr_compare_ip(&node->local_address, &prev_node->local_address) != 0;
     node->global_address_delta = addr_compare_ip(&node->global_address, &prev_node->global_address) != 0;
-    node->rank_delta = node->rank - prev_node->rank;
     node->metric_delta = node->metric.value != prev_node->metric.value;
-    node->grounded_delta = node->grounded != prev_node->grounded;
     node->latest_dao_sequence_delta = node->latest_dao_sequence - prev_node->latest_dao_sequence;
-    node->latest_dtsn_delta = node->latest_dtsn - prev_node->latest_dtsn;
 
+    rpl_instance_config_compare( &prev_node->instance_config, &node->instance_config, &node->instance_config_delta);
     rpl_dodag_config_compare( &prev_node->dodag_config, &node->dodag_config, &node->dodag_config_delta);
     rpl_prefix_compare( &prev_node->dodag_prefix_info, &node->dodag_prefix_info, &node->dodag_prefix_info_delta);
 
@@ -216,6 +210,13 @@ void node_set_key(di_node_t *node, const di_node_key_t *key) {
 
 		node_set_changed(node);
 	}
+}
+
+void node_set_instance_config(di_node_t *node, const rpl_instance_config_t *config) {
+    if(memcmp(&node->instance_config, config, sizeof(rpl_instance_config_t))) {
+        node->instance_config = *config;
+        node_set_changed(node);
+    }
 }
 
 void node_set_dodag_config(di_node_t *node, const rpl_dodag_config_t *config) {
@@ -276,13 +277,6 @@ void node_set_metric(di_node_t* node, const di_metric_t* metric) {
 void node_set_rank(di_node_t *node, uint16_t rank) {
 	if(node->rank != rank) {
 		node->rank = rank;
-		node_set_changed(node);
-	}
-}
-
-void node_set_grounded(di_node_t *node, bool grounded) {
-	if(node->grounded == grounded) {
-		node->grounded = grounded;
 		node_set_changed(node);
 	}
 }
@@ -421,6 +415,14 @@ uint16_t node_get_simple_id(const di_node_t *node) {
 	return node->simple_id;
 }
 
+const rpl_instance_config_t *node_get_instance_config(const di_node_t *node) {
+    return &node->instance_config;
+}
+
+const rpl_instance_config_delta_t *node_get_instance_config_delta(const di_node_t *node) {
+    return &node->instance_config_delta;
+}
+
 const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node) {
     return &node->dodag_config;
 }
@@ -457,10 +459,6 @@ uint16_t node_get_rank(const di_node_t *node) {
 	return node->rank;
 }
 
-bool node_get_grounded(const di_node_t *node) {
-	return node->grounded;
-}
-
 const di_dodag_ref_t * node_get_dodag(const di_node_t *node) {
 	if(node->dodag.version >= 0)
 		return &node->dodag;
@@ -470,10 +468,6 @@ const di_dodag_ref_t * node_get_dodag(const di_node_t *node) {
 
 int node_get_packet_count(const di_node_t *node) {
 	return node->packet_count;
-}
-
-int node_get_dtsn(const di_node_t *node) {
-	return node->latest_dtsn;
 }
 
 int node_get_dao_seq(const di_node_t *node) {
@@ -520,24 +514,12 @@ bool node_get_global_address_delta(const di_node_t *node) {
   return node->global_address_delta;
 }
 
-int node_get_rank_delta(const di_node_t *node) {
-  return node->rank_delta;
-}
-
 int node_get_metric_delta(const di_node_t *node) {
   return node->metric_delta;
 }
 
-bool node_get_grounded_delta(const di_node_t *node) {
-  return node->grounded_delta;
-}
-
 int node_get_latest_dao_sequence_delta(const di_node_t *node) {
   return node->latest_dao_sequence_delta;
-}
-
-int node_get_latest_dtsn_delta(const di_node_t *node) {
-  return node->latest_dtsn_delta;
 }
 
 int node_get_packet_count_delta(const di_node_t *node) {
