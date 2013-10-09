@@ -1,4 +1,5 @@
 #include "rpl_def.h"
+#include "stddef.h"
 
 void rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_instance_config_t *right, rpl_instance_config_delta_t *delta) {
     if ( delta == NULL ) return;
