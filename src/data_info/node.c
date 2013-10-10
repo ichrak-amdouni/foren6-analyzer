@@ -15,10 +15,12 @@ struct di_node {
 	bool has_instance_config;
     rpl_instance_config_t instance_config;               //Via DIO
     rpl_instance_config_delta_t instance_config_delta;
+    rpl_instance_config_delta_t actual_instance_config_delta;
 
     bool has_dodag_config;
     rpl_dodag_config_t dodag_config;               //Via DIO config option
 	rpl_dodag_config_delta_t dodag_config_delta;
+    rpl_dodag_config_delta_t actual_dodag_config_delta;
 
 	bool has_dodag_prefix_info;
 	rpl_prefix_t dodag_prefix_info;                //Via DIO prefix option
@@ -175,14 +177,20 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     rpl_dodag_config_compare( node_get_dodag_config(prev_node), node_get_dodag_config(node), &node->dodag_config_delta);
     rpl_prefix_compare( node_get_dodag_prefix_info(prev_node), node_get_dodag_prefix_info(node), &node->dodag_prefix_info_delta);
 
+    rpl_instance_config_t const * instance_config = NULL;
+    rpl_dodag_config_t const * dodag_config = NULL;
     rpl_prefix_t const * dodag_prefix_info = NULL;
     di_dodag_ref_t const * dodag_ref = node_get_dodag(node);
     if (dodag_ref) {
         di_dodag_t const * dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
         if ( dodag ) {
+            instance_config = dodag_get_instance_config(dodag);
+            dodag_config = dodag_get_dodag_config(dodag);
             dodag_prefix_info = dodag_get_prefix(dodag);
         }
     }
+    rpl_instance_config_compare(instance_config, node_get_instance_config(node), &node->actual_instance_config_delta);
+    rpl_dodag_config_compare(dodag_config, node_get_dodag_config(node), &node->actual_dodag_config_delta);
     rpl_prefix_compare( dodag_prefix_info, node_get_dodag_prefix_info(node), &node->actual_dodag_prefix_info_delta);
 
     //node->packet_count_delta = node->packet_count - prev_node->packet_count;
@@ -464,6 +472,10 @@ const rpl_instance_config_delta_t *node_get_instance_config_delta(const di_node_
     return &node->instance_config_delta;
 }
 
+const rpl_instance_config_delta_t *node_get_actual_instance_config_delta(const di_node_t *node) {
+    return &node->actual_instance_config_delta;
+}
+
 const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node) {
     if ( node-> has_dodag_config ) {
         return &node->dodag_config;
@@ -474,6 +486,10 @@ const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node) {
 
 const rpl_dodag_config_delta_t *node_get_dodag_config_delta(const di_node_t *node) {
     return &node->dodag_config_delta;
+}
+
+const rpl_dodag_config_delta_t *node_get_actual_dodag_config_delta(const di_node_t *node) {
+    return &node->actual_dodag_config_delta;
 }
 
 const rpl_prefix_t *node_get_dodag_prefix_info(const di_node_t *node) {

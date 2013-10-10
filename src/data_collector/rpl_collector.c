@@ -55,11 +55,12 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
         rpl_instance_add_dodag(rpl_instance, dodag);
         rpl_instance_set_mop(rpl_instance, dio->mode_of_operation);
 
+        dodag_set_instance_config(dodag, dio);
+        if(dodag_config) {
+            dodag_set_dodag_config(dodag, dodag_config);
+        }
         if(prefix) {
             dodag_set_prefix(dodag, prefix);
-        }
-        if(dodag_config) {
-            dodag_set_config(dodag, dodag_config);
         }
     }
 

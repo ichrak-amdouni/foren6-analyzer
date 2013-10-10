@@ -78,8 +78,10 @@ int node_get_packet_count(const di_node_t *node);
 
 const rpl_instance_config_t *node_get_instance_config(const di_node_t *node);
 const rpl_instance_config_delta_t *node_get_instance_config_delta(const di_node_t *node);
+const rpl_instance_config_delta_t *node_get_actual_instance_config_delta(const di_node_t *node);
 const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node);
 const rpl_dodag_config_delta_t *node_get_dodag_config_delta(const di_node_t *node);
+const rpl_dodag_config_delta_t *node_get_actual_dodag_config_delta(const di_node_t *node);
 const rpl_prefix_t *node_get_dodag_prefix_info(const di_node_t *node);
 const rpl_prefix_delta_t *node_get_dodag_prefix_info_delta(const di_node_t *node);
 const rpl_prefix_delta_t *node_get_actual_dodag_prefix_info_delta(const di_node_t *node);

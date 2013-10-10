@@ -12,10 +12,16 @@ struct di_dodag {
 	di_dodag_key_t key;				//Via DIO & DAO for dodagid and via DIO for version
 
 	//Configuration
-	rpl_dodag_config_t config;				//Via DIO config option
-	rpl_dodag_config_delta_t config_delta;
+    rpl_instance_config_t instance_config;              //Via DIO config option
+    rpl_instance_config_delta_t instance_config_delta;
 
+    bool has_dodag_config;
+	rpl_dodag_config_t dodag_config;				//Via DIO config option
+	rpl_dodag_config_delta_t dodag_config_delta;
+
+	bool has_prefix_info;
     rpl_prefix_t prefix_info;						//Via DIO prefix option
+    rpl_prefix_delta_t prefix_info_delta;
 
 	di_rpl_instance_ref_t rpl_instance;		//Via DIO, DAO
 
@@ -27,6 +33,7 @@ struct di_dodag {
 };
 
 static void dodag_set_changed(di_dodag_t *dodag);
+static void dodag_set_nodes_changed(di_dodag_t *dodag);
 
 size_t dodag_sizeof() {
 	return sizeof(di_dodag_t);
@@ -40,7 +47,14 @@ void dodag_init(void *data, const void *key, size_t key_size) {
 	dodag->nodes = hash_create(sizeof(di_node_ref_t), NULL);
 	dodag->rpl_instance.rpl_instance = -1;
 	dodag->key.ref = *(di_dodag_ref_t*)key;
-	memset(&dodag->config, 0, sizeof(dodag->config));
+    memset(&dodag->instance_config, 0, sizeof(dodag->instance_config));
+    memset(&dodag->instance_config_delta, 0, sizeof(dodag->instance_config_delta));
+    dodag->has_dodag_config = false;
+	memset(&dodag->dodag_config, 0, sizeof(dodag->dodag_config));
+    memset(&dodag->dodag_config_delta, 0, sizeof(dodag->dodag_config_delta));
+    dodag->has_prefix_info = false;
+    memset(&dodag->prefix_info, 0, sizeof(dodag->prefix_info));
+    memset(&dodag->prefix_info_delta, 0, sizeof(dodag->prefix_info_delta));
 	dodag->has_changed = true;
 	rpl_event_dodag(dodag, RET_Created);
 }
@@ -82,38 +96,63 @@ void dodag_set_key(di_dodag_t *dodag, const di_dodag_key_t *key) {
 	}
 }
 
-void dodag_set_config(di_dodag_t *dodag, const rpl_dodag_config_t *config) {
-	if(memcmp(&dodag->config, config, sizeof(rpl_dodag_config_t))) {
-		dodag->config = *config;
-		dodag_set_changed(dodag);
-	}
+void dodag_set_nodes_changed(di_dodag_t *dodag) {
+    hash_iterator_ptr it, itend;
+    it = hash_begin(dodag->nodes, NULL);
+    itend = hash_end(dodag->nodes, NULL);
+
+    for(; hash_it_equ(it, itend) == false; hash_it_inc(it)) {
+        di_node_t *node = rpldata_get_node(hash_it_value(it), HVM_FailIfNonExistant, NULL);
+        assert(node != NULL);
+        assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
+        //Force nodes update so they compare again their configuration against the dodag
+        node_set_changed(node);
+    }
+
+    hash_it_destroy(it);
+    hash_it_destroy(itend);
+}
+
+void dodag_set_instance_config(di_dodag_t *dodag, const rpl_instance_config_t *instance_config) {
+    if(memcmp(&dodag->instance_config, instance_config, sizeof(rpl_instance_config_t))) {
+        dodag->instance_config = *instance_config;
+        dodag_set_nodes_changed(dodag);
+        dodag_set_changed(dodag);
+    }
+}
+
+void dodag_set_dodag_config(di_dodag_t *dodag, const rpl_dodag_config_t *dodag_config) {
+    if ( dodag_config ) {
+        if(!dodag->has_dodag_config || memcmp(&dodag->dodag_config, dodag_config, sizeof(rpl_dodag_config_t))) {
+            dodag->dodag_config = *dodag_config;
+            dodag_set_nodes_changed(dodag);
+            dodag_set_changed(dodag);
+        }
+        dodag->has_dodag_config = true;
+    } else {
+        if ( dodag->has_dodag_config ) {
+            dodag_set_nodes_changed(dodag);
+            dodag_set_changed(dodag);
+        }
+        dodag->has_dodag_config = false;
+    }
 }
 
 void dodag_set_prefix(di_dodag_t *dodag, const rpl_prefix_t *prefix) {
-	hash_iterator_ptr it, itend;
-
-
-	if(dodag->prefix_info.prefix.length == prefix->prefix.length && !addr_compare_ip_len(&dodag->prefix_info.prefix.prefix, &prefix->prefix.prefix, prefix->prefix.length))
-		return;	//Same prefix, nothing to change
-
-	dodag->prefix_info = *prefix;
-
-	it = hash_begin(dodag->nodes, NULL);
-	itend = hash_end(dodag->nodes, NULL);
-
-	for(; hash_it_equ(it, itend) == false; hash_it_inc(it)) {
-		di_node_t *node = rpldata_get_node(hash_it_value(it), HVM_FailIfNonExistant, NULL);
-		assert(node != NULL);
-		assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
-		//node_update_ip(node, &prefix->prefix);
-		//Force nodes update so they compare again their configuration against the dodag
-		node_set_changed(node);
-	}
-
-	hash_it_destroy(it);
-	hash_it_destroy(itend);
-
-	dodag_set_changed(dodag);
+    if ( prefix ) {
+        if(!dodag->has_prefix_info || memcmp(&dodag->prefix_info, prefix, sizeof(rpl_prefix_t))) {
+            dodag->prefix_info = *prefix;
+            dodag_set_nodes_changed(dodag);
+            dodag_set_changed(dodag);
+        }
+        dodag->has_prefix_info = true;
+    } else {
+        if ( dodag->has_prefix_info ) {
+            dodag_set_nodes_changed(dodag);
+            dodag_set_changed(dodag);
+        }
+        dodag->has_prefix_info = false;
+    }
 }
 
 void dodag_set_rpl_instance(di_dodag_t *dodag, const di_rpl_instance_ref_t* rpl_instance) {
@@ -183,12 +222,24 @@ const di_dodag_key_t *dodag_get_key(const di_dodag_t *dodag) {
 	return &dodag->key;
 }
 
-const rpl_dodag_config_t *dodag_get_config(const di_dodag_t *dodag) {
-	return &dodag->config;
+const rpl_instance_config_t *dodag_get_instance_config(const di_dodag_t *dodag) {
+    return &dodag->instance_config;
+}
+
+const rpl_dodag_config_t *dodag_get_dodag_config(const di_dodag_t *dodag) {
+    if ( dodag->has_dodag_config ) {
+        return &dodag->dodag_config;
+    } else {
+        return NULL;
+    }
 }
 
 const rpl_prefix_t *dodag_get_prefix(const di_dodag_t *dodag) {
-	return &dodag->prefix_info;
+    if ( dodag->has_prefix_info ) {
+        return &dodag->prefix_info;
+    } else {
+        return false;
+    }
 }
 
 const di_rpl_instance_ref_t *dodag_get_rpl_instance(const di_dodag_t *dodag) {
