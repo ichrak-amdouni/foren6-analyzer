@@ -14,7 +14,7 @@ void rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_in
     } else if ( left == NULL || right == NULL ) {
         delta->rpl_instance_id = true;
         delta->version_number = true;
-        delta->rank = true;
+        //delta->rank = true;
         delta->grounded = true;
         delta->mode_of_operation = true;
         delta->dtsn = true;
@@ -28,8 +28,8 @@ void rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_in
         delta->dtsn = right->dtsn != left->dtsn;
         delta->dodagid = addr_compare_ip(&right->dodagid, &left->dodagid) != 0;
     }
-    delta->has_changed = delta->rpl_instance_id || delta->version_number || delta->rank ||
-        delta->grounded || delta->mode_of_operation || delta->dtsn ||
+    delta->has_changed = delta->rpl_instance_id || delta->version_number ||/* delta->rank ||*/
+        delta->grounded || delta->mode_of_operation || /* delta->dtsn ||*/
         delta->dodagid;
 }
 
