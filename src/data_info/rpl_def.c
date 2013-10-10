@@ -14,7 +14,7 @@ void rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_in
     } else if ( left == NULL || right == NULL ) {
         delta->rpl_instance_id = true;
         delta->version_number = true;
-        //delta->rank = true;
+        delta->rank = true;
         delta->grounded = true;
         delta->mode_of_operation = true;
         delta->dtsn = true;
