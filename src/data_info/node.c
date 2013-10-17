@@ -525,7 +525,7 @@ const di_metric_t *node_get_metric(const di_node_t* node) {
 }
 
 uint16_t node_get_rank(const di_node_t *node) {
-	return node->rank;
+	return node->instance_config.rank;
 }
 
 const di_dodag_ref_t * node_get_dodag(const di_node_t *node) {
