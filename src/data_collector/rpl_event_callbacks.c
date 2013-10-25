@@ -124,6 +124,8 @@ bool rpl_event_commit_changed_objects(int packet_id, double timestamp) {
 	if(node || link || dodag || rpl_instance)
 		rpldata_wsn_create_version(packet_id, timestamp);
 
+	rpl_event_process_events(rpldata_get_wsn_last_version());
+
 	return node || link || dodag || rpl_instance;
 }
 
