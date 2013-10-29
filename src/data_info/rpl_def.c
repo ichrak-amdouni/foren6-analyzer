@@ -1,39 +1,165 @@
 #include "rpl_def.h"
 #include "stddef.h"
 
-void rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_instance_config_t *right, rpl_instance_config_delta_t *delta) {
+void init_rpl_instance_config(rpl_instance_config_t *config) {
+    config->rpl_instance_id = 0;
+    init_ipv6_addr(&config->dodagid);
+    config->version_number = 0;
+    config->mode_of_operation = 0;
+}
+
+void init_rpl_instance_data(rpl_instance_data_t *data) {
+    data->has_dio_data = false;
+    data->rpl_instance_id = 0;
+    data->grounded = false;
+    data->dtsn = 0;
+    data->has_rank = false;
+    data->rank = 0;
+    data->has_metric = false;
+    init_rpl_metric(&data->metric);
+}
+
+void init_rpl_dodag_config(rpl_dodag_config_t *config) {
+    config->auth_enabled = 0;
+    config->path_control_size = 0;
+    config->dio_interval_min = 0;
+    config->dio_interval_max = 0;
+    config->dio_redundancy_constant = 0;
+    config->max_rank_inc = 0;
+    config->min_hop_rank_inc = 0;
+    config->default_lifetime = 0;
+    config->lifetime_unit = 0;
+    config->objective_function = 0;
+}
+
+void init_rpl_prefix(rpl_prefix_t *prefix) {
+    init_prefix(&prefix->prefix);
+    prefix->on_link = false;
+    prefix->auto_address_config = false;
+    prefix->router_address = false;
+    prefix->valid_lifetime = 0;
+    prefix->preferred_lifetime = 0;
+}
+
+void init_rpl_metric(rpl_metric_t *metric) {
+    metric->type = 0;
+    metric->value = 0;
+}
+
+void init_rpl_statistics(rpl_statistics_t *statistics)
+{
+    statistics->last_dao_timestamp = 0;
+    statistics->last_dio_timestamp = 0;
+    statistics->max_dao_interval = 0;
+    statistics->max_dio_interval = 0;
+}
+
+void init_rpl_errors(rpl_errors_t *errors) {
+    errors->upward_rank_errors = 0;
+    errors->downward_rank_errors = 0;
+    errors->route_loop_errors = 0;
+
+    errors->ip_mismatch_errors = 0;
+    errors->dodag_version_decrease_errors = 0;
+    errors->dodag_mismatch_errors = 0;
+}
+
+void update_rpl_instance_config_from_dio(rpl_instance_config_t *config, const rpl_dio_t * dio) {
+    if ( !dio ) return;
+    config->rpl_instance_id = dio->rpl_instance_id;
+    config->dodagid = dio->dodagid;
+    config->version_number = dio->version_number;
+    config->mode_of_operation = dio->mode_of_operation;
+}
+
+void update_rpl_instance_data_from_dio(rpl_instance_data_t *data, const rpl_dio_t * dio) {
+    if (!dio ) return;
+    data->has_dio_data = true;
+    data->has_rank = true;
+    data->rpl_instance_id = dio->rpl_instance_id;
+    data->rank = dio->rank;
+    data->grounded = dio->grounded;
+    data->dtsn = dio->dtsn;
+}
+
+void update_rpl_instance_data_from_metric(rpl_instance_data_t *data, const rpl_metric_t * metric) {
+    if ( metric ) {
+        data->has_metric = true;
+        data->metric = *metric;
+    } else {
+        data->has_metric = false;
+    }
+}
+
+void update_rpl_instance_data_from_hop_by_hop(rpl_instance_data_t *data, const rpl_hop_by_hop_opt_t * hop_by_hop) {
+    if ( hop_by_hop ) {
+        data->has_rank = true;
+        data->rank = hop_by_hop->sender_rank;
+    }
+}
+
+void update_rpl_instance_data_from_dao(rpl_instance_data_t *data, const rpl_dao_t * dao) {
+    if ( !dao ) return;
+    data->has_dao_data = true;
+    data->latest_dao_sequence = dao->dao_sequence;
+}
+
+void rpl_instance_config_delta(const rpl_instance_config_t *left, const rpl_instance_config_t *right, rpl_instance_config_delta_t *delta) {
     if ( delta == NULL ) return;
     if ( left == NULL && right == NULL ) {
         delta->rpl_instance_id = false;
-        delta->version_number = false;
-        delta->rank = false;
-        delta->grounded = false;
-        delta->mode_of_operation = false;
-        delta->dtsn = false;
         delta->dodagid = false;
+        delta->version_number = false;
+        delta->mode_of_operation = false;
     } else if ( left == NULL || right == NULL ) {
         delta->rpl_instance_id = true;
-        delta->version_number = true;
-        delta->rank = true;
-        delta->grounded = true;
-        delta->mode_of_operation = true;
-        delta->dtsn = true;
         delta->dodagid = true;
+        delta->version_number = true;
+        delta->mode_of_operation = true;
     } else {
         delta->rpl_instance_id = right->rpl_instance_id != left->rpl_instance_id;
-        delta->version_number = right->version_number != left->version_number;
-        delta->rank = right->rank != left->rank;
-        delta->grounded = right->grounded != left->grounded;
-        delta->mode_of_operation = right->mode_of_operation != left->mode_of_operation;
-        delta->dtsn = right->dtsn != left->dtsn;
         delta->dodagid = addr_compare_ip(&right->dodagid, &left->dodagid) != 0;
+        delta->version_number = right->version_number != left->version_number;
+        delta->mode_of_operation = right->mode_of_operation != left->mode_of_operation;
     }
-    delta->has_changed = delta->rpl_instance_id || delta->version_number ||/* delta->rank ||*/
-        delta->grounded || delta->mode_of_operation || /* delta->dtsn ||*/
-        delta->dodagid;
+    delta->has_changed = delta->rpl_instance_id || delta->dodagid || delta->version_number ||
+        delta->mode_of_operation;
 }
 
-void rpl_dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right, rpl_dodag_config_delta_t *delta) {
+void rpl_instance_data_delta(const rpl_instance_data_t *left, const rpl_instance_data_t *right, rpl_instance_data_delta_t *delta) {
+    if ( delta == NULL ) return;
+    if ( left == NULL && right == NULL ) {
+        delta->rpl_instance_id = false;
+        delta->has_metric = false;
+        delta->metric = 0;
+        delta->has_rank = false;
+        delta->rank = 0;
+        delta->grounded = false;
+        delta->dtsn = 0;
+        delta->latest_dao_sequence = 0;
+    } else if ( left == NULL || right == NULL ) {
+        delta->rpl_instance_id = true;
+        delta->has_metric = true;
+        delta->metric = left ? left->metric.value : right->metric.value;
+        delta->has_rank = left ? left->has_rank : right->has_rank;
+        delta->rank = left ? left->rank : right->rank;
+        delta->grounded = true;
+        delta->dtsn = left ? left->dtsn : right->dtsn;
+        delta->latest_dao_sequence = left ? left->latest_dao_sequence : right->latest_dao_sequence;
+    } else {
+        delta->rpl_instance_id = right->rpl_instance_id != left->rpl_instance_id;
+        delta->has_metric = right->has_metric != left->has_metric;
+        delta->metric = right->metric.value - left->metric.value;
+        delta->rank = right->rank != left->rank;
+        delta->grounded = right->grounded != left->grounded;
+        delta->dtsn = right->dtsn != left->dtsn;
+        delta->latest_dao_sequence = right->latest_dao_sequence - left->latest_dao_sequence;
+    }
+    delta->has_changed = delta->rpl_instance_id || delta->has_metric || delta->metric || delta->rank ||
+        delta->grounded || delta->dtsn || delta->latest_dao_sequence;
+}
+
+void rpl_dodag_config_delta(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right, rpl_dodag_config_delta_t *delta) {
     if ( delta == NULL ) return;
     if ( left == NULL && right == NULL ) {
         delta->auth_enabled = false;
@@ -76,7 +202,7 @@ void rpl_dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_co
         delta->objective_function;
 }
 
-void rpl_prefix_compare(const rpl_prefix_t *left, const rpl_prefix_t *right, rpl_prefix_delta_t *delta) {
+void rpl_prefix_delta(const rpl_prefix_t *left, const rpl_prefix_t *right, rpl_prefix_delta_t *delta) {
     if ( delta == NULL ) return;
     if ( left == NULL && right == NULL ) {
         delta->prefix = false;
@@ -103,4 +229,64 @@ void rpl_prefix_compare(const rpl_prefix_t *left, const rpl_prefix_t *right, rpl
 
     delta->has_changed = delta->prefix || delta->on_link || delta->auto_address_config ||
         delta->router_address || delta->valid_lifetime || delta->preferred_lifetime;
+}
+
+void rpl_statistics_delta(const rpl_statistics_t *left, const rpl_statistics_t *right, rpl_statistics_delta_t *delta)
+{
+    if (delta == NULL) return;
+    delta->max_dao_interval = right->max_dao_interval - left->max_dao_interval;
+    delta->max_dio_interval = right->max_dio_interval - left->max_dio_interval;
+
+    delta->has_changed = right->max_dao_interval != left->max_dao_interval ||
+        right->max_dio_interval != left->max_dio_interval;
+}
+
+void rpl_errors_delta(const rpl_errors_t *left, const rpl_errors_t *right, rpl_errors_delta_t *delta) {
+    if (delta == NULL) return;
+    delta->upward_rank_errors = right->upward_rank_errors - left->upward_rank_errors;
+    delta->downward_rank_errors = right->downward_rank_errors - left->downward_rank_errors;
+    delta->route_loop_errors = right->route_loop_errors - left->route_loop_errors;
+
+    delta->ip_mismatch_errors = right->ip_mismatch_errors - left->ip_mismatch_errors;
+    delta->dodag_version_decrease_errors = right->dodag_version_decrease_errors - left->dodag_version_decrease_errors;
+    delta->dodag_mismatch_errors = right->dodag_mismatch_errors - left->dodag_mismatch_errors;
+
+    delta->has_changed = delta->upward_rank_errors + delta->downward_rank_errors + delta->route_loop_errors +
+        delta->ip_mismatch_errors + /*delta->dodag_version_decrease_errors +*/ delta->dodag_mismatch_errors;
+}
+
+bool rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_instance_config_t *right) {
+    rpl_instance_config_delta_t delta;
+    rpl_instance_config_delta(left, right, &delta);
+    return delta.has_changed;
+}
+
+bool rpl_dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right) {
+    rpl_dodag_config_delta_t delta;
+    rpl_dodag_config_delta(left, right, &delta);
+    return delta.has_changed;
+}
+
+bool rpl_prefix_compare(const rpl_prefix_t *left, const rpl_prefix_t *right) {
+    rpl_prefix_delta_t delta;
+    rpl_prefix_delta(left, right, &delta);
+    return delta.has_changed;
+}
+
+bool rpl_instance_data_compare(const rpl_instance_data_t *left, const rpl_instance_data_t *right) {
+    rpl_instance_data_delta_t delta;
+    rpl_instance_data_delta(left, right, &delta);
+    return delta.has_changed;
+}
+
+bool rpl_statistics_compare(const rpl_statistics_t *left, const rpl_statistics_t *right) {
+    rpl_statistics_delta_t delta;
+    rpl_statistics_delta(left, right, &delta);
+    return delta.has_changed;
+}
+
+bool rpl_errors_compare(const rpl_errors_t *left, const rpl_errors_t *right) {
+    rpl_errors_delta_t delta;
+    rpl_errors_delta(left, right, &delta);
+    return delta.has_changed;
 }

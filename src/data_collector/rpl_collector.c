@@ -55,27 +55,19 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
         rpl_instance_add_dodag(rpl_instance, dodag);
         rpl_instance_set_mop(rpl_instance, dio->mode_of_operation);
 
-        dodag_set_instance_config(dodag, dio);
-        if(dodag_config) {
-            dodag_set_dodag_config(dodag, dodag_config);
-        }
-        if(prefix) {
-            dodag_set_prefix(dodag, prefix);
-        }
+        dodag_update_from_dio(dodag, dio);
+        dodag_update_from_dodag_config(dodag, dodag_config);
+        dodag_update_from_dodag_prefix_info(dodag, prefix);
     }
 
     node_add_packet_count(node, 1);
 	node_update_dio_interval(node, pkt_info.timestamp);
 	node_set_local_ip(node, pkt_info.src_ip_address);
-    node_set_instance_config(node, dio);
-    node_set_dodag_config(node, dodag_config);
-    node_set_dodag_prefix_info(node, prefix);
-    if(metric && metric->type == RDOMT_ETX) {
-        di_metric_t metric_value = {metric_get_type("ETX"), metric->value};
-        node_set_metric(node, &metric_value);
-    } else if(metric) {
-        fprintf(stderr, "Warning: metric is not ETX (%d)!\n", metric->type);
-    }
+
+	node_update_from_dio(node, dio);
+    node_update_from_metric(node, metric);
+    node_update_from_dodag_config(node, dodag_config);
+    node_update_from_dodag_prefix_info(node, prefix);
 }
 
 void rpl_collector_parse_dao(packet_info_t pkt_info,
@@ -174,7 +166,7 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 		}
 
 		if(addr_compare_ip(&target->target, node_get_global_ip(child)) == 0) {
-			node_set_dao_seq(child, dao->dao_sequence);
+			node_update_from_dao(child, dao);
 			node_update_dao_interval(child, pkt_info.timestamp);
 		}
 	}
@@ -210,11 +202,9 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 	di_node_ref_t node_ref;
 	node_ref_init(&node_ref, pkt_info.src_wpan_address);
 	src = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &src_created);
-	node_add_packet_count(src, 1);
 
-	if(rpl_info) {
-		node_set_rank(src, rpl_info->sender_rank);
-	}
+	node_add_packet_count(src, 1);
+	node_update_from_hop_by_hop(src, rpl_info);
 
 	if(pkt_info.dst_wpan_address != 0 && pkt_info.dst_wpan_address != ADDR_MAC64_BROADCAST) {
 		node_ref_init(&node_ref, pkt_info.dst_wpan_address);

@@ -34,6 +34,9 @@ typedef struct wpan_addr_list {
 	struct wpan_addr_list* next;
 } wpan_addr_elt_t, *wpan_addr_list_t;
 
+void init_ipv6_addr(addr_ipv6_t *addr);
+void init_prefix(di_prefix_t *prefix);
+
 wpan_addr_elt_t *addr_wpan_add_to_list(wpan_addr_list_t *list, addr_wpan_t address);
 wpan_addr_elt_t *addr_wpan_del_from_list(wpan_addr_list_t *list, addr_wpan_t address);
 

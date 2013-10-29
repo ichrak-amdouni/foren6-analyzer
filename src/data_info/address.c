@@ -8,6 +8,14 @@
 
 static int addr_list_compare(wpan_addr_elt_t *a, wpan_addr_elt_t *b);
 
+void init_ipv6_addr(addr_ipv6_t *addr) {
+    memset(addr, 0, sizeof(addr_ipv6_t));
+}
+
+void init_prefix(di_prefix_t *prefix) {
+    prefix->length = 0;
+    init_ipv6_addr(&prefix->prefix);
+}
 wpan_addr_elt_t *addr_wpan_add_to_list(wpan_addr_list_t *list, addr_wpan_t address) {
 	wpan_addr_elt_t search_address;
 	wpan_addr_elt_t *addr_ref;
