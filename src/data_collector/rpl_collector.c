@@ -64,10 +64,10 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 	node_update_dio_interval(node, pkt_info.timestamp);
 	node_set_local_ip(node, pkt_info.src_ip_address);
 
-	node_update_from_dio(node, dio);
+	node_update_from_dio(node, dio, dodag);
     node_update_from_metric(node, metric);
-    node_update_from_dodag_config(node, dodag_config);
-    node_update_from_dodag_prefix_info(node, prefix);
+    node_update_from_dodag_config(node, dodag_config, dodag);
+    node_update_from_dodag_prefix_info(node, prefix, dodag);
 }
 
 void rpl_collector_parse_dao(packet_info_t pkt_info,

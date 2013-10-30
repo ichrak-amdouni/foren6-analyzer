@@ -246,6 +246,7 @@ typedef struct rpl_errors {
     int ip_mismatch_errors;   //incremented when a DAO message is sent to a node with the wrong IP<=>WPAN addresses association
     int dodag_version_decrease_errors;  //incremented when a DIO message contain a dodag version smaller than the known version
     int dodag_mismatch_errors; //incremented when a DAO is sent to a parent with the dodagid in the DAO packet different from the parent's dodag
+    int dodag_config_mismatch_errors; //incremented when the dodag configuration advertised by the node is not the same as the dodag root
 } rpl_errors_t;
 
 typedef struct rpl_errors_delta {
@@ -258,6 +259,8 @@ typedef struct rpl_errors_delta {
     int ip_mismatch_errors;
     int dodag_version_decrease_errors;
     int dodag_mismatch_errors;
+
+    int dodag_config_mismatch_errors;
 } rpl_errors_delta_t;
 
 void init_rpl_instance_config(rpl_instance_config_t *config);

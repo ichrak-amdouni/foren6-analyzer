@@ -246,7 +246,7 @@ const rpl_prefix_t *dodag_get_prefix(const di_dodag_t *dodag) {
     if ( dodag->has_prefix_info ) {
         return &dodag->prefix_info;
     } else {
-        return false;
+        return NULL;
     }
 }
 

@@ -59,12 +59,12 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix);
 void node_add_route(di_node_t *node, const di_route_t *route_prefix, addr_wpan_t via_node);
 void node_del_route(di_node_t *node, const di_route_t *route_prefix, addr_wpan_t via_node);
 
-void node_update_from_dio(di_node_t *node, const rpl_dio_t *dio);
+void node_update_from_dio(di_node_t *node, const rpl_dio_t *dio, const di_dodag_t *dodag);
 void node_update_from_metric(di_node_t *node, const rpl_metric_t *metric);
 void node_update_from_hop_by_hop(di_node_t *node, const rpl_hop_by_hop_opt_t * hop_by_hop);
 void node_update_from_dao(di_node_t *node, const rpl_dao_t * dao);
-void node_update_from_dodag_config(di_node_t *node, const rpl_dodag_config_t *config);
-void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *prefix_info);
+void node_update_from_dodag_config(di_node_t *node, const rpl_dodag_config_t *config, const di_dodag_t *dodag);
+void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *prefix_info, const di_dodag_t *dodag);
 
 void node_add_packet_count(di_node_t *node, int count);
 
@@ -77,6 +77,7 @@ void node_add_route_error(di_node_t *node);
 void node_add_dodag_version_error(di_node_t *node);
 void node_add_ip_mismatch_error(di_node_t *node);
 void node_add_dodag_mismatch_error(di_node_t *node);
+void node_add_dodag_config_mismatch_error(di_node_t *node);
 
 //Data getters
 

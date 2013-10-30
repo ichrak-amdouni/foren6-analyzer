@@ -62,6 +62,8 @@ void init_rpl_errors(rpl_errors_t *errors) {
     errors->ip_mismatch_errors = 0;
     errors->dodag_version_decrease_errors = 0;
     errors->dodag_mismatch_errors = 0;
+
+    errors->dodag_config_mismatch_errors = 0;
 }
 
 void update_rpl_instance_config_from_dio(rpl_instance_config_t *config, const rpl_dio_t * dio) {
@@ -251,8 +253,11 @@ void rpl_errors_delta(const rpl_errors_t *left, const rpl_errors_t *right, rpl_e
     delta->dodag_version_decrease_errors = right->dodag_version_decrease_errors - left->dodag_version_decrease_errors;
     delta->dodag_mismatch_errors = right->dodag_mismatch_errors - left->dodag_mismatch_errors;
 
+    delta->dodag_config_mismatch_errors = right->dodag_config_mismatch_errors - left->dodag_config_mismatch_errors;
+
     delta->has_changed = delta->upward_rank_errors + delta->downward_rank_errors + delta->route_loop_errors +
-        delta->ip_mismatch_errors + /*delta->dodag_version_decrease_errors +*/ delta->dodag_mismatch_errors;
+        delta->ip_mismatch_errors + /*delta->dodag_version_decrease_errors +*/ delta->dodag_mismatch_errors +
+        delta->dodag_config_mismatch_errors;
 }
 
 bool rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_instance_config_t *right) {

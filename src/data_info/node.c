@@ -128,6 +128,7 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     rpl_prefix_delta( node_get_dodag_prefix_info(prev_node), node_get_dodag_prefix_info(node), &node->rpl_dodag_prefix_info_delta);
     rpl_statistics_delta(node_get_rpl_statistics(prev_node), node_get_rpl_statistics(node), &node->rpl_statistics_delta);
 
+    /*
     rpl_instance_config_t const * instance_config = NULL;
     rpl_dodag_config_t const * dodag_config = NULL;
     rpl_prefix_t const * dodag_prefix_info = NULL;
@@ -144,6 +145,12 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     rpl_dodag_config_delta(dodag_config, node_get_dodag_config(node), &node->actual_rpl_dodag_config_delta);
     rpl_prefix_delta( dodag_prefix_info, node_get_dodag_prefix_info(node), &node->actual_rpl_dodag_prefix_info_delta);
 
+    if (node->actual_rpl_instance_config_delta.has_changed ||
+        node->actual_rpl_dodag_config_delta.has_changed ||
+        node->actual_rpl_dodag_prefix_info_delta.has_changed) {
+      node_add_dodag_config_mismatch_error(node);
+    }
+    */
     rpl_errors_delta(node_get_rpl_errors(prev_node), node_get_rpl_errors(node), &node->rpl_errors_delta);
     node->has_errors = node->rpl_errors_delta.has_changed;
 }
@@ -251,8 +258,9 @@ void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
     }
 }
 
-void node_update_from_dio(di_node_t *node, const rpl_dio_t *dio) {
+void node_update_from_dio(di_node_t *node, const rpl_dio_t *dio, const di_dodag_t *dodag) {
     if ( ! dio ) return;
+    bool had_config = node->has_rpl_instance_config;
     rpl_instance_config_t new_config = node->rpl_instance_config;
     rpl_instance_data_t new_data = node->rpl_instance_data;
     update_rpl_instance_config_from_dio(&new_config, dio);
@@ -265,6 +273,14 @@ void node_update_from_dio(di_node_t *node, const rpl_dio_t *dio) {
         node->rpl_instance_data = new_data;
         node_set_changed(node);
     }
+    if ( dodag ) {
+        rpl_instance_config_t const *instance_config = dodag_get_instance_config(dodag);
+        rpl_instance_config_delta(instance_config, node_get_instance_config(node), &node->actual_rpl_instance_config_delta);
+        if (had_config && node->actual_rpl_instance_config_delta.has_changed ) {
+            node_add_dodag_config_mismatch_error(node);
+        }
+    }
+
     node->has_rpl_instance_config = true;
     node->has_rpl_instance_data = true;
 }
@@ -301,7 +317,8 @@ void node_update_from_dao(di_node_t *node, const rpl_dao_t * dao) {
     }
 }
 
-void node_update_from_dodag_config(di_node_t *node, const rpl_dodag_config_t *config) {
+void node_update_from_dodag_config(di_node_t *node, const rpl_dodag_config_t *config, const di_dodag_t *dodag) {
+    bool had_config = node->has_rpl_dodag_config;
     if ( config ) {
         if( rpl_dodag_config_compare(config, &node->rpl_dodag_config) ) {
             node->rpl_dodag_config = *config;
@@ -314,9 +331,18 @@ void node_update_from_dodag_config(di_node_t *node, const rpl_dodag_config_t *co
         }
         node->has_rpl_dodag_config = false;
     }
+    if ( dodag ) {
+        rpl_dodag_config_t const *dodag_config = dodag_get_dodag_config(dodag);
+        rpl_dodag_config_delta(dodag_config, node_get_dodag_config(node), &node->actual_rpl_dodag_config_delta);
+
+        if (had_config && node->actual_rpl_dodag_config_delta.has_changed ) {
+            node_add_dodag_config_mismatch_error(node);
+        }
+    }
 }
 
-void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *prefix_info) {
+void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *prefix_info, const di_dodag_t *dodag) {
+    bool had_prefix = node->has_rpl_dodag_prefix_info;
     if ( prefix_info ) {
         if( rpl_prefix_compare(prefix_info, &node->rpl_dodag_prefix_info) ) {
             node->rpl_dodag_prefix_info = *prefix_info;
@@ -329,6 +355,14 @@ void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *pre
             node_set_changed(node);
         }
         node->has_rpl_dodag_prefix_info = false;
+    }
+    if ( dodag ) {
+        rpl_prefix_t const *dodag_prefix_info = dodag_get_prefix(dodag);
+        rpl_prefix_delta( dodag_prefix_info, node_get_dodag_prefix_info(node), &node->actual_rpl_dodag_prefix_info_delta);
+
+        if (had_prefix && node->actual_rpl_dodag_prefix_info_delta.has_changed) {
+            node_add_dodag_config_mismatch_error(node);
+        }
     }
 }
 
@@ -412,6 +446,11 @@ void node_add_ip_mismatch_error(di_node_t *node) {
 void node_add_dodag_mismatch_error(di_node_t *node) {
 	node->rpl_errors.dodag_mismatch_errors++;
 	node_set_changed(node);
+}
+
+void node_add_dodag_config_mismatch_error(di_node_t *node) {
+    node->rpl_errors.dodag_config_mismatch_errors++;
+    node_set_changed(node);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
