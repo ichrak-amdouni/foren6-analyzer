@@ -186,6 +186,7 @@ void rpl_collector_parse_dis(packet_info_t pkt_info,
 	node_add_packet_count(node, 1);
 
 	node_set_local_ip(node, pkt_info.src_ip_address);
+	node_update_from_dis(node, request);
 }
 
 void rpl_collector_parse_data(packet_info_t pkt_info,

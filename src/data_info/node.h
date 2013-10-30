@@ -66,6 +66,8 @@ void node_update_from_dao(di_node_t *node, const rpl_dao_t * dao);
 void node_update_from_dodag_config(di_node_t *node, const rpl_dodag_config_t *config, const di_dodag_t *dodag);
 void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *prefix_info, const di_dodag_t *dodag);
 
+void node_update_from_dis(di_node_t *node, const rpl_dis_opt_info_req_t *dis);
+
 void node_add_packet_count(di_node_t *node, int count);
 
 void node_update_dao_interval(di_node_t *node, double timestamp);

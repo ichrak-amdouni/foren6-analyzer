@@ -228,6 +228,9 @@ typedef struct rpl_statistics {
     double last_dio_timestamp;
     double max_dao_interval;  //maximum interval seen between 2 DAO packets
     double max_dio_interval;  //maximum interval seen between 2 DIO packets
+    int dis;
+    int dio;
+    int dao;
 } rpl_statistics_t;
 
 typedef struct rpl_statistics_delta {
@@ -236,6 +239,9 @@ typedef struct rpl_statistics_delta {
     double last_dio_timestamp;
     double max_dao_interval;
     double max_dio_interval;
+    int dis;
+    int dio;
+    int dao;
 } rpl_statistics_delta_t;
 
 typedef struct rpl_errors {

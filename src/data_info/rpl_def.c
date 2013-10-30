@@ -52,6 +52,9 @@ void init_rpl_statistics(rpl_statistics_t *statistics)
     statistics->last_dio_timestamp = 0;
     statistics->max_dao_interval = 0;
     statistics->max_dio_interval = 0;
+    statistics->dis = 0;
+    statistics->dio = 0;
+    statistics->dao = 0;
 }
 
 void init_rpl_errors(rpl_errors_t *errors) {
@@ -238,9 +241,13 @@ void rpl_statistics_delta(const rpl_statistics_t *left, const rpl_statistics_t *
     if (delta == NULL) return;
     delta->max_dao_interval = right->max_dao_interval - left->max_dao_interval;
     delta->max_dio_interval = right->max_dio_interval - left->max_dio_interval;
+    delta->dis = right->dis - left->dis;
+    delta->dio = right->dio - left->dio;
+    delta->dao = right->dao - left->dao;
 
     delta->has_changed = right->max_dao_interval != left->max_dao_interval ||
-        right->max_dio_interval != left->max_dio_interval;
+        right->max_dio_interval != left->max_dio_interval ||
+        delta->dis || delta->dio || delta->dao;
 }
 
 void rpl_errors_delta(const rpl_errors_t *left, const rpl_errors_t *right, rpl_errors_delta_t *delta) {
