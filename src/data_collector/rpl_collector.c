@@ -79,6 +79,7 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	di_node_t *child, *parent;
 	di_link_t *new_link = NULL;
 	di_link_t *old_link = NULL;
+	di_dodag_t *dodag = NULL;
 
 	bool child_created = false;
 	bool parent_created = false;
@@ -109,7 +110,7 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	if(dao->dodagid_present && node_get_dodag(child)) {
 		const di_dodag_ref_t *dodag_ref = node_get_dodag(parent);
 		if(dodag_ref && addr_compare_ip(&dao->dodagid, &dodag_ref->dodagid) == 0) {
-			di_dodag_t *dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
+			dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
 			assert(dodag);
 			dodag_add_node(dodag, child);
 		} else {
@@ -166,7 +167,7 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 		}
 
 		if(addr_compare_ip(&target->target, node_get_global_ip(child)) == 0) {
-			node_update_from_dao(child, dao);
+			node_update_from_dao(child, dao, dodag);
 			node_update_dao_interval(child, pkt_info.timestamp);
 		}
 	}

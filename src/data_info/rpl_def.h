@@ -142,7 +142,9 @@ typedef struct rpl_hop_by_hop_opt {
 
 typedef struct rpl_instance_config {
     uint8_t rpl_instance_id;
+    bool has_dodagid;
     struct in6_addr dodagid;
+    bool has_dio_config;
     uint8_t version_number;
     di_rpl_mop_e mode_of_operation;
 } rpl_instance_config_t;
@@ -181,7 +183,9 @@ typedef struct rpl_instance_data {
 typedef struct rpl_instance_config_delta {
     bool has_changed;
     bool rpl_instance_id;
+    bool has_dodagid;
     bool dodagid;
+    bool has_dio_config;
     bool version_number;
     bool mode_of_operation;
 } rpl_instance_config_delta_t;
@@ -193,6 +197,7 @@ typedef struct rpl_instance_data_delta {
     int metric;
     bool has_rank;
     int rank;
+    bool has_dio_data;
     bool grounded;
     int dtsn;
     bool has_dao_data;
@@ -281,6 +286,7 @@ void update_rpl_instance_config_from_dio(rpl_instance_config_t *config, const rp
 void update_rpl_instance_data_from_dio(rpl_instance_data_t *data, const rpl_dio_t * dio);
 void update_rpl_instance_data_from_metric(rpl_instance_data_t *data, const rpl_metric_t * metric);
 void update_rpl_instance_data_from_hop_by_hop(rpl_instance_data_t *data, const rpl_hop_by_hop_opt_t * hop_by_hop) ;
+void update_rpl_instance_config_from_dao(rpl_instance_config_t *config, const rpl_dao_t * dao);
 void update_rpl_instance_data_from_dao(rpl_instance_data_t *data, const rpl_dao_t * dao) ;
 
 void rpl_instance_config_delta(const rpl_instance_config_t *left, const rpl_instance_config_t *right, rpl_instance_config_delta_t *delta);
