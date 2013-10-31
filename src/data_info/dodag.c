@@ -33,7 +33,6 @@ struct di_dodag {
 };
 
 static void dodag_set_changed(di_dodag_t *dodag);
-static void dodag_set_nodes_changed(di_dodag_t *dodag);
 
 size_t dodag_sizeof() {
 	return sizeof(di_dodag_t);
@@ -132,8 +131,7 @@ void dodag_set_nodes_changed(di_dodag_t *dodag) {
         di_node_t *node = rpldata_get_node(hash_it_value(it), HVM_FailIfNonExistant, NULL);
         assert(node != NULL);
         assert(!memcmp(node_get_dodag(node), &dodag->key.ref, sizeof(di_dodag_ref_t)));
-        //Force nodes update so they compare again their configuration against the dodag
-        node_set_changed(node);
+        node_update_from_dodag(node, dodag);
     }
 
     hash_it_destroy(it);
@@ -146,7 +144,7 @@ void dodag_update_from_dio(di_dodag_t *dodag, const rpl_dio_t *dio) {
     update_rpl_instance_config_from_dio(&new_config, dio);
     if( rpl_instance_config_compare(&new_config, &dodag->instance_config)) {
         dodag->instance_config = new_config;
-        dodag_set_nodes_changed(dodag);
+        //dodag_set_nodes_changed(dodag);
         dodag_set_changed(dodag);
     }
 }
@@ -155,13 +153,13 @@ void dodag_update_from_dodag_config(di_dodag_t *dodag, const rpl_dodag_config_t 
     if ( dodag_config ) {
         if(rpl_dodag_config_compare(dodag_config, &dodag->dodag_config)) {
             dodag->dodag_config = *dodag_config;
-            dodag_set_nodes_changed(dodag);
+            //dodag_set_nodes_changed(dodag);
             dodag_set_changed(dodag);
         }
         dodag->has_dodag_config = true;
     } else {
         if ( dodag->has_dodag_config ) {
-            dodag_set_nodes_changed(dodag);
+            //dodag_set_nodes_changed(dodag);
             dodag_set_changed(dodag);
         }
         dodag->has_dodag_config = false;
@@ -172,13 +170,13 @@ void dodag_update_from_dodag_prefix_info(di_dodag_t *dodag, const rpl_prefix_t *
     if ( prefix ) {
         if( rpl_prefix_compare(prefix, &dodag->prefix_info) ) {
             dodag->prefix_info = *prefix;
-            dodag_set_nodes_changed(dodag);
+            //dodag_set_nodes_changed(dodag);
             dodag_set_changed(dodag);
         }
         dodag->has_prefix_info = true;
     } else {
         if ( dodag->has_prefix_info ) {
-            dodag_set_nodes_changed(dodag);
+            //dodag_set_nodes_changed(dodag);
             dodag_set_changed(dodag);
         }
         dodag->has_prefix_info = false;

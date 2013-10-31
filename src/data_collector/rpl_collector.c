@@ -68,6 +68,10 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
     node_update_from_metric(node, metric);
     node_update_from_dodag_config(node, dodag_config, dodag);
     node_update_from_dodag_prefix_info(node, prefix, dodag);
+
+    if (dio->rank == 0 || dio->rank == 256) {
+        dodag_set_nodes_changed(dodag);
+    }
 }
 
 void rpl_collector_parse_dao(packet_info_t pkt_info,

@@ -65,6 +65,7 @@ void node_update_from_hop_by_hop(di_node_t *node, const rpl_hop_by_hop_opt_t * h
 void node_update_from_dao(di_node_t *node, const rpl_dao_t * dao, const di_dodag_t *dodag);
 void node_update_from_dodag_config(di_node_t *node, const rpl_dodag_config_t *config, const di_dodag_t *dodag);
 void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *prefix_info, const di_dodag_t *dodag);
+void node_update_from_dodag(di_node_t *node, const di_dodag_t *dodag);
 
 void node_update_from_dis(di_node_t *node, const rpl_dis_opt_info_req_t *dis);
 
