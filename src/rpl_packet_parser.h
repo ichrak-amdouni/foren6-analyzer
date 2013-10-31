@@ -20,14 +20,22 @@ typedef struct analyzer_callbacks {
     void (*onErrorEvent)(char const * errorMessage);
 } analyzer_callbacks_t;
 
+typedef struct analyser_config {
+    int root_rank;
+} analyser_config_t;
+
 	/**
 	 * Initialize the analyzer.
-     * @param name the name of a registered interface reader, or the shared object file that provide the needed interface
-     * @param target a target where to read data from the sniffer like /dev/ttyUSB0 for the telos interface
      */
 	void rpl_tool_init();
 
 	void rpl_tool_cleanup();
+
+	/**
+	 * Configure the analysis parameter
+	 */
+	void rpl_tool_set_analyser_config(const analyser_config_t *config);
+	const analyser_config_t *rpl_tool_get_analyser_config();
 
 	interface_t *rpl_tool_get_interface(const char *name);
 

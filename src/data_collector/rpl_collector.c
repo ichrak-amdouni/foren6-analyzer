@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../rpl_packet_parser.h"
 #include "../data_info/address.h"
 #include "../data_info/node.h"
 #include "../data_info/dodag.h"
@@ -50,7 +51,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 
     dodag_add_node(dodag, node);
 
-    if (dio->rank == 0 || dio->rank == 256) {
+    if (dio->rank == 0 || dio->rank == rpl_tool_get_analyser_config()->root_rank) {
         //Only update instance and DODAG if it comes from a RPL Root or Virtual Root
         rpl_instance_add_dodag(rpl_instance, dodag);
         rpl_instance_set_mop(rpl_instance, dio->mode_of_operation);
@@ -69,7 +70,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
     node_update_from_dodag_config(node, dodag_config, dodag);
     node_update_from_dodag_prefix_info(node, prefix, dodag);
 
-    if (dio->rank == 0 || dio->rank == 256) {
+    if (dio->rank == 0 || dio->rank == rpl_tool_get_analyser_config()->root_rank) {
         dodag_set_nodes_changed(dodag);
     }
 }
@@ -113,12 +114,14 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 
 	if(dao->dodagid_present && node_get_dodag(child)) {
 		const di_dodag_ref_t *dodag_ref = node_get_dodag(parent);
-		if(dodag_ref && addr_compare_ip(&dao->dodagid, &dodag_ref->dodagid) == 0) {
-			dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
-			assert(dodag);
-			dodag_add_node(dodag, child);
-		} else {
-			node_add_dodag_mismatch_error(child);
+		if(dodag_ref) {
+		    if (addr_compare_ip(&dao->dodagid, &dodag_ref->dodagid) == 0) {
+		        dodag = rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
+		        assert(dodag);
+		        dodag_add_node(dodag, child);
+		    } else {
+		      node_add_dodag_mismatch_error(child);
+		    }
 		}
 	}
 

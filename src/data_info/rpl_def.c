@@ -265,28 +265,63 @@ void rpl_prefix_delta(const rpl_prefix_t *left, const rpl_prefix_t *right, rpl_p
 void rpl_statistics_delta(const rpl_statistics_t *left, const rpl_statistics_t *right, rpl_statistics_delta_t *delta)
 {
     if (delta == NULL) return;
-    delta->max_dao_interval = right->max_dao_interval - left->max_dao_interval;
-    delta->max_dio_interval = right->max_dio_interval - left->max_dio_interval;
-    delta->dis = right->dis - left->dis;
-    delta->dio = right->dio - left->dio;
-    delta->dao = right->dao - left->dao;
-
-    delta->has_changed = right->max_dao_interval != left->max_dao_interval ||
-        right->max_dio_interval != left->max_dio_interval ||
+    if ( left == NULL && right == NULL ) {
+        delta->max_dao_interval = 0;
+        delta->max_dio_interval = 0;
+        delta->dis = 0;
+        delta->dio = 0;
+        delta->dao = 0;
+    } else if ( left == NULL || right == NULL ) {
+        delta->max_dao_interval = right ? right->max_dao_interval : left->max_dao_interval;
+        delta->max_dio_interval = right ? right->max_dio_interval : left->max_dio_interval;
+        delta->dis = right ? right->dis : left->dis;
+        delta->dio = right ? right->dio : left->dio;
+        delta->dao = right ? right->dao : left->dao;
+    } else {
+        delta->max_dao_interval = right->max_dao_interval - left->max_dao_interval;
+        delta->max_dio_interval = right->max_dio_interval - left->max_dio_interval;
+        delta->dis = right->dis - left->dis;
+        delta->dio = right->dio - left->dio;
+        delta->dao = right->dao - left->dao;
+    }
+    delta->has_changed = delta->max_dao_interval != 0 ||
+        delta->max_dio_interval != 0 ||
         delta->dis || delta->dio || delta->dao;
 }
 
 void rpl_errors_delta(const rpl_errors_t *left, const rpl_errors_t *right, rpl_errors_delta_t *delta) {
     if (delta == NULL) return;
-    delta->upward_rank_errors = right->upward_rank_errors - left->upward_rank_errors;
-    delta->downward_rank_errors = right->downward_rank_errors - left->downward_rank_errors;
-    delta->route_loop_errors = right->route_loop_errors - left->route_loop_errors;
+    if ( left == NULL && right == NULL ) {
+        delta->upward_rank_errors = 0;
+        delta->downward_rank_errors = 0;
+        delta->route_loop_errors = 0;
 
-    delta->ip_mismatch_errors = right->ip_mismatch_errors - left->ip_mismatch_errors;
-    delta->dodag_version_decrease_errors = right->dodag_version_decrease_errors - left->dodag_version_decrease_errors;
-    delta->dodag_mismatch_errors = right->dodag_mismatch_errors - left->dodag_mismatch_errors;
+        delta->ip_mismatch_errors = 0;
+        delta->dodag_version_decrease_errors = 0;
+        delta->dodag_mismatch_errors = 0;
 
-    delta->dodag_config_mismatch_errors = right->dodag_config_mismatch_errors - left->dodag_config_mismatch_errors;
+        delta->dodag_config_mismatch_errors = 0;
+    } else if ( left == NULL || right == NULL ) {
+        delta->upward_rank_errors = right ? right->upward_rank_errors : left->upward_rank_errors;
+        delta->downward_rank_errors = right ? right->downward_rank_errors : left->downward_rank_errors;
+        delta->route_loop_errors = right ? right->route_loop_errors : left->route_loop_errors;
+
+        delta->ip_mismatch_errors = right ? right->ip_mismatch_errors : left->ip_mismatch_errors;
+        delta->dodag_version_decrease_errors = right ? right->dodag_version_decrease_errors : left->dodag_version_decrease_errors;
+        delta->dodag_mismatch_errors = right ? right->dodag_mismatch_errors : left->dodag_mismatch_errors;
+
+        delta->dodag_config_mismatch_errors = right ? right->dodag_config_mismatch_errors : left->dodag_config_mismatch_errors;
+    } else {
+        delta->upward_rank_errors = right->upward_rank_errors - left->upward_rank_errors;
+        delta->downward_rank_errors = right->downward_rank_errors - left->downward_rank_errors;
+        delta->route_loop_errors = right->route_loop_errors - left->route_loop_errors;
+
+        delta->ip_mismatch_errors = right->ip_mismatch_errors - left->ip_mismatch_errors;
+        delta->dodag_version_decrease_errors = right->dodag_version_decrease_errors - left->dodag_version_decrease_errors;
+        delta->dodag_mismatch_errors = right->dodag_mismatch_errors - left->dodag_mismatch_errors;
+
+        delta->dodag_config_mismatch_errors = right->dodag_config_mismatch_errors - left->dodag_config_mismatch_errors;
+    }
 
     delta->has_changed = delta->upward_rank_errors + delta->downward_rank_errors + delta->route_loop_errors +
         delta->ip_mismatch_errors + /*delta->dodag_version_decrease_errors +*/ delta->dodag_mismatch_errors +
