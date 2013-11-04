@@ -185,7 +185,8 @@ static void parse_xml_end_element(void *data, const char *el) {
  * Reset tshark and parser
  */
 static void sniffer_parser_reset() {
-	if(tshark_pid) {
+	char context0[8+8+1+INET6_ADDRSTRLEN];
+    if(tshark_pid) {
 	    signal(SIGPIPE, SIG_IGN);
 		kill(tshark_pid, SIGKILL);	//Kill old tshark process to avoid multiple spawned processes at the same time
 	}
@@ -225,10 +226,13 @@ static void sniffer_parser_reset() {
 
 	signal(SIGPIPE, &tshark_exited);
 
+	strcpy(context0, "6lowpan.context0:");
+    inet_ntop(AF_INET6, (const char*)&rpl_tool_get_analyser_config()->context0, context0+strlen(context0), INET6_ADDRSTRLEN);
+
 #ifdef USE_NEW_TSHARK
-	if(spawn_piped_process("tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-2", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
+	if(spawn_piped_process("tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-2", "-R", "ipv6", "-l", "-o", context0, NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
 #else
-	if(spawn_piped_process("tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-R", "ipv6", "-l", NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
+	if(spawn_piped_process("tshark", (char* const[]){"tshark", "-i", "-", "-V", "-T", "pdml", "-R", "ipv6", "-l", "-o", context0, NULL}, &tshark_pid, &pipe_tshark_stdin, &pipe_tshark_stdout) == false) {
 #endif
 		perror("Can't spawn tshark process");
 		return;

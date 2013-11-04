@@ -14,7 +14,6 @@ void rpl_tool_set_callbacks(rpl_event_callbacks_t *callbacks) {
 void rpl_tool_init() {
 	desc_poll_init();
 	rpldata_init();
-	sniffer_parser_init();
 	analyser_config.root_rank = 256;
 	analyser_config.context0.s6_addr16[0] = 0xaaaa;
     analyser_config.context0.s6_addr16[1] = 0;
@@ -26,12 +25,17 @@ void rpl_tool_init() {
     analyser_config.context0.s6_addr16[7] = 0;
 }
 
+void rpl_tool_start() {
+    sniffer_parser_init();
+}
+
 void rpl_tool_cleanup() {
 	desc_poll_cleanup();
 }
 
 void rpl_tool_set_analyser_config(const analyser_config_t *config) {
     if ( !config ) return;
+    printf("Analyser config updated\n");
     analyser_config = *config;
 }
 

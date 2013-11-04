@@ -30,6 +30,8 @@ typedef struct analyser_config {
      */
 	void rpl_tool_init();
 
+    void rpl_tool_start();
+
 	void rpl_tool_cleanup();
 
 	/**
