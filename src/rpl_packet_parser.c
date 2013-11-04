@@ -16,6 +16,14 @@ void rpl_tool_init() {
 	rpldata_init();
 	sniffer_parser_init();
 	analyser_config.root_rank = 256;
+	analyser_config.context0.s6_addr16[0] = 0xaaaa;
+    analyser_config.context0.s6_addr16[1] = 0;
+    analyser_config.context0.s6_addr16[2] = 0;
+    analyser_config.context0.s6_addr16[3] = 0;
+    analyser_config.context0.s6_addr16[4] = 0;
+    analyser_config.context0.s6_addr16[5] = 0;
+    analyser_config.context0.s6_addr16[6] = 0;
+    analyser_config.context0.s6_addr16[7] = 0;
 }
 
 void rpl_tool_cleanup() {

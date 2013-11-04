@@ -22,6 +22,9 @@ typedef uint64_t addr_wpan_t;
 
 #ifdef __APPLE__
 #define __in6_u __u6_addr
+#ifndef s6_addr16
+#define s6_addr16   __u6_addr.__u6_addr16
+#endif
 #endif
 
 typedef struct di_prefix {

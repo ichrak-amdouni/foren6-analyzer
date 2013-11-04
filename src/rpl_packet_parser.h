@@ -22,6 +22,7 @@ typedef struct analyzer_callbacks {
 
 typedef struct analyser_config {
     int root_rank;
+    struct in6_addr context0;
 } analyser_config_t;
 
 	/**
