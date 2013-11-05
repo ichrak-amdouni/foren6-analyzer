@@ -408,9 +408,15 @@ void node_update_from_dodag(di_node_t *node, const di_dodag_t *dodag) {
     instance_config = dodag_get_instance_config(dodag);
     dodag_config = dodag_get_dodag_config(dodag);
     dodag_prefix_info = dodag_get_prefix(dodag);
-    rpl_instance_config_delta(instance_config, &node->rpl_instance_config, &node->actual_rpl_instance_config_delta);
-    rpl_dodag_config_delta(dodag_config, &node->rpl_dodag_config, &node->actual_rpl_dodag_config_delta);
-    rpl_prefix_delta( dodag_prefix_info, &node->rpl_dodag_prefix_info, &node->actual_rpl_dodag_prefix_info_delta);
+    if ( node->has_rpl_instance_config ) {
+        rpl_instance_config_delta(instance_config, &node->rpl_instance_config, &node->actual_rpl_instance_config_delta);
+    }
+    if ( node->has_rpl_dodag_config ) {
+        rpl_dodag_config_delta(dodag_config, &node->rpl_dodag_config, &node->actual_rpl_dodag_config_delta);
+    }
+    if ( node->has_rpl_dodag_prefix_info ) {
+        rpl_prefix_delta( dodag_prefix_info, &node->rpl_dodag_prefix_info, &node->actual_rpl_dodag_prefix_info_delta);
+    }
 
     if (node->actual_rpl_instance_config_delta.has_changed ||
         node->actual_rpl_dodag_config_delta.has_changed ||
