@@ -227,16 +227,16 @@ const di_dodag_ref_t * node_get_dodag(const di_node_t *node) {
 void node_set_ip(di_node_t *node, addr_ipv6_t address) {
     addr_wpan_t wpan_addr = addr_get_mac64_from_ip(address);
     if ( addr_is_ip_local(address) ) {
+        node->sixlowpan_config.has_seen_local_address = true;
         if(addr_compare_ip(&node->sixlowpan_config.local_address, &address)) {
             node->sixlowpan_config.local_address = address;
-            node->sixlowpan_config.has_seen_local_address = true;
             node->sixlowpan_config.is_custom_local_address = addr_compare_wpan(&wpan_addr, &node->key.ref.wpan_address);
             node_set_changed(node);
         }
     } else if ( addr_is_ip_global(address) ) {
+        node->sixlowpan_config.has_seen_global_address = true;
         if(addr_compare_ip(&node->sixlowpan_config.global_address, &address)) {
             node->sixlowpan_config.global_address = address;
-            node->sixlowpan_config.has_seen_global_address = true;
             node->sixlowpan_config.is_custom_global_address = addr_compare_wpan(&wpan_addr, &node->key.ref.wpan_address);;
             node_set_changed(node);
         }
