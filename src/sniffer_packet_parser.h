@@ -23,6 +23,7 @@ extern "C" {
 
 //Initialize sniffer parser
 void sniffer_parser_init();
+void sniffer_parser_reset();
 
 //Give data to parse to parser
 //Call sensor_info_collector_parse_packet when a packet has been fully received

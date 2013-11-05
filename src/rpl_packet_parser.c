@@ -34,6 +34,7 @@ void rpl_tool_cleanup() {
 }
 
 void rpl_tool_start_capture() {
+    sniffer_parser_reset();
     sniffer_parser_create_out();
 }
 

@@ -51,7 +51,7 @@ struct packet_data {
 static XML_Parser dissected_packet_parser;	//parse output of tshark
 
 static void process_events(int fd, void* data);
-static void sniffer_parser_reset();
+static void tshark_parser_reset();
 static bool spawn_piped_process(const char* command, char* const arguments[], int *pid, int *process_input_pipe, int *process_output_pipe);
 static void tshark_exited();
 
@@ -74,10 +74,12 @@ void sniffer_parser_init() {
 	parser_register_all();
 
 	last_packets = hash_create(sizeof(struct packet_data), NULL);
-
-	sniffer_parser_reset();
 }
 
+void sniffer_parser_reset() {
+    hash_clear(last_packets);
+    tshark_parser_reset();
+}
 //Give data to parse to parser
 void sniffer_parser_parse_data(const unsigned char* data, int len, struct timeval timestamp) {
 	struct pcap_pkthdr pkt_hdr;
@@ -124,7 +126,7 @@ static void process_events(int fd, void* data) {
 	int nbread;
 
 	if(sniffer_parser_reset_requested) {
-		sniffer_parser_reset();
+		tshark_parser_reset();
 		sniffer_parser_reset_requested = false;
 	}
 
@@ -188,7 +190,7 @@ static void parse_xml_end_element(void *data, const char *el) {
 /*
  * Reset tshark and parser
  */
-static void sniffer_parser_reset() {
+static void tshark_parser_reset() {
 	char context0[8+8+1+INET6_ADDRSTRLEN];
     if(tshark_pid) {
 	    signal(SIGPIPE, SIG_IGN);
@@ -202,8 +204,10 @@ static void sniffer_parser_reset() {
 	if(pipe_tshark_stdin)
 		close(pipe_tshark_stdin);
 */
-	if(pipe_tshark_stdout)
+	if(pipe_tshark_stdout) {
+	    desc_poll_del(pipe_tshark_stdout);
 		close(pipe_tshark_stdout);
+	}
 
 	if(pd)
 		pcap_close(pd);
