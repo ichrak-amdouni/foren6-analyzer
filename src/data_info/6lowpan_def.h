@@ -12,9 +12,11 @@ extern "C" {
 #endif
 
 typedef struct sixlowpan_config {
+    bool has_seen_local_address;
     bool is_custom_local_address;
     addr_ipv6_t local_address;
 
+    bool has_seen_global_address;
     bool is_custom_global_address;
     addr_ipv6_t global_address;
 

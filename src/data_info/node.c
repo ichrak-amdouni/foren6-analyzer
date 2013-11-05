@@ -229,12 +229,14 @@ void node_set_ip(di_node_t *node, addr_ipv6_t address) {
     if ( addr_is_ip_local(address) ) {
         if(addr_compare_ip(&node->sixlowpan_config.local_address, &address)) {
             node->sixlowpan_config.local_address = address;
+            node->sixlowpan_config.has_seen_local_address = true;
             node->sixlowpan_config.is_custom_local_address = addr_compare_wpan(&wpan_addr, &node->key.ref.wpan_address);
             node_set_changed(node);
         }
     } else if ( addr_is_ip_global(address) ) {
         if(addr_compare_ip(&node->sixlowpan_config.global_address, &address)) {
             node->sixlowpan_config.global_address = address;
+            node->sixlowpan_config.has_seen_global_address = true;
             node->sixlowpan_config.is_custom_global_address = addr_compare_wpan(&wpan_addr, &node->key.ref.wpan_address);;
             node_set_changed(node);
         }
@@ -366,6 +368,10 @@ void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *pre
             node->rpl_dodag_prefix_info = *prefix_info;
             node_set_changed(node);
         }
+        if ( ! node->sixlowpan_config.has_seen_global_address) {
+            node->sixlowpan_config.global_address = addr_get_global_ip_from_mac64(prefix_info->prefix, node->key.ref.wpan_address);
+            node->sixlowpan_config.is_custom_global_address = false;
+        }
         node->has_rpl_dodag_prefix_info = true;
     } else {
         if ( node->has_rpl_dodag_prefix_info ) {
@@ -416,6 +422,10 @@ void node_update_from_dodag(di_node_t *node, const di_dodag_t *dodag) {
     }
     if ( node->has_rpl_dodag_prefix_info ) {
         rpl_prefix_delta( dodag_prefix_info, &node->rpl_dodag_prefix_info, &node->actual_rpl_dodag_prefix_info_delta);
+    }
+    if ( dodag_prefix_info && ! node->has_rpl_dodag_prefix_info && ! node->sixlowpan_config.has_seen_global_address) {
+        node->sixlowpan_config.global_address = addr_get_global_ip_from_mac64(dodag_prefix_info->prefix, node->key.ref.wpan_address);
+        node->sixlowpan_config.is_custom_global_address = false;
     }
 
     if (node->actual_rpl_instance_config_delta.has_changed ||

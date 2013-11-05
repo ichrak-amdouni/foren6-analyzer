@@ -4,6 +4,10 @@
 void init_sixlowpan_config(sixlowpan_config_t *config) {
     init_ipv6_addr(&config->local_address);
     init_ipv6_addr(&config->global_address);
+    config->has_seen_local_address = false;
+    config->is_custom_local_address = false;
+    config->has_seen_global_address = false;
+    config->is_custom_global_address = false;
 }
 
 void init_sixlowpan_statistics(sixlowpan_statistics_t *statistics)
