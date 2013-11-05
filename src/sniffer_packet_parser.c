@@ -25,6 +25,8 @@ static enum {
 } xml_parser_state = false;
 pthread_mutex_t state_lock;
 
+char outpcap_name[128];
+
 static pcap_t* pd = NULL;
 static pcap_dumper_t* pdumper = NULL;
 static pcap_t* pd_out = NULL;
@@ -89,8 +91,10 @@ void sniffer_parser_parse_data(const unsigned char* data, int len, struct timeva
 	if(check_duplicate_packet(data, len)) {
 		pcap_dump((u_char *)pdumper, &pkt_hdr, data);
 		pcap_dump_flush(pdumper);
-		pcap_dump((u_char *)pdumper_out, &pkt_hdr, data);
-		pcap_dump_flush(pdumper_out);
+		if ( pdumper_out ) {
+		    pcap_dump((u_char *)pdumper_out, &pkt_hdr, data);
+		    pcap_dump_flush(pdumper_out);
+		}
 		fflush(pcap_output);
 	}
 
@@ -207,8 +211,10 @@ static void sniffer_parser_reset() {
 		pcap_dump_close(pdumper);
 	if(pd_out)
 		pcap_close(pd_out);
-	if(pdumper_out)
+	if(pdumper_out) {
 		pcap_dump_close(pdumper_out);
+	    pdumper_out = pcap_dump_open(pd_out, outpcap_name);
+	}
 
 	if(dissected_packet_parser)
 		XML_ParserFree(dissected_packet_parser);
@@ -218,7 +224,6 @@ static void sniffer_parser_reset() {
 	pd = NULL;
 	pdumper = NULL;
 	pd_out = NULL;
-	pdumper_out = NULL;
 	pipe_tshark_stdin = 0;
 	pipe_tshark_stdout = 0;
 
@@ -250,14 +255,12 @@ static void sniffer_parser_reset() {
 	pd = pcap_open_dead(DLT_IEEE802_15_4, 255);
 	pdumper = pcap_dump_fopen(pd, pcap_output);
 
-	char outpcap_name[128];
 	struct tm *current_time;
 	time_t cur_time = time(NULL);
 	current_time = localtime(&cur_time);
 //	sprintf(outpcap_name, "out_%02d%02d%04d-%02d%02d%02d-%d.pcap", current_time->tm_mday, current_time->tm_mon, current_time->tm_year + 1900, current_time->tm_hour, current_time->tm_min, current_time->tm_sec, getpid());
 	sprintf(outpcap_name, "out.pcap");
 	pd_out = pcap_open_dead(DLT_IEEE802_15_4, 255);
-	pdumper_out = pcap_dump_open(pd_out, outpcap_name);
 
 	dissected_packet_parser = XML_ParserCreate(NULL);
 	XML_SetElementHandler(dissected_packet_parser, &parse_xml_start_element, &parse_xml_end_element);
@@ -372,4 +375,17 @@ static bool check_duplicate_packet(const unsigned char* data, int len) {
 	hash_add(last_packets, (hash_key_t){hashed_data, sizeof(hashed_data)}, &pkt_data, NULL, HAM_FailIfExists, NULL);
 
 	return is_duplicate == false;
+}
+
+void sniffer_parser_create_out() {
+    sniffer_parser_close_out();
+    unlink(outpcap_name);
+    pdumper_out = pcap_dump_open(pd_out, outpcap_name);
+}
+
+void sniffer_parser_close_out() {
+    if ( pdumper_out ) {
+        pcap_dump_close(pdumper_out);
+        pdumper_out = NULL;
+    }
 }

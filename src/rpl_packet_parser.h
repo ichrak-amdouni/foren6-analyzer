@@ -34,6 +34,10 @@ typedef struct analyser_config {
 
 	void rpl_tool_cleanup();
 
+	void rpl_tool_start_capture();
+
+	void rpl_tool_stop_capture();
+
 	/**
 	 * Configure the analysis parameter
 	 */

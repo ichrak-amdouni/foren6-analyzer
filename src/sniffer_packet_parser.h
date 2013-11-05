@@ -31,6 +31,8 @@ void sniffer_parser_parse_data(const unsigned char* data, int len, struct timeva
 int sniffer_parser_get_packet_count();
 void sniffer_parser_pause_parser(bool pause);
 
+void sniffer_parser_create_out();
+void sniffer_parser_close_out();
 
 #ifdef	__cplusplus
 }

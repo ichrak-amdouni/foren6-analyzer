@@ -33,6 +33,14 @@ void rpl_tool_cleanup() {
 	desc_poll_cleanup();
 }
 
+void rpl_tool_start_capture() {
+    sniffer_parser_create_out();
+}
+
+void rpl_tool_stop_capture() {
+    sniffer_parser_close_out();
+}
+
 void rpl_tool_set_analyser_config(const analyser_config_t *config) {
     if ( !config ) return;
     printf("Analyser config updated\n");
