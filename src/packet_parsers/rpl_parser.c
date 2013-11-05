@@ -154,6 +154,8 @@ static void rpl_parser_parse_field(const char *nameStr, const char *showStr, con
 			 inet_pton(AF_INET6, showStr, &current_packet.pkt_info.dst_ip_address);
 			 if(current_packet.type == RPT_None)
 				 current_packet.type = RPT_Data;
+        } else if(!strcmp(nameStr, "ipv6.hlim")) {
+                 current_packet.pkt_info.hop_limit = valueInt;
 		} else if(!strcmp(nameStr, "icmpv6.type") && valueInt == ICMPV6_RPL_TYPE) {
 			current_packet.type = RPT_RplUnknown;
 		} else if(current_packet.type == RPT_RplUnknown && !strcmp(nameStr, "icmpv6.code")) {

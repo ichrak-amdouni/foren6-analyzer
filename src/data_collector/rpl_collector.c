@@ -63,7 +63,7 @@ void rpl_collector_parse_dio(packet_info_t pkt_info,
 
     node_add_packet_count(node, 1);
 	node_update_dio_interval(node, pkt_info.timestamp);
-	node_set_local_ip(node, pkt_info.src_ip_address);
+	node_set_ip(node, pkt_info.src_ip_address);
 
 	node_update_from_dio(node, dio, dodag);
     node_update_from_metric(node, metric);
@@ -98,7 +98,7 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	child = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &child_created);
 	node_add_packet_count(child, 1);
 
-	node_set_local_ip(child, pkt_info.src_ip_address);
+	node_set_ip(child, pkt_info.src_ip_address);
 
 	node_ref_init(&node_ref, pkt_info.dst_wpan_address);
 	parent = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &parent_created);
@@ -193,7 +193,7 @@ void rpl_collector_parse_dis(packet_info_t pkt_info,
 	node = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &node_created);  //nothing to do with the node, but be sure it exists in the node list
 	node_add_packet_count(node, 1);
 
-	node_set_local_ip(node, pkt_info.src_ip_address);
+	node_set_ip(node, pkt_info.src_ip_address);
 	node_update_from_dis(node, request);
 }
 
@@ -213,6 +213,10 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 	src = rpldata_get_node(&node_ref, HVM_CreateIfNonExistant, &src_created);
 
 	node_add_packet_count(src, 1);
+	if ( pkt_info.hop_limit == 64) {
+	    //Update only if own packet
+        node_set_ip(src, pkt_info.src_ip_address);
+	}
 	node_update_from_hop_by_hop(src, rpl_info);
 
 	if(pkt_info.dst_wpan_address != 0 && pkt_info.dst_wpan_address != ADDR_MAC64_BROADCAST) {

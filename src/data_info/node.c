@@ -51,7 +51,10 @@ struct di_node {
 	rpl_statistics_t rpl_statistics;
 	rpl_statistics_delta_t rpl_statistics_delta;
 
-	rpl_errors_t  rpl_errors;
+    sixlowpan_errors_t sixlowpan_errors;
+    sixlowpan_errors_delta_t sixlowpan_errors_delta;
+
+    rpl_errors_t  rpl_errors;
 	rpl_errors_delta_t rpl_errors_delta;
 };
 
@@ -75,6 +78,8 @@ void node_init(void *data, const void *key, size_t key_size) {
     init_sixlowpan_config(&node->sixlowpan_config);
     init_sixlowpan_statistics(&node->sixlowpan_statistics);
     init_sixlowpan_statistics_delta(&node->sixlowpan_statistics_delta);
+    init_sixlowpan_errors(&node->sixlowpan_errors);
+    init_sixlowpan_errors_delta(&node->sixlowpan_errors_delta);
 
     init_rpl_instance_config(&node->rpl_instance_config);
     init_rpl_instance_data(&node->rpl_instance_data);
@@ -106,8 +111,9 @@ di_node_t *node_dup(di_node_t *node) {
 	memcpy(new_node, node, sizeof(di_node_t));
 	new_node->routes = route_dup(&node->routes);
 
-	//packet_count_delta is filled in by node_update_old_field
+	//sixlowpan data is filled in by node_update_old_field
 	init_sixlowpan_statistics_delta(&new_node->sixlowpan_statistics_delta);
+    init_sixlowpan_errors_delta(&new_node->sixlowpan_errors_delta);
 
 	//routes_delta is not computed in fill_delta but on the fly
 	node->routes_delta = false;
@@ -117,7 +123,7 @@ di_node_t *node_dup(di_node_t *node) {
 
 void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     sixlowpan_config_delta( node_get_sixlowpan_config(prev_node), node_get_sixlowpan_config(node), &node->sixlowpan_config_delta);
-    //sixlowpan statistics are collected as packet as received
+    //sixlowpan statistics and errors are collected as packet as received
     //node->packet_count_delta = node->packet_count - prev_node->packet_count;
 
     rpl_instance_config_delta( node_get_instance_config(prev_node), node_get_instance_config(node), &node->rpl_instance_config_delta);
@@ -127,7 +133,7 @@ void node_fill_delta(di_node_t *node, di_node_t const *prev_node) {
     rpl_statistics_delta(node_get_rpl_statistics(prev_node), node_get_rpl_statistics(node), &node->rpl_statistics_delta);
 
     rpl_errors_delta(node_get_rpl_errors(prev_node), node_get_rpl_errors(node), &node->rpl_errors_delta);
-    node->has_errors = node->rpl_errors_delta.has_changed;
+    node->has_errors = node->rpl_errors_delta.has_changed || node->sixlowpan_errors_delta.has_changed;
 }
 
 void node_set_changed(di_node_t *node) {
@@ -218,29 +224,36 @@ const di_dodag_ref_t * node_get_dodag(const di_node_t *node) {
 // DATA SETTERS
 ///////////////////////////////////////////////////////////////////////////////
 
-void node_set_local_ip(di_node_t *node, addr_ipv6_t address) {
-    if(addr_compare_ip(&node->sixlowpan_config.local_address, &address)) {
-        node->sixlowpan_config.local_address = address;
-        node->sixlowpan_config.is_custom_local_address = true;
-        node_set_changed(node);
-    }
-}
-
-void node_set_global_ip(di_node_t *node, addr_ipv6_t address) {
-    if(addr_compare_ip(&node->sixlowpan_config.global_address, &address)) {
-        node->sixlowpan_config.global_address = address;
-        node->sixlowpan_config.is_custom_global_address = true;
-        node_set_changed(node);
-    }
-}
-
-void node_update_ip(di_node_t *node, const di_prefix_t *prefix) {
-    if(!node->sixlowpan_config.is_custom_global_address) {
-        addr_ipv6_t ip = addr_get_global_ip_from_mac64(*prefix, node->key.ref.wpan_address);
-        if(memcmp(&ip, &node->sixlowpan_config.global_address, sizeof(addr_ipv6_t))) {
-            node->sixlowpan_config.global_address = ip;
+void node_set_ip(di_node_t *node, addr_ipv6_t address) {
+    addr_wpan_t wpan_addr = addr_get_mac64_from_ip(address);
+    if ( addr_is_ip_local(address) ) {
+        if(addr_compare_ip(&node->sixlowpan_config.local_address, &address)) {
+            node->sixlowpan_config.local_address = address;
+            node->sixlowpan_config.is_custom_local_address = addr_compare_wpan(&wpan_addr, &node->key.ref.wpan_address);
             node_set_changed(node);
         }
+    } else if ( addr_is_ip_global(address) ) {
+        if(addr_compare_ip(&node->sixlowpan_config.global_address, &address)) {
+            node->sixlowpan_config.global_address = address;
+            node->sixlowpan_config.is_custom_global_address = addr_compare_wpan(&wpan_addr, &node->key.ref.wpan_address);;
+            node_set_changed(node);
+        }
+        if(node->has_rpl_dodag_prefix_info &&
+            addr_prefix_compare(&node->rpl_dodag_prefix_info.prefix, &node->sixlowpan_config.global_address) != 0) {
+            node->sixlowpan_errors.invalid_prefix++;
+            node->sixlowpan_errors_delta.invalid_prefix++;
+            node_update_old_field(node, offsetof(di_node_t, sixlowpan_errors.invalid_prefix), sizeof(node->sixlowpan_errors.invalid_prefix));
+            node_update_old_field(node, offsetof(di_node_t, sixlowpan_errors_delta.invalid_prefix), sizeof(node->sixlowpan_errors_delta.invalid_prefix));
+            node->has_errors = true;
+            node_update_old_field(node, offsetof(di_node_t, has_errors), sizeof(node->has_errors));
+        }
+    } else {
+        node->sixlowpan_errors.invalid_ip++;
+        node->sixlowpan_errors_delta.invalid_ip++;
+        node_update_old_field(node, offsetof(di_node_t, sixlowpan_errors.invalid_ip), sizeof(node->sixlowpan_errors.invalid_ip));
+        node_update_old_field(node, offsetof(di_node_t, sixlowpan_errors_delta.invalid_ip), sizeof(node->sixlowpan_errors_delta.invalid_ip));
+        node->has_errors = true;
+        node_update_old_field(node, offsetof(di_node_t, has_errors), sizeof(node->has_errors));
     }
 }
 
@@ -351,7 +364,6 @@ void node_update_from_dodag_prefix_info(di_node_t *node, const rpl_prefix_t *pre
     if ( prefix_info ) {
         if( rpl_prefix_compare(prefix_info, &node->rpl_dodag_prefix_info) ) {
             node->rpl_dodag_prefix_info = *prefix_info;
-            node_update_ip(node, &prefix_info->prefix);
             node_set_changed(node);
         }
         node->has_rpl_dodag_prefix_info = true;
@@ -605,6 +617,15 @@ const rpl_statistics_t *node_get_rpl_statistics(const di_node_t *node) {
 }
 const rpl_statistics_delta_t *node_get_rpl_statistics_delta(const di_node_t *node) {
     return &node->rpl_statistics_delta;
+}
+
+const sixlowpan_errors_t *node_get_sixlowpan_errors(const di_node_t *node) {
+    if (!node) return NULL;
+    return &node->sixlowpan_errors;
+}
+
+const sixlowpan_errors_delta_t *node_get_sixlowpan_errors_delta(const di_node_t *node) {
+    return &node->sixlowpan_errors_delta;
 }
 
 const rpl_errors_t *node_get_rpl_errors(const di_node_t *node) {

@@ -43,16 +43,18 @@ void init_prefix(di_prefix_t *prefix);
 wpan_addr_elt_t *addr_wpan_add_to_list(wpan_addr_list_t *list, addr_wpan_t address);
 wpan_addr_elt_t *addr_wpan_del_from_list(wpan_addr_list_t *list, addr_wpan_t address);
 
-uint64_t addr_get_mac64_from_ip(addr_ipv6_t ip_address);
+addr_wpan_t addr_get_mac64_from_ip(addr_ipv6_t ip_address);
 addr_ipv6_t addr_get_local_ip_from_mac64(addr_wpan_t mac_address);
 addr_ipv6_t addr_get_global_ip_from_mac64(di_prefix_t prefix, addr_wpan_t mac_address);
 uint64_t addr_get_int_id_from_mac64(addr_wpan_t mac_address);
 addr_wpan_t addr_get_mac64_from_int_id(uint64_t int_id);
 
 //For list search
+//Return 0 if equal
 int addr_compare_ip(const addr_ipv6_t *a, const addr_ipv6_t *b);
 int addr_compare_wpan(const addr_wpan_t *a, const addr_wpan_t *b);
 int addr_compare_ip_len(const addr_ipv6_t *a, const addr_ipv6_t *b, int bit_len);	//Compare len bits
+int addr_prefix_compare(const di_prefix_t *a, const addr_ipv6_t *b);
 
 int prefix_compare(const di_prefix_t *a, const di_prefix_t *b);
 

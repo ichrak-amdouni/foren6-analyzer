@@ -20,6 +20,7 @@ typedef struct packet_info {
 	addr_ipv6_t src_ip_address;
 	addr_ipv6_t dst_ip_address;
 	double timestamp;
+	int hop_limit;
 } packet_info_t;
 
 void rpl_collector_parse_dio(packet_info_t pkt_info, rpl_dio_t* dio, rpl_dio_opt_config_t* dodag_config, rpl_dio_opt_metric_t* metric, rpl_dio_opt_prefix_t* prefix, rpl_dio_opt_route_t* route_info);

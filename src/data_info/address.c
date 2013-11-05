@@ -154,6 +154,10 @@ int prefix_compare(const di_prefix_t *a, const di_prefix_t *b) {
     }
 }
 
+int addr_prefix_compare(const di_prefix_t *a, const addr_ipv6_t *b) {
+    return addr_compare_ip_len(&a->prefix, b, a->length);
+}
+
 bool addr_is_ip_any(addr_ipv6_t address) {
 	static const addr_ipv6_t any_address = {{{0}}};
 

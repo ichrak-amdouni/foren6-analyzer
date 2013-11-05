@@ -52,9 +52,7 @@ uint16_t node_get_simple_id(const di_node_t *node);
 
 // Data setters
 
-void node_set_local_ip(di_node_t *node, addr_ipv6_t address);
-void node_set_global_ip(di_node_t *node, addr_ipv6_t address);
-void node_update_ip(di_node_t *node, const di_prefix_t *prefix);
+void node_set_ip(di_node_t *node, addr_ipv6_t address);
 
 void node_add_route(di_node_t *node, const di_route_t *route_prefix, addr_wpan_t via_node);
 void node_del_route(di_node_t *node, const di_route_t *route_prefix, addr_wpan_t via_node);
@@ -114,6 +112,9 @@ const sixlowpan_statistics_delta_t *node_get_sixlowpan_statistics_delta(const di
 
 const rpl_statistics_t *node_get_rpl_statistics(const di_node_t *node);
 const rpl_statistics_delta_t *node_get_rpl_statistics_delta(const di_node_t *node);
+
+const sixlowpan_errors_t *node_get_sixlowpan_errors(const di_node_t *node);
+const sixlowpan_errors_delta_t *node_get_sixlowpan_errors_delta(const di_node_t *node);
 
 const rpl_errors_t *node_get_rpl_errors(const di_node_t *node);
 const rpl_errors_delta_t *node_get_rpl_errors_delta(const di_node_t *node);
