@@ -414,9 +414,11 @@ void node_update_from_dodag(di_node_t *node, const di_dodag_t *dodag) {
     instance_config = dodag_get_instance_config(dodag);
     dodag_config = dodag_get_dodag_config(dodag);
     dodag_prefix_info = dodag_get_prefix(dodag);
+    //Do not check instance config, instance config is the dodag reference and not actual config
+    /*
     if ( node->has_rpl_instance_config ) {
         rpl_instance_config_delta(instance_config, &node->rpl_instance_config, &node->actual_rpl_instance_config_delta);
-    }
+    }*/
     if ( node->has_rpl_dodag_config ) {
         rpl_dodag_config_delta(dodag_config, &node->rpl_dodag_config, &node->actual_rpl_dodag_config_delta);
     }
@@ -428,7 +430,7 @@ void node_update_from_dodag(di_node_t *node, const di_dodag_t *dodag) {
         node->sixlowpan_config.is_custom_global_address = false;
     }
 
-    if (node->actual_rpl_instance_config_delta.has_changed ||
+    if (/*node->actual_rpl_instance_config_delta.has_changed ||*/
         node->actual_rpl_dodag_config_delta.has_changed ||
         node->actual_rpl_dodag_prefix_info_delta.has_changed) {
       node_add_dodag_config_mismatch_error(node);
