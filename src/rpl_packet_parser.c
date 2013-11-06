@@ -46,7 +46,6 @@ void rpl_tool_stop_capture() {
 
 void rpl_tool_set_analyser_config(const analyser_config_t *config) {
     if ( !config ) return;
-    printf("Analyser config updated\n");
     analyser_config = *config;
 }
 
