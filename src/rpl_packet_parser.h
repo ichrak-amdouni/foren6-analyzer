@@ -23,6 +23,8 @@ typedef struct analyzer_callbacks {
 typedef struct analyser_config {
     int root_rank;
     struct in6_addr context0;
+    bool address_autconf_only;
+    bool one_preferred_parent;
 } analyser_config_t;
 
 	/**

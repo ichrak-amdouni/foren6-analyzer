@@ -5,6 +5,7 @@
 
 #include "node.h"
 #include "route.h"
+#include "../rpl_packet_parser.h"
 #include "../data_collector/rpl_event_callbacks.h"
 #include "rpl_data.h"
 #include "rpl_def.h"
@@ -231,6 +232,9 @@ void node_set_ip(di_node_t *node, addr_ipv6_t address) {
         if(addr_compare_ip(&node->sixlowpan_config.local_address, &address)) {
             node->sixlowpan_config.local_address = address;
             node->sixlowpan_config.is_custom_local_address = addr_compare_wpan(&wpan_addr, &node->key.ref.wpan_address);
+            if ( node->sixlowpan_config.is_custom_local_address && rpl_tool_get_analyser_config()->address_autconf_only) {
+                node->sixlowpan_errors.invalid_ip++;
+            }
             node_set_changed(node);
         }
     } else if ( addr_is_ip_global(address) ) {
@@ -238,6 +242,9 @@ void node_set_ip(di_node_t *node, addr_ipv6_t address) {
         if(addr_compare_ip(&node->sixlowpan_config.global_address, &address)) {
             node->sixlowpan_config.global_address = address;
             node->sixlowpan_config.is_custom_global_address = addr_compare_wpan(&wpan_addr, &node->key.ref.wpan_address);;
+            if ( node->sixlowpan_config.is_custom_global_address && rpl_tool_get_analyser_config()->address_autconf_only) {
+                node->sixlowpan_errors.invalid_ip++;
+            }
             node_set_changed(node);
         }
         if(node->has_rpl_dodag_prefix_info &&
