@@ -49,7 +49,7 @@ wpan_addr_elt_t *addr_wpan_del_from_list(wpan_addr_list_t *list, addr_wpan_t add
 addr_wpan_t addr_get_mac64_from_ip(addr_ipv6_t address) {
 	uint64_t int_id;
 
-	int_id = ((uint64_t)address.__in6_u.__u6_addr32[2] << 32) | address.__in6_u.__u6_addr32[3];
+	int_id = ((uint64_t)be32toh(address.__in6_u.__u6_addr32[2]) << 32) | be32toh(address.__in6_u.__u6_addr32[3]);
 	return addr_get_mac64_from_int_id(int_id);
 }
 
