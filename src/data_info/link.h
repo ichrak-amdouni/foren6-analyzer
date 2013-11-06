@@ -49,9 +49,11 @@ void link_reset_changed(di_link_t *link);
 const di_link_key_t *link_get_key(const di_link_t *link);
 time_t link_get_last_update(const di_link_t *link);
 uint32_t link_get_packet_count(const di_link_t *link);
+bool link_get_deprecated(const di_link_t *link);
 const di_metric_t* link_get_metric(const di_link_t *link);
 void *link_get_user_data(const di_link_t *link);
 
+void links_deprecate_all_from(di_link_ref_t const *new_link_ref);
 
 #ifdef	__cplusplus
 }

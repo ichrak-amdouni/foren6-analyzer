@@ -126,11 +126,13 @@ void rpl_collector_parse_dao(packet_info_t pkt_info,
 	}
 
 	if(transit && transit->path_lifetime > 0) {
-		//Clear parents list
-
 		di_link_ref_t link_ref;
 		link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(child)}, (di_node_ref_t){node_get_mac64(parent)});
+        //Clear parents list
 		new_link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
+        if ( link_created && rpl_tool_get_analyser_config()->one_preferred_parent ) {
+            links_deprecate_all_from(&link_ref);
+        }
 		link_update(new_link, time(NULL), 1);
 
 
@@ -230,6 +232,9 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 				di_link_ref_t link_ref;
 				link_ref_init(&link_ref, (di_node_ref_t){node_get_mac64(src)}, (di_node_ref_t){node_get_mac64(dst)});
 				link = rpldata_get_link(&link_ref, HVM_CreateIfNonExistant, &link_created);
+		        if ( link_created && rpl_tool_get_analyser_config()->one_preferred_parent ) {
+		            links_deprecate_all_from(&link_ref);
+		        }
 				link_update(link, time(NULL), 1);
 				//link_set_metric(new_link, node_get_metric(src));
 

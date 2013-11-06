@@ -16,6 +16,8 @@ struct di_link {
 	time_t expiration_time;
 	uint32_t packet_count;	//TX only
 
+	bool deprecated;
+
 	bool has_changed;
 	void *user_data;
 };
@@ -60,7 +62,10 @@ bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count) {
 	link->last_update = time;
 	link->packet_count += added_packet_count;
 	link_update_old_field(link, offsetof(di_link_t, packet_count), sizeof(link->packet_count));
-
+	if ( link->deprecated ) {
+	    link->deprecated = false;
+	    link_set_changed(link);
+	}
 	return true;
 }
 
@@ -135,6 +140,29 @@ const di_metric_t* link_get_metric(const di_link_t *link) {
 	return &link->metric;
 }
 
+bool link_get_deprecated(const di_link_t *link) {
+    return link->deprecated;
+}
+
 void *link_get_user_data(const di_link_t *link) {
 	return link->user_data;
+}
+
+void links_deprecate_all_from(di_link_ref_t const *new_link_ref) {
+    hash_iterator_ptr it = hash_begin(NULL, NULL);
+    hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
+    hash_container_ptr working_container = rpldata_get_links(0);
+    for(hash_begin(working_container, it), hash_end(working_container, itEnd); !hash_it_equ(it, itEnd); hash_it_inc(it)) {
+        di_link_t **link_ptr = hash_it_value(it);
+        di_link_t *link = (link_ptr)? *link_ptr : NULL;
+        di_link_ref_t link_ref = link_get_key(link)->ref;
+        if ( link_ref.child.wpan_address == new_link_ref->child.wpan_address &&
+            link_ref.parent.wpan_address != new_link_ref->parent.wpan_address) {
+            link->deprecated = true;
+            link_set_changed(link);
+        }
+    }
+
+    hash_it_destroy(it);
+    hash_it_destroy(itEnd);
 }
