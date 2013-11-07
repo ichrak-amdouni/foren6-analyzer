@@ -97,6 +97,7 @@ const rpl_instance_config_delta_t *node_get_actual_instance_config_delta(const d
 
 const rpl_instance_data_t *node_get_instance_data(const di_node_t *node);
 const rpl_instance_data_delta_t *node_get_instance_data_delta(const di_node_t *node);
+bool node_has_rank(const di_node_t *node);
 int node_get_rank(const di_node_t *node);
 
 const rpl_dodag_config_t *node_get_dodag_config(const di_node_t *node);

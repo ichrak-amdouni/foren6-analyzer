@@ -586,6 +586,9 @@ const rpl_instance_data_delta_t *node_get_instance_data_delta(const di_node_t *n
     return &node->rpl_instance_data_delta;
 }
 
+bool node_has_rank(const di_node_t *node) {
+  return node->rpl_instance_data.has_rank;
+}
 int node_get_rank(const di_node_t *node) {
     return node->rpl_instance_data.rank;
 }

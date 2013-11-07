@@ -254,7 +254,7 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 					}
 				}
 
-				if(rpl_info->sender_rank < node_get_rank(dst))
+				if(node_has_rank(dst) && rpl_info->sender_rank < node_get_rank(dst))
 					node_add_upward_error(src);
 			} else {
 			    di_route_t route;
@@ -263,7 +263,7 @@ void rpl_collector_parse_data(packet_info_t pkt_info,
 				route.prefix = pkt_info.dst_ip_address;
 				node_add_route(src, &route, node_get_mac64(dst));
 
-				if(rpl_info->sender_rank > node_get_rank(dst))
+				if(node_has_rank(dst) && rpl_info->sender_rank > node_get_rank(dst))
 					node_add_downward_error(src);
 			}
 		}
