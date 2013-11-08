@@ -122,6 +122,8 @@ const rpl_errors_delta_t *node_get_rpl_errors_delta(const di_node_t *node);
 
 int node_get_has_errors(const di_node_t *node);
 
+void nodes_clear_all_errors();
+
 #ifdef	__cplusplus
 }
 #endif

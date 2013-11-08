@@ -672,3 +672,19 @@ bool node_get_routes_delta(const di_node_t *node) {
 int node_get_has_errors(const di_node_t *node) {
     return node->has_errors;
 }
+
+void nodes_clear_all_errors() {
+    hash_iterator_ptr it = hash_begin(NULL, NULL);
+    hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
+    hash_container_ptr working_container = rpldata_get_nodes(0);
+    for(hash_begin(working_container, it), hash_end(working_container, itEnd); !hash_it_equ(it, itEnd); hash_it_inc(it)) {
+        di_node_t **node_ptr = hash_it_value(it);
+        di_node_t *node = (node_ptr)? *node_ptr : NULL;
+        init_sixlowpan_errors(&node->sixlowpan_errors);
+        init_rpl_errors(&node->rpl_errors);
+        node_set_changed(node);
+    }
+
+    hash_it_destroy(it);
+    hash_it_destroy(itEnd);
+}

@@ -54,6 +54,7 @@ const di_metric_t* link_get_metric(const di_link_t *link);
 void *link_get_user_data(const di_link_t *link);
 
 void links_deprecate_all_from(di_link_ref_t const *new_link_ref);
+void links_clear_all_deprecated();
 
 #ifdef	__cplusplus
 }

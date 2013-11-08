@@ -166,3 +166,26 @@ void links_deprecate_all_from(di_link_ref_t const *new_link_ref) {
     hash_it_destroy(it);
     hash_it_destroy(itEnd);
 }
+
+void links_clear_all_deprecated() {
+  hash_iterator_ptr it = hash_begin(NULL, NULL);
+  hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
+  hash_container_ptr working_container = rpldata_get_links(0);
+  bool removed;
+  do {
+      removed = false;
+      for(hash_begin(working_container, it), hash_end(working_container, itEnd); !hash_it_equ(it, itEnd); hash_it_inc(it)) {
+          di_link_t **link_ptr = hash_it_value(it);
+          di_link_t *link = (link_ptr)? *link_ptr : NULL;
+          if ( link->deprecated ) {
+              hash_it_delete_value(it);
+              rpl_event_link(link, RET_Deleted);
+              removed = true;
+              break;
+          }
+      }
+  } while (removed);
+
+  hash_it_destroy(it);
+  hash_it_destroy(itEnd);
+}
