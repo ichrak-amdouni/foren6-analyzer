@@ -1,185 +1,272 @@
+/*
+ * Copyright (c) 2013, CETIC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/**
+ * \file
+ *         RPL event callbacks
+ * \author
+ *         Foren6 Team <foren6@cetic.be>
+ *         http://cetic.github.io/foren6/credits.html
+ */
+
 #include "rpl_event_callbacks.h"
 #include "../utlist.h"
 #include "../data_info/rpl_data.h"
 #include <stdlib.h>
 
-static rpl_event_callbacks_t event_callbacks = {0};
+static rpl_event_callbacks_t event_callbacks = { 0 };
 
 typedef enum rpl_object_type {
-	ROT_Node,
-	ROT_Dodag,
-	ROT_Link,
-	ROT_RplInstance,
-	ROT_Packet
+    ROT_Node,
+    ROT_Dodag,
+    ROT_Link,
+    ROT_RplInstance,
+    ROT_Packet
 } rpl_object_type_e;
 
 typedef struct rpl_event_el {
-	rpl_event_type_e type;
-	rpl_object_type_e object_type;
-	union {
-		di_node_ref_t node_ref;
-		di_dodag_ref_t dodag_ref;
-		di_rpl_instance_ref_t rpl_instance_ref;
-		di_link_ref_t link_ref;
-		int packet_id;
-	};
-	struct rpl_event_el *next;
-	struct rpl_event_el *prev;
+    rpl_event_type_e type;
+    rpl_object_type_e object_type;
+    union {
+        di_node_ref_t node_ref;
+        di_dodag_ref_t dodag_ref;
+        di_rpl_instance_ref_t rpl_instance_ref;
+        di_link_ref_t link_ref;
+        int packet_id;
+    };
+    struct rpl_event_el *next;
+    struct rpl_event_el *prev;
 } *rpl_event_list_t, rpl_event_el_t;
 
 rpl_event_list_t head;
 
-void rpl_event_set_callbacks(rpl_event_callbacks_t *callbacks) {
-	event_callbacks = *callbacks;
+void
+rpl_event_set_callbacks(rpl_event_callbacks_t * callbacks)
+{
+    event_callbacks = *callbacks;
 }
 
-void rpl_event_packet(int packet_id) {
-	rpl_event_el_t *element = (rpl_event_el_t*) calloc(1, sizeof(rpl_event_el_t));
+void
+rpl_event_packet(int packet_id)
+{
+    rpl_event_el_t *element =
+        (rpl_event_el_t *) calloc(1, sizeof(rpl_event_el_t));
 
-	element->type = RET_Created;
-	element->object_type = ROT_Packet;
-	element->packet_id = packet_id;
+    element->type = RET_Created;
+    element->object_type = ROT_Packet;
+    element->packet_id = packet_id;
 
-	DL_APPEND(head, element);
+    DL_APPEND(head, element);
 }
 
-void rpl_event_node(di_node_t *node, rpl_event_type_e type) {
-	rpl_event_el_t *element = (rpl_event_el_t*) calloc(1, sizeof(rpl_event_el_t));
+void
+rpl_event_node(di_node_t * node, rpl_event_type_e type)
+{
+    rpl_event_el_t *element =
+        (rpl_event_el_t *) calloc(1, sizeof(rpl_event_el_t));
 
-	element->type = type;
-	element->object_type = ROT_Node;
-	element->node_ref = node_get_key(node)->ref;
+    element->type = type;
+    element->object_type = ROT_Node;
+    element->node_ref = node_get_key(node)->ref;
 
-	DL_APPEND(head, element);
+    DL_APPEND(head, element);
 }
 
-void rpl_event_dodag(di_dodag_t *dodag, rpl_event_type_e type) {
-	rpl_event_el_t *element = (rpl_event_el_t*) calloc(1, sizeof(rpl_event_el_t));
+void
+rpl_event_dodag(di_dodag_t * dodag, rpl_event_type_e type)
+{
+    rpl_event_el_t *element =
+        (rpl_event_el_t *) calloc(1, sizeof(rpl_event_el_t));
 
-	element->type = type;
-	element->object_type = ROT_Dodag;
-	element->dodag_ref = dodag_get_key(dodag)->ref;
+    element->type = type;
+    element->object_type = ROT_Dodag;
+    element->dodag_ref = dodag_get_key(dodag)->ref;
 
-	DL_APPEND(head, element);
+    DL_APPEND(head, element);
 }
 
-void rpl_event_link(di_link_t *link, rpl_event_type_e type) {
-	rpl_event_el_t *element = (rpl_event_el_t*) calloc(1, sizeof(rpl_event_el_t));
+void
+rpl_event_link(di_link_t * link, rpl_event_type_e type)
+{
+    rpl_event_el_t *element =
+        (rpl_event_el_t *) calloc(1, sizeof(rpl_event_el_t));
 
-	element->type = type;
-	element->object_type = ROT_Link;
-	element->link_ref = link_get_key(link)->ref;
+    element->type = type;
+    element->object_type = ROT_Link;
+    element->link_ref = link_get_key(link)->ref;
 
-	DL_APPEND(head, element);
+    DL_APPEND(head, element);
 }
 
-void rpl_event_rpl_instance(di_rpl_instance_t *rpl_instance, rpl_event_type_e type) {
-	rpl_event_el_t *element = (rpl_event_el_t*) calloc(1, sizeof(rpl_event_el_t));
+void
+rpl_event_rpl_instance(di_rpl_instance_t * rpl_instance,
+                       rpl_event_type_e type)
+{
+    rpl_event_el_t *element =
+        (rpl_event_el_t *) calloc(1, sizeof(rpl_event_el_t));
 
-	element->type = type;
-	element->object_type = ROT_RplInstance;
-	element->rpl_instance_ref = rpl_instance_get_key(rpl_instance)->ref;
+    element->type = type;
+    element->object_type = ROT_RplInstance;
+    element->rpl_instance_ref = rpl_instance_get_key(rpl_instance)->ref;
 
-	DL_APPEND(head, element);
+    DL_APPEND(head, element);
 }
 
-bool rpl_event_commit_changed_objects(int packet_id, double timestamp) {
-	//These boolean are true if we already created a version for the according object type
-	bool node, dodag, link, rpl_instance;
-	rpl_event_el_t *event;
+bool
+rpl_event_commit_changed_objects(int packet_id, double timestamp)
+{
+    //These boolean are true if we already created a version for the according object type
+    bool node, dodag, link, rpl_instance;
+    rpl_event_el_t *event;
 
-	node = dodag = link = rpl_instance = false;
+    node = dodag = link = rpl_instance = false;
 
-	DL_FOREACH(head, event) {
-		switch(event->object_type) {
-			case ROT_Dodag:
-				if(!dodag)
-					rpldata_add_dodag_version();
-				dodag = true;
-				break;
+    DL_FOREACH(head, event) {
+        switch (event->object_type) {
+        case ROT_Dodag:
+            if(!dodag)
+                rpldata_add_dodag_version();
+            dodag = true;
+            break;
 
-			case ROT_Link:
-				if(!link)
-					rpldata_add_link_version();
-				link = true;
-				break;
+        case ROT_Link:
+            if(!link)
+                rpldata_add_link_version();
+            link = true;
+            break;
 
-			case ROT_Node:
-				if(!node)
-					rpldata_add_node_version();
-				node = true;
-				break;
+        case ROT_Node:
+            if(!node)
+                rpldata_add_node_version();
+            node = true;
+            break;
 
-			case ROT_RplInstance:
-				if(!rpl_instance)
-					rpldata_add_rpl_instance_version();
-				rpl_instance = true;
-				break;
+        case ROT_RplInstance:
+            if(!rpl_instance)
+                rpldata_add_rpl_instance_version();
+            rpl_instance = true;
+            break;
 
-			case ROT_Packet:
-				break;
-		}
-	}
+        case ROT_Packet:
+            break;
+        }
+    }
 
-	if(node || link || dodag || rpl_instance)
-		rpldata_wsn_create_version(packet_id, timestamp);
+    if(node || link || dodag || rpl_instance)
+        rpldata_wsn_create_version(packet_id, timestamp);
 
-	rpl_event_process_events(rpldata_get_wsn_last_version());
+    rpl_event_process_events(rpldata_get_wsn_last_version());
 
-	return node || link || dodag || rpl_instance;
+    return node || link || dodag || rpl_instance;
 }
 
-void rpl_event_process_events(int wsn_version) {
-	rpl_event_el_t *event, *tmp;
-	int version;
-	hash_container_ptr container;
+void
+rpl_event_process_events(int wsn_version)
+{
+    rpl_event_el_t *event, *tmp;
+    int version;
+    hash_container_ptr container;
 
-	DL_FOREACH_SAFE(head, event, tmp) {
-		if(event->type == RET_Deleted)
-			version = wsn_version - 1;
-		else version = wsn_version;
+    DL_FOREACH_SAFE(head, event, tmp) {
+        if(event->type == RET_Deleted)
+            version = wsn_version - 1;
+        else
+            version = wsn_version;
 
-		switch(event->object_type) {
-			case ROT_Dodag: {
-				di_dodag_t *dodag;
-				container = rpldata_get_dodags(version);
-				dodag = *(di_dodag_t**)hash_value(container, hash_key_make(event->dodag_ref), HVM_FailIfNonExistant, NULL);
-				if(event_callbacks.onDodagEvent) event_callbacks.onDodagEvent(dodag, event->type);
-				break;
-			}
+        switch (event->object_type) {
+        case ROT_Dodag:{
+                di_dodag_t *dodag;
 
-			case ROT_Link: {
-				di_link_t *link;
-				container = rpldata_get_links(version);
-				link = *(di_link_t**)hash_value(container, hash_key_make(event->link_ref), HVM_FailIfNonExistant, NULL);
-				if(event_callbacks.onLinkEvent) event_callbacks.onLinkEvent(link, event->type);
-				break;
-			}
+                container = rpldata_get_dodags(version);
+                dodag =
+                    *(di_dodag_t **) hash_value(container,
+                                                hash_key_make(event->
+                                                              dodag_ref),
+                                                HVM_FailIfNonExistant, NULL);
+                if(event_callbacks.onDodagEvent)
+                    event_callbacks.onDodagEvent(dodag, event->type);
+                break;
+            }
 
-			case ROT_Node: {
-				di_node_t *node;
-				container = rpldata_get_nodes(version);
-				node = *(di_node_t**)hash_value(container, hash_key_make(event->node_ref), HVM_FailIfNonExistant, NULL);
-				if(event_callbacks.onNodeEvent) event_callbacks.onNodeEvent(node, event->type);
-				break;
-			}
+        case ROT_Link:{
+                di_link_t *link;
 
-			case ROT_RplInstance: {
-				di_rpl_instance_t *rpl_instance;
-				container = rpldata_get_rpl_instances(version);
-				rpl_instance = *(di_rpl_instance_t**)hash_value(container, hash_key_make(event->rpl_instance_ref), HVM_FailIfNonExistant, NULL);
-				if(event_callbacks.onRplInstanceEvent) event_callbacks.onRplInstanceEvent(rpl_instance, event->type);
-				break;
-			}
+                container = rpldata_get_links(version);
+                link =
+                    *(di_link_t **) hash_value(container,
+                                               hash_key_make(event->link_ref),
+                                               HVM_FailIfNonExistant, NULL);
+                if(event_callbacks.onLinkEvent)
+                    event_callbacks.onLinkEvent(link, event->type);
+                break;
+            }
 
-			case ROT_Packet:
-				if(event_callbacks.onPacketEvent) event_callbacks.onPacketEvent(event->packet_id);
-		}
-		DL_DELETE(head, event);
-	}
+        case ROT_Node:{
+                di_node_t *node;
+
+                container = rpldata_get_nodes(version);
+                node =
+                    *(di_node_t **) hash_value(container,
+                                               hash_key_make(event->node_ref),
+                                               HVM_FailIfNonExistant, NULL);
+                if(event_callbacks.onNodeEvent)
+                    event_callbacks.onNodeEvent(node, event->type);
+                break;
+            }
+
+        case ROT_RplInstance:{
+                di_rpl_instance_t *rpl_instance;
+
+                container = rpldata_get_rpl_instances(version);
+                rpl_instance =
+                    *(di_rpl_instance_t **) hash_value(container,
+                                                       hash_key_make(event->
+                                                                     rpl_instance_ref),
+                                                       HVM_FailIfNonExistant,
+                                                       NULL);
+                if(event_callbacks.onRplInstanceEvent)
+                    event_callbacks.onRplInstanceEvent(rpl_instance,
+                                                       event->type);
+                break;
+            }
+
+        case ROT_Packet:
+            if(event_callbacks.onPacketEvent)
+                event_callbacks.onPacketEvent(event->packet_id);
+        }
+        DL_DELETE(head, event);
+    }
 }
 
-void rpl_event_clear() {
-	if(event_callbacks.onClearEvent)
-		event_callbacks.onClearEvent();
+void
+rpl_event_clear()
+{
+    if(event_callbacks.onClearEvent)
+        event_callbacks.onClearEvent();
 }

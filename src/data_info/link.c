@@ -1,3 +1,40 @@
+/*
+ * Copyright (c) 2013, CETIC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/**
+ * \file
+ *         Parent-Child Relationships in DODAG Management
+ * \author
+ *         Foren6 Team <foren6@cetic.be>
+ *         http://cetic.github.io/foren6/credits.html
+ */
+
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,155 +46,212 @@
 #include "rpl_data.h"
 
 struct di_link {
-	di_link_key_t key;
+    di_link_key_t key;
 
-	di_metric_t metric;
-	time_t last_update;		//TX only
-	time_t expiration_time;
-	uint32_t packet_count;	//TX only
+    di_metric_t metric;
+    time_t last_update;         //TX only
+    time_t expiration_time;
+    uint32_t packet_count;      //TX only
 
-	bool deprecated;
+    bool deprecated;
 
-	bool has_changed;
-	void *user_data;
+    bool has_changed;
+    void *user_data;
 };
 
-static void link_set_changed(di_link_t *link);
-static void link_update_old_field(const di_link_t *link, int field_offset, int field_size);
+static void link_set_changed(di_link_t * link);
+static void link_update_old_field(const di_link_t * link, int field_offset,
+                                  int field_size);
 
-size_t link_sizeof() {
-	return sizeof(di_link_t);
+size_t
+link_sizeof()
+{
+    return sizeof(di_link_t);
 }
 
-void link_init(void *data, const void *key, size_t key_size) {
-	di_link_t *link = (di_link_t*) data;
+void
+link_init(void *data, const void *key, size_t key_size)
+{
+    di_link_t *link = (di_link_t *) data;
 
-	assert(key_size == sizeof(di_link_ref_t));
+    assert(key_size == sizeof(di_link_ref_t));
 
-	link->key.ref = *(di_link_ref_t*) key;
-	link->has_changed = true;
-	rpl_event_link(link, RET_Created);
+    link->key.ref = *(di_link_ref_t *) key;
+    link->has_changed = true;
+    rpl_event_link(link, RET_Created);
 }
 
-void link_destroy(void *data) {
-	data = data; //prevent a unused arg warning
-	// Nothing to do
+void
+link_destroy(void *data)
+{
+    data = data;                //prevent a unused arg warning
+    // Nothing to do
 }
 
-void link_key_init(di_link_key_t *key, di_node_ref_t child, di_node_ref_t parent, uint32_t version) {
-	memset(key, 0, sizeof(di_link_key_t));
+void
+link_key_init(di_link_key_t * key, di_node_ref_t child, di_node_ref_t parent,
+              uint32_t version)
+{
+    memset(key, 0, sizeof(di_link_key_t));
 
-	key->ref.child = child;
-	key->ref.parent = parent;
+    key->ref.child = child;
+    key->ref.parent = parent;
 }
 
-void link_ref_init(di_link_ref_t *ref, di_node_ref_t child, di_node_ref_t parent) {
-	memset(ref, 0, sizeof(di_link_ref_t));
+void
+link_ref_init(di_link_ref_t * ref, di_node_ref_t child, di_node_ref_t parent)
+{
+    memset(ref, 0, sizeof(di_link_ref_t));
 
-	ref->child = child;
-	ref->parent = parent;
+    ref->child = child;
+    ref->parent = parent;
 }
 
-bool link_update(di_link_t *link, time_t time, uint32_t added_packet_count) {
-	link->last_update = time;
-	link->packet_count += added_packet_count;
-	link_update_old_field(link, offsetof(di_link_t, packet_count), sizeof(link->packet_count));
-	if ( link->deprecated ) {
-	    link->deprecated = false;
-	    link_set_changed(link);
-	}
-	return true;
+bool
+link_update(di_link_t * link, time_t time, uint32_t added_packet_count)
+{
+    link->last_update = time;
+    link->packet_count += added_packet_count;
+    link_update_old_field(link, offsetof(di_link_t, packet_count),
+                          sizeof(link->packet_count));
+    if(link->deprecated) {
+        link->deprecated = false;
+        link_set_changed(link);
+    }
+    return true;
 }
 
-static void link_set_changed(di_link_t *link) {
-	if(link->has_changed == false)
-		rpl_event_link(link, RET_Updated);
-	link->has_changed = true;
+static void
+link_set_changed(di_link_t * link)
+{
+    if(link->has_changed == false)
+        rpl_event_link(link, RET_Updated);
+    link->has_changed = true;
 }
 
-static void link_update_old_field(const di_link_t *link, int field_offset, int field_size) {
-	di_link_t **versionned_link_ptr;
-	int version = rpldata_get_wsn_last_version();
-	if(version) {
-		hash_container_ptr container = rpldata_get_links(version);
-		if(container) {
-			versionned_link_ptr = (di_link_t**)hash_value(container, hash_key_make(link->key.ref), HVM_FailIfNonExistant, NULL);
-			if(versionned_link_ptr && *versionned_link_ptr != link)
-				memcpy((char*)(*versionned_link_ptr) + field_offset, (char*)link + field_offset, field_size);
-		}
-	}
+static void
+link_update_old_field(const di_link_t * link, int field_offset,
+                      int field_size)
+{
+    di_link_t **versionned_link_ptr;
+    int version = rpldata_get_wsn_last_version();
+
+    if(version) {
+        hash_container_ptr container = rpldata_get_links(version);
+
+        if(container) {
+            versionned_link_ptr =
+                (di_link_t **) hash_value(container,
+                                          hash_key_make(link->key.ref),
+                                          HVM_FailIfNonExistant, NULL);
+            if(versionned_link_ptr && *versionned_link_ptr != link)
+                memcpy((char *)(*versionned_link_ptr) + field_offset,
+                       (char *)link + field_offset, field_size);
+        }
+    }
 }
 
-di_link_t *link_dup(const di_link_t *link) {
-	di_link_t *new_link;
+di_link_t *
+link_dup(const di_link_t * link)
+{
+    di_link_t *new_link;
 
-	new_link = malloc(sizeof(di_link_t));
-	memcpy(new_link, link, sizeof(di_link_t));
+    new_link = malloc(sizeof(di_link_t));
+    memcpy(new_link, link, sizeof(di_link_t));
 
-	return new_link;
+    return new_link;
 }
 
-void link_set_key(di_link_t *link, di_link_key_t *key) {
-	if(memcmp(&link->key, key, sizeof(di_link_key_t))) {
-		link->key = *key;
-		link_set_changed(link);
-	}
+void
+link_set_key(di_link_t * link, di_link_key_t * key)
+{
+    if(memcmp(&link->key, key, sizeof(di_link_key_t))) {
+        link->key = *key;
+        link_set_changed(link);
+    }
 }
 
-void link_set_metric(di_link_t *link, const di_metric_t *metric) {
-	if(link->metric.type != metric->type || link->metric.value != metric->value) {
-		link->metric = *metric;
-		link_set_changed(link);
-	}
+void
+link_set_metric(di_link_t * link, const di_metric_t * metric)
+{
+    if(link->metric.type != metric->type
+       || link->metric.value != metric->value) {
+        link->metric = *metric;
+        link_set_changed(link);
+    }
 }
 
-void link_set_user_data(di_link_t *link, void *user_data) {
-	link->user_data = user_data;
+void
+link_set_user_data(di_link_t * link, void *user_data)
+{
+    link->user_data = user_data;
 }
 
-bool link_has_changed(di_link_t *link) {
-	return link->has_changed;
+bool
+link_has_changed(di_link_t * link)
+{
+    return link->has_changed;
 }
 
-void link_reset_changed(di_link_t *link) {
-	link->has_changed = false;
+void
+link_reset_changed(di_link_t * link)
+{
+    link->has_changed = false;
 }
 
 
-const di_link_key_t *link_get_key(const di_link_t *link) {
-	return &link->key;
+const di_link_key_t *
+link_get_key(const di_link_t * link)
+{
+    return &link->key;
 }
 
-time_t link_get_last_update(const di_link_t *link) {
-	return link->last_update;
+time_t
+link_get_last_update(const di_link_t * link)
+{
+    return link->last_update;
 }
 
-uint32_t link_get_packet_count(const di_link_t *link) {
-	return link->packet_count;
+uint32_t
+link_get_packet_count(const di_link_t * link)
+{
+    return link->packet_count;
 }
 
-const di_metric_t* link_get_metric(const di_link_t *link) {
-	return &link->metric;
+const di_metric_t *
+link_get_metric(const di_link_t * link)
+{
+    return &link->metric;
 }
 
-bool link_get_deprecated(const di_link_t *link) {
+bool
+link_get_deprecated(const di_link_t * link)
+{
     return link->deprecated;
 }
 
-void *link_get_user_data(const di_link_t *link) {
-	return link->user_data;
+void *
+link_get_user_data(const di_link_t * link)
+{
+    return link->user_data;
 }
 
-void links_deprecate_all_from(di_link_ref_t const *new_link_ref) {
+void
+links_deprecate_all_from(di_link_ref_t const *new_link_ref)
+{
     hash_iterator_ptr it = hash_begin(NULL, NULL);
     hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
     hash_container_ptr working_container = rpldata_get_links(0);
-    for(hash_begin(working_container, it), hash_end(working_container, itEnd); !hash_it_equ(it, itEnd); hash_it_inc(it)) {
+
+    for(hash_begin(working_container, it), hash_end(working_container, itEnd);
+        !hash_it_equ(it, itEnd); hash_it_inc(it)) {
         di_link_t **link_ptr = hash_it_value(it);
-        di_link_t *link = (link_ptr)? *link_ptr : NULL;
+        di_link_t *link = (link_ptr) ? *link_ptr : NULL;
         di_link_ref_t link_ref = link_get_key(link)->ref;
-        if ( link_ref.child.wpan_address == new_link_ref->child.wpan_address &&
-            link_ref.parent.wpan_address != new_link_ref->parent.wpan_address) {
+
+        if(link_ref.child.wpan_address == new_link_ref->child.wpan_address &&
+           link_ref.parent.wpan_address !=
+           new_link_ref->parent.wpan_address) {
             link->deprecated = true;
             link_set_changed(link);
         }
@@ -167,25 +261,31 @@ void links_deprecate_all_from(di_link_ref_t const *new_link_ref) {
     hash_it_destroy(itEnd);
 }
 
-void links_clear_all_deprecated() {
-  hash_iterator_ptr it = hash_begin(NULL, NULL);
-  hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
-  hash_container_ptr working_container = rpldata_get_links(0);
-  bool removed;
-  do {
-      removed = false;
-      for(hash_begin(working_container, it), hash_end(working_container, itEnd); !hash_it_equ(it, itEnd); hash_it_inc(it)) {
-          di_link_t **link_ptr = hash_it_value(it);
-          di_link_t *link = (link_ptr)? *link_ptr : NULL;
-          if ( link->deprecated ) {
-              hash_it_delete_value(it);
-              rpl_event_link(link, RET_Deleted);
-              removed = true;
-              break;
-          }
-      }
-  } while (removed);
+void
+links_clear_all_deprecated()
+{
+    hash_iterator_ptr it = hash_begin(NULL, NULL);
+    hash_iterator_ptr itEnd = hash_begin(NULL, NULL);
+    hash_container_ptr working_container = rpldata_get_links(0);
+    bool removed;
 
-  hash_it_destroy(it);
-  hash_it_destroy(itEnd);
+    do {
+        removed = false;
+        for(hash_begin(working_container, it),
+            hash_end(working_container, itEnd); !hash_it_equ(it, itEnd);
+            hash_it_inc(it)) {
+            di_link_t **link_ptr = hash_it_value(it);
+            di_link_t *link = (link_ptr) ? *link_ptr : NULL;
+
+            if(link->deprecated) {
+                hash_it_delete_value(it);
+                rpl_event_link(link, RET_Deleted);
+                removed = true;
+                break;
+            }
+        }
+    } while(removed);
+
+    hash_it_destroy(it);
+    hash_it_destroy(itEnd);
 }

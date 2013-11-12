@@ -1,8 +1,38 @@
 /*
- * File:   sniffer_packet_parser.h
- * Author: am
+ * Copyright (c) 2013, CETIC.
+ * All rights reserved.
  *
- * Created on June 12, 2013, 4:51 PM
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/**
+ * \file
+ *         RPL Information
+ * \author
+ *         Foren6 Team <foren6@cetic.be>
+ *         http://cetic.github.io/foren6/credits.html
  */
 
 #ifndef RPL_DEF_H
@@ -231,8 +261,8 @@ typedef struct rpl_prefix_delta {
 typedef struct rpl_statistics {
     double last_dao_timestamp;
     double last_dio_timestamp;
-    double max_dao_interval;  //maximum interval seen between 2 DAO packets
-    double max_dio_interval;  //maximum interval seen between 2 DIO packets
+    double max_dao_interval;        //maximum interval seen between 2 DAO packets
+    double max_dio_interval;        //maximum interval seen between 2 DIO packets
     int dis;
     int dio;
     int dao;
@@ -250,14 +280,14 @@ typedef struct rpl_statistics_delta {
 } rpl_statistics_delta_t;
 
 typedef struct rpl_errors {
-    int upward_rank_errors;   //incremented when data trafic goes from a node to it's parent in the case of the parent has a greater rank than the child
-    int downward_rank_errors; //incremented when data trafic goes from a node to a child where the child have a smaller rank than the parent
-    int route_loop_errors;    //incremented when a node choose a parent that is in it's routing table
+    int upward_rank_errors; //incremented when data trafic goes from a node to it's parent in the case of the parent has a greater rank than the child
+    int downward_rank_errors;       //incremented when data trafic goes from a node to a child where the child have a smaller rank than the parent
+    int route_loop_errors;  //incremented when a node choose a parent that is in it's routing table
 
-    int ip_mismatch_errors;   //incremented when a DAO message is sent to a node with the wrong IP<=>WPAN addresses association
-    int dodag_version_decrease_errors;  //incremented when a DIO message contain a dodag version smaller than the known version
-    int dodag_mismatch_errors; //incremented when a DAO is sent to a parent with the dodagid in the DAO packet different from the parent's dodag
-    int dodag_config_mismatch_errors; //incremented when the dodag configuration advertised by the node is not the same as the dodag root
+    int ip_mismatch_errors; //incremented when a DAO message is sent to a node with the wrong IP<=>WPAN addresses association
+    int dodag_version_decrease_errors;      //incremented when a DIO message contain a dodag version smaller than the known version
+    int dodag_mismatch_errors;      //incremented when a DAO is sent to a parent with the dodagid in the DAO packet different from the parent's dodag
+    int dodag_config_mismatch_errors;       //incremented when the dodag configuration advertised by the node is not the same as the dodag root
 } rpl_errors_t;
 
 typedef struct rpl_errors_delta {
@@ -274,38 +304,61 @@ typedef struct rpl_errors_delta {
     int dodag_config_mismatch_errors;
 } rpl_errors_delta_t;
 
-void init_rpl_instance_config(rpl_instance_config_t *config);
-void init_rpl_instance_data(rpl_instance_data_t *data);
-void init_rpl_dodag_config(rpl_dodag_config_t *config);
-void init_rpl_prefix(rpl_prefix_t *prefix);
-void init_rpl_metric(rpl_metric_t *metric);
-void init_rpl_statistics(rpl_statistics_t *statistics);
-void init_rpl_errors(rpl_errors_t *errors);
+void init_rpl_instance_config(rpl_instance_config_t * config);
+void init_rpl_instance_data(rpl_instance_data_t * data);
+void init_rpl_dodag_config(rpl_dodag_config_t * config);
+void init_rpl_prefix(rpl_prefix_t * prefix);
+void init_rpl_metric(rpl_metric_t * metric);
+void init_rpl_statistics(rpl_statistics_t * statistics);
+void init_rpl_errors(rpl_errors_t * errors);
 
-void update_rpl_instance_config_from_dio(rpl_instance_config_t *config, const rpl_dio_t * dio);
-void update_rpl_instance_data_from_dio(rpl_instance_data_t *data, const rpl_dio_t * dio);
-void update_rpl_instance_data_from_metric(rpl_instance_data_t *data, const rpl_metric_t * metric);
-void update_rpl_instance_data_from_hop_by_hop(rpl_instance_data_t *data, const rpl_hop_by_hop_opt_t * hop_by_hop) ;
-void update_rpl_instance_config_from_dao(rpl_instance_config_t *config, const rpl_dao_t * dao);
-void update_rpl_instance_data_from_dao(rpl_instance_data_t *data, const rpl_dao_t * dao) ;
+void update_rpl_instance_config_from_dio(rpl_instance_config_t * config,
+                                         const rpl_dio_t * dio);
+void update_rpl_instance_data_from_dio(rpl_instance_data_t * data,
+                                       const rpl_dio_t * dio);
+void update_rpl_instance_data_from_metric(rpl_instance_data_t * data,
+                                          const rpl_metric_t * metric);
+void update_rpl_instance_data_from_hop_by_hop(rpl_instance_data_t * data,
+                                              const rpl_hop_by_hop_opt_t *
+                                              hop_by_hop);
+void update_rpl_instance_config_from_dao(rpl_instance_config_t * config,
+                                         const rpl_dao_t * dao);
+void update_rpl_instance_data_from_dao(rpl_instance_data_t * data,
+                                       const rpl_dao_t * dao);
 
-void rpl_instance_config_delta(const rpl_instance_config_t *left, const rpl_instance_config_t *right, rpl_instance_config_delta_t *delta);
-void rpl_dodag_config_delta(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right, rpl_dodag_config_delta_t *delta);
-void rpl_prefix_delta(const rpl_prefix_t *left, const rpl_prefix_t *right, rpl_prefix_delta_t *delta);
-void rpl_instance_data_delta(const rpl_instance_data_t *left, const rpl_instance_data_t *right, rpl_instance_data_delta_t *delta);
-void rpl_statistics_delta(const rpl_statistics_t *left, const rpl_statistics_t *right, rpl_statistics_delta_t *delta);
-void rpl_errors_delta(const rpl_errors_t *left, const rpl_errors_t *right, rpl_errors_delta_t *delta);
+void rpl_instance_config_delta(const rpl_instance_config_t * left,
+                               const rpl_instance_config_t * right,
+                               rpl_instance_config_delta_t * delta);
+void rpl_dodag_config_delta(const rpl_dodag_config_t * left,
+                            const rpl_dodag_config_t * right,
+                            rpl_dodag_config_delta_t * delta);
+void rpl_prefix_delta(const rpl_prefix_t * left,
+                      const rpl_prefix_t * right,
+                      rpl_prefix_delta_t * delta);
+void rpl_instance_data_delta(const rpl_instance_data_t * left,
+                             const rpl_instance_data_t * right,
+                             rpl_instance_data_delta_t * delta);
+void rpl_statistics_delta(const rpl_statistics_t * left,
+                          const rpl_statistics_t * right,
+                          rpl_statistics_delta_t * delta);
+void rpl_errors_delta(const rpl_errors_t * left,
+                      const rpl_errors_t * right,
+                      rpl_errors_delta_t * delta);
 
-bool rpl_instance_config_compare(const rpl_instance_config_t *left, const rpl_instance_config_t *right);
-bool rpl_dodag_config_compare(const rpl_dodag_config_t *left, const rpl_dodag_config_t *right);
-bool rpl_prefix_compare(const rpl_prefix_t *left, const rpl_prefix_t *right);
-bool rpl_instance_data_compare(const rpl_instance_data_t *left, const rpl_instance_data_t *right);
-bool rpl_statistics_compare(const rpl_statistics_t *left, const rpl_statistics_t *right);
-bool rpl_errors_compare(const rpl_errors_t *left, const rpl_errors_t *right);
+bool rpl_instance_config_compare(const rpl_instance_config_t * left,
+                                 const rpl_instance_config_t * right);
+bool rpl_dodag_config_compare(const rpl_dodag_config_t * left,
+                              const rpl_dodag_config_t * right);
+bool rpl_prefix_compare(const rpl_prefix_t * left,
+                        const rpl_prefix_t * right);
+bool rpl_instance_data_compare(const rpl_instance_data_t * left,
+                               const rpl_instance_data_t * right);
+bool rpl_statistics_compare(const rpl_statistics_t * left,
+                            const rpl_statistics_t * right);
+bool rpl_errors_compare(const rpl_errors_t * left,
+                        const rpl_errors_t * right);
 
 #ifdef  __cplusplus
 }
 #endif
-
-#endif  /* RPL_DEF_H */
-
+#endif                          /* RPL_DEF_H */

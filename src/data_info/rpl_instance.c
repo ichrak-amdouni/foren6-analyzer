@@ -1,3 +1,40 @@
+/*
+ * Copyright (c) 2013, CETIC.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/**
+ * \file
+ *         RPL Instances
+ * \author
+ *         Foren6 Team <foren6@cetic.be>
+ *         http://cetic.github.io/foren6/credits.html
+ */
+
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -7,120 +44,160 @@
 #include "../data_collector/rpl_event_callbacks.h"
 
 struct di_rpl_instance {
-	di_rpl_instance_key_t key;
+    di_rpl_instance_key_t key;
 
-	hash_container_ptr dodags;			//Via DIO, DAO
-	di_rpl_mop_e mode_of_operation;	//Via DIO
+    hash_container_ptr dodags;  //Via DIO, DAO
+    di_rpl_mop_e mode_of_operation;     //Via DIO
 
-	bool has_changed;
-	void *user_data;
+    bool has_changed;
+    void *user_data;
 };
 
-static void rpl_instance_set_changed(di_rpl_instance_t *rpl_instance);
+static void rpl_instance_set_changed(di_rpl_instance_t * rpl_instance);
 
-size_t rpl_instance_sizeof() {
-	return sizeof(di_rpl_instance_t);
+size_t
+rpl_instance_sizeof()
+{
+    return sizeof(di_rpl_instance_t);
 }
 
-void rpl_instance_init(void* data, const void *key, size_t key_size) {
-	di_rpl_instance_t *instance = (di_rpl_instance_t*) data;
+void
+rpl_instance_init(void *data, const void *key, size_t key_size)
+{
+    di_rpl_instance_t *instance = (di_rpl_instance_t *) data;
 
-	assert(key_size == sizeof(di_rpl_instance_ref_t));
+    assert(key_size == sizeof(di_rpl_instance_ref_t));
 
-	instance->dodags = hash_create(sizeof(di_dodag_ref_t), NULL);
-	instance->key.ref = *(di_rpl_instance_ref_t*) key;
-	instance->has_changed = true;
-	rpl_event_rpl_instance(instance, RET_Created);
+    instance->dodags = hash_create(sizeof(di_dodag_ref_t), NULL);
+    instance->key.ref = *(di_rpl_instance_ref_t *) key;
+    instance->has_changed = true;
+    rpl_event_rpl_instance(instance, RET_Created);
 }
 
-void rpl_instance_destroy(void *data) {
-	di_rpl_instance_t *instance = (di_rpl_instance_t*) data;
+void
+rpl_instance_destroy(void *data)
+{
+    di_rpl_instance_t *instance = (di_rpl_instance_t *) data;
 
-	hash_destroy(instance->dodags);
+    hash_destroy(instance->dodags);
 }
 
-di_rpl_instance_t* rpl_instance_dup(const di_rpl_instance_t* rpl_instance) {
-	di_rpl_instance_t *new_instance;
+di_rpl_instance_t *
+rpl_instance_dup(const di_rpl_instance_t * rpl_instance)
+{
+    di_rpl_instance_t *new_instance;
 
-	new_instance = malloc(sizeof(di_rpl_instance_t));
-	memcpy(new_instance, rpl_instance, sizeof(di_rpl_instance_t));
-	new_instance->dodags = hash_dup(rpl_instance->dodags);
+    new_instance = malloc(sizeof(di_rpl_instance_t));
+    memcpy(new_instance, rpl_instance, sizeof(di_rpl_instance_t));
+    new_instance->dodags = hash_dup(rpl_instance->dodags);
 
-	return new_instance;
+    return new_instance;
 }
 
-void rpl_instance_key_init(di_rpl_instance_key_t *key, uint8_t rpl_instance, uint32_t version) {
-	memset(key, 0, sizeof(di_rpl_instance_key_t));
+void
+rpl_instance_key_init(di_rpl_instance_key_t * key, uint8_t rpl_instance,
+                      uint32_t version)
+{
+    memset(key, 0, sizeof(di_rpl_instance_key_t));
 
-	key->ref.rpl_instance = rpl_instance;
+    key->ref.rpl_instance = rpl_instance;
 }
 
-void rpl_instance_ref_init(di_rpl_instance_ref_t *ref, uint8_t rpl_instance) {
-	memset(ref, 0, sizeof(di_rpl_instance_ref_t));
+void
+rpl_instance_ref_init(di_rpl_instance_ref_t * ref, uint8_t rpl_instance)
+{
+    memset(ref, 0, sizeof(di_rpl_instance_ref_t));
 
-	ref->rpl_instance = rpl_instance;
+    ref->rpl_instance = rpl_instance;
 }
 
-void rpl_instance_set_key(di_rpl_instance_t* rpl_instance, const di_rpl_instance_key_t* key) {
-	if(memcmp(&rpl_instance->key, key, sizeof(di_rpl_instance_key_t))) {
-		rpl_instance->key = *key;
-		rpl_instance_set_changed(rpl_instance);
-	}
+void
+rpl_instance_set_key(di_rpl_instance_t * rpl_instance,
+                     const di_rpl_instance_key_t * key)
+{
+    if(memcmp(&rpl_instance->key, key, sizeof(di_rpl_instance_key_t))) {
+        rpl_instance->key = *key;
+        rpl_instance_set_changed(rpl_instance);
+    }
 }
 
-void rpl_instance_set_mop(di_rpl_instance_t* rpl_instance, di_rpl_mop_e mop) {
-	if(rpl_instance->mode_of_operation != mop) {
-		rpl_instance->mode_of_operation = mop;
-		rpl_instance_set_changed(rpl_instance);
-	}
+void
+rpl_instance_set_mop(di_rpl_instance_t * rpl_instance, di_rpl_mop_e mop)
+{
+    if(rpl_instance->mode_of_operation != mop) {
+        rpl_instance->mode_of_operation = mop;
+        rpl_instance_set_changed(rpl_instance);
+    }
 }
 
-void rpl_instance_set_user_data(di_rpl_instance_t* rpl_instance, void *user_data) {
-	rpl_instance->user_data = user_data;
+void
+rpl_instance_set_user_data(di_rpl_instance_t * rpl_instance, void *user_data)
+{
+    rpl_instance->user_data = user_data;
 }
 
-void rpl_instance_add_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) {
-	bool was_already_existing;
-	hash_add(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref), &dodag_get_key(dodag)->ref, NULL, HAM_OverwriteIfExists, &was_already_existing);
+void
+rpl_instance_add_dodag(di_rpl_instance_t * rpl_instance, di_dodag_t * dodag)
+{
+    bool was_already_existing;
 
-	if(!was_already_existing) {
-		dodag_set_rpl_instance(dodag, &rpl_instance->key.ref);
-		rpl_instance_set_changed(rpl_instance);
-	}
+    hash_add(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref),
+             &dodag_get_key(dodag)->ref, NULL, HAM_OverwriteIfExists,
+             &was_already_existing);
+
+    if(!was_already_existing) {
+        dodag_set_rpl_instance(dodag, &rpl_instance->key.ref);
+        rpl_instance_set_changed(rpl_instance);
+    }
 }
 
-void rpl_instance_del_dodag(di_rpl_instance_t* rpl_instance, di_dodag_t *dodag) {
-	static const di_rpl_instance_ref_t null_rpl_instance = {-1};
+void
+rpl_instance_del_dodag(di_rpl_instance_t * rpl_instance, di_dodag_t * dodag)
+{
+    static const di_rpl_instance_ref_t null_rpl_instance = { -1 };
 
-	if(hash_delete(rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref))) {
-		dodag_set_rpl_instance(dodag, &null_rpl_instance);
-		rpl_instance_set_changed(rpl_instance);
-	}
+    if(hash_delete
+       (rpl_instance->dodags, hash_key_make(dodag_get_key(dodag)->ref))) {
+        dodag_set_rpl_instance(dodag, &null_rpl_instance);
+        rpl_instance_set_changed(rpl_instance);
+    }
 }
 
-static void rpl_instance_set_changed(di_rpl_instance_t *rpl_instance) {
-	if(rpl_instance->has_changed == false)
-		rpl_event_rpl_instance(rpl_instance, RET_Updated);
-	rpl_instance->has_changed = true;
+static void
+rpl_instance_set_changed(di_rpl_instance_t * rpl_instance)
+{
+    if(rpl_instance->has_changed == false)
+        rpl_event_rpl_instance(rpl_instance, RET_Updated);
+    rpl_instance->has_changed = true;
 }
 
-bool rpl_instance_has_changed(di_rpl_instance_t *rpl_instance) {
-	return rpl_instance->has_changed;
+bool
+rpl_instance_has_changed(di_rpl_instance_t * rpl_instance)
+{
+    return rpl_instance->has_changed;
 }
 
-void rpl_instance_reset_changed(di_rpl_instance_t *rpl_instance) {
-	rpl_instance->has_changed = false;
+void
+rpl_instance_reset_changed(di_rpl_instance_t * rpl_instance)
+{
+    rpl_instance->has_changed = false;
 }
 
 
-const di_rpl_instance_key_t* rpl_instance_get_key(const di_rpl_instance_t* rpl_instance) {
-	return &rpl_instance->key;
+const di_rpl_instance_key_t *
+rpl_instance_get_key(const di_rpl_instance_t * rpl_instance)
+{
+    return &rpl_instance->key;
 }
 
-di_rpl_mop_e rpl_instance_get_mop(const di_rpl_instance_t* rpl_instance) {
-	return rpl_instance->mode_of_operation;
+di_rpl_mop_e
+rpl_instance_get_mop(const di_rpl_instance_t * rpl_instance)
+{
+    return rpl_instance->mode_of_operation;
 }
 
-void *rpl_instance_get_user_data(const di_rpl_instance_t* rpl_instance) {
-	return rpl_instance->user_data;
+void *
+rpl_instance_get_user_data(const di_rpl_instance_t * rpl_instance)
+{
+    return rpl_instance->user_data;
 }

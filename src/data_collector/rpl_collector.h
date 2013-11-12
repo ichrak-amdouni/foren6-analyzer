@@ -1,8 +1,38 @@
 /*
- * File:   rpl_collector.h
- * Author: am
+ * Copyright (c) 2013, CETIC.
+ * All rights reserved.
  *
- * Created on June 21, 2013, 4:47 PM
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/**
+ * \file
+ *         RPL-related information collector
+ * \author
+ *         Foren6 Team <foren6@cetic.be>
+ *         http://cetic.github.io/foren6/credits.html
  */
 
 #ifndef RPL_COLLECTOR_H
@@ -15,22 +45,28 @@ extern "C" {
 #endif
 
 typedef struct packet_info {
-	addr_wpan_t src_wpan_address;
-	addr_wpan_t dst_wpan_address;
-	addr_ipv6_t src_ip_address;
-	addr_ipv6_t dst_ip_address;
-	double timestamp;
-	int hop_limit;
+    addr_wpan_t src_wpan_address;
+    addr_wpan_t dst_wpan_address;
+    addr_ipv6_t src_ip_address;
+    addr_ipv6_t dst_ip_address;
+    double timestamp;
+    int hop_limit;
 } packet_info_t;
 
-void rpl_collector_parse_dio(packet_info_t pkt_info, rpl_dio_t* dio, rpl_dio_opt_config_t* dodag_config, rpl_dio_opt_metric_t* metric, rpl_dio_opt_prefix_t* prefix, rpl_dio_opt_route_t* route_info);
-void rpl_collector_parse_dao(packet_info_t pkt_info, rpl_dao_t* dao, rpl_dao_opt_target_t* target, rpl_dao_opt_transit_t *transit);
-void rpl_collector_parse_dis(packet_info_t pkt_info, rpl_dis_opt_info_req_t *request);
-void rpl_collector_parse_data(packet_info_t pkt_info, rpl_hop_by_hop_opt_t* rpl_info);
+void rpl_collector_parse_dio(packet_info_t pkt_info, rpl_dio_t * dio,
+                             rpl_dio_opt_config_t * dodag_config,
+                             rpl_dio_opt_metric_t * metric,
+                             rpl_dio_opt_prefix_t * prefix,
+                             rpl_dio_opt_route_t * route_info);
+void rpl_collector_parse_dao(packet_info_t pkt_info, rpl_dao_t * dao,
+                             rpl_dao_opt_target_t * target,
+                             rpl_dao_opt_transit_t * transit);
+void rpl_collector_parse_dis(packet_info_t pkt_info,
+                             rpl_dis_opt_info_req_t * request);
+void rpl_collector_parse_data(packet_info_t pkt_info,
+                              rpl_hop_by_hop_opt_t * rpl_info);
 
 #ifdef	__cplusplus
 }
 #endif
-
-#endif	/* RPL_COLLECTOR_H */
-
+#endif                          /* RPL_COLLECTOR_H */
