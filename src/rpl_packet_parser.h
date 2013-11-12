@@ -47,7 +47,7 @@ extern "C" {
 #endif
 
 typedef struct analyzer_callbacks {
-    void (*onErrorEvent)(char const * errorMessage);
+    void (*onErrorEvent) (char const *errorMessage);
 } analyzer_callbacks_t;
 
 typedef struct analyser_config {
@@ -57,44 +57,42 @@ typedef struct analyser_config {
     bool one_preferred_parent;
 } analyser_config_t;
 
-	/**
-	 * Initialize the analyzer.
-     */
-	void rpl_tool_init();
+    /**
+ * Initialize the analyzer.
+ */
+void rpl_tool_init();
 
-    void rpl_tool_start();
+void rpl_tool_start();
 
-	void rpl_tool_cleanup();
+void rpl_tool_cleanup();
 
-	void rpl_tool_start_capture();
+void rpl_tool_start_capture();
 
-	void rpl_tool_stop_capture();
-
-	/**
-	 * Configure the analysis parameter
-	 */
-	void rpl_tool_set_analyser_config(const analyser_config_t *config);
-	const analyser_config_t *rpl_tool_get_analyser_config();
-
-	interface_t *rpl_tool_get_interface(const char *name);
-
-	/**
-	 * Set callback to call when events are triggered (like node creation)
-     * @param callbacks
-     */
-	void rpl_tool_set_callbacks(rpl_event_callbacks_t *callbacks);
+void rpl_tool_stop_capture();
 
     /**
-     * Set callback to call when analyzer events are triggered (like error reporting)
-     * @param callbacks
-     */
-	void rpl_tool_set_analyzer_callbacks(analyzer_callbacks_t * callbacks);
+ * Configure the analysis parameter
+ */
+void rpl_tool_set_analyser_config(const analyser_config_t * config);
+const analyser_config_t *rpl_tool_get_analyser_config();
 
-	void rpl_tool_report_error(char const *  error_message);
+interface_t *rpl_tool_get_interface(const char *name);
+
+    /**
+ * Set callback to call when events are triggered (like node creation)
+ * @param callbacks
+ */
+void rpl_tool_set_callbacks(rpl_event_callbacks_t * callbacks);
+
+/**
+ * Set callback to call when analyzer events are triggered (like error reporting)
+ * @param callbacks
+ */
+void rpl_tool_set_analyzer_callbacks(analyzer_callbacks_t * callbacks);
+
+void rpl_tool_report_error(char const *error_message);
 
 #ifdef	__cplusplus
 }
 #endif
-
-#endif	/* RPL_PACKET_PARSER_H */
-
+#endif                          /* RPL_PACKET_PARSER_H */

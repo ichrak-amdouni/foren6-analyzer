@@ -51,11 +51,20 @@ extern "C" {
 void rpldata_init();
 
 //These function use version 0. Modification to other version should not be allowed.
-di_node_t *rpldata_get_node(const di_node_ref_t *node_ref, hash_value_mode_e value_mode, bool *was_already_existing);
-di_dodag_t *rpldata_get_dodag(const di_dodag_ref_t *dodag_ref, hash_value_mode_e value_mode, bool *was_already_existing);
-di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_ref_t *rpl_instance_ref, hash_value_mode_e value_mode, bool *was_already_existing);
-di_link_t *rpldata_get_link(const di_link_ref_t *link_ref, hash_value_mode_e value_mode, bool *was_already_existing);
-di_link_t *rpldata_del_link(const di_link_ref_t *link_ref);
+di_node_t *rpldata_get_node(const di_node_ref_t * node_ref,
+                            hash_value_mode_e value_mode,
+                            bool * was_already_existing);
+di_dodag_t *rpldata_get_dodag(const di_dodag_ref_t * dodag_ref,
+                              hash_value_mode_e value_mode,
+                              bool * was_already_existing);
+di_rpl_instance_t *rpldata_get_rpl_instance(const di_rpl_instance_ref_t *
+                                            rpl_instance_ref,
+                                            hash_value_mode_e value_mode,
+                                            bool * was_already_existing);
+di_link_t *rpldata_get_link(const di_link_ref_t * link_ref,
+                            hash_value_mode_e value_mode,
+                            bool * was_already_existing);
+di_link_t *rpldata_del_link(const di_link_ref_t * link_ref);
 
 hash_container_ptr rpldata_get_nodes(uint32_t version);
 hash_container_ptr rpldata_get_dodags(uint32_t version);
@@ -80,6 +89,4 @@ void rpldata_clear();
 #ifdef	__cplusplus
 }
 #endif
-
-#endif	/* RPL_DATA_H */
-
+#endif                          /* RPL_DATA_H */

@@ -49,6 +49,4 @@ parser_t rpl_parser_register();
 #ifdef	__cplusplus
 }
 #endif
-
-#endif	/* RPL_PARSER_H */
-
+#endif                          /* RPL_PARSER_H */

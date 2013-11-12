@@ -46,11 +46,11 @@ extern "C" {
 #endif
 
 typedef struct circular_buffer {
-	uint8_t *data;
-	int size;
-	int element_size;
-	int read_idx;
-	int write_idx;
+    uint8_t *data;
+    int size;
+    int element_size;
+    int read_idx;
+    int write_idx;
 } *circular_buffer_t;
 
 circular_buffer_t circular_buffer_create(int size, int element_size);
@@ -63,7 +63,4 @@ void *circular_buffer_pop_back(circular_buffer_t buf);
 #ifdef	__cplusplus
 }
 #endif
-
-
-#endif	/* CIRCULAR_BUFFER_H */
-
+#endif                          /* CIRCULAR_BUFFER_H */

@@ -53,24 +53,26 @@ typedef struct di_route {
 
 typedef struct di_route_el {
     di_route_t target;
-	addr_wpan_t via_node;
+    addr_wpan_t via_node;
 
-	void *user_data;
+    void *user_data;
 
-	struct di_route_el *next;
+    struct di_route_el *next;
 } di_route_el_t, *di_route_list_t;
 
-di_route_el_t *route_get(di_route_list_t *list, di_route_t route_prefix, addr_wpan_t via_node, bool allow_summary);
-di_route_el_t *route_add(di_route_list_t *list, di_route_t route_prefix, addr_wpan_t via_node, bool auto_summary, bool *was_already_existing);
-bool route_remove(di_route_list_t *list, di_route_t route_prefix, addr_wpan_t via_node);
-bool route_del_all_outdated(di_route_list_t *list);
+di_route_el_t *route_get(di_route_list_t * list, di_route_t route_prefix,
+                         addr_wpan_t via_node, bool allow_summary);
+di_route_el_t *route_add(di_route_list_t * list, di_route_t route_prefix,
+                         addr_wpan_t via_node, bool auto_summary,
+                         bool * was_already_existing);
+bool route_remove(di_route_list_t * list, di_route_t route_prefix,
+                  addr_wpan_t via_node);
+bool route_del_all_outdated(di_route_list_t * list);
 
-di_route_list_t route_dup(const di_route_list_t *routes);
-void route_destroy(di_route_list_t *routes);
+di_route_list_t route_dup(const di_route_list_t * routes);
+void route_destroy(di_route_list_t * routes);
 
 #ifdef	__cplusplus
 }
 #endif
-
-#endif	/* ROUTE_H */
-
+#endif                          /* ROUTE_H */

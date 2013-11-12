@@ -48,28 +48,31 @@ extern "C" {
 #endif
 
 typedef enum rpl_event_type {
-	RET_Created,
-	RET_Updated,
-	RET_Deleted
+    RET_Created,
+    RET_Updated,
+    RET_Deleted
 } rpl_event_type_e;
 
 typedef struct rpl_event_callbacks {
-	void (*onNodeEvent)(di_node_t *node, rpl_event_type_e event_type);
-	void (*onDodagEvent)(di_dodag_t *dodag, rpl_event_type_e event_type);
-	void (*onLinkEvent)(di_link_t *link, rpl_event_type_e event_type);
-	void (*onRplInstanceEvent)(di_rpl_instance_t *rpl_instance, rpl_event_type_e event_type);
-	void (*onPacketEvent)(int packet_id);
-	void (*onClearEvent)();
+    void (*onNodeEvent) (di_node_t * node, rpl_event_type_e event_type);
+    void (*onDodagEvent) (di_dodag_t * dodag,
+                          rpl_event_type_e event_type);
+    void (*onLinkEvent) (di_link_t * link, rpl_event_type_e event_type);
+    void (*onRplInstanceEvent) (di_rpl_instance_t * rpl_instance,
+                                rpl_event_type_e event_type);
+    void (*onPacketEvent) (int packet_id);
+    void (*onClearEvent) ();
 } rpl_event_callbacks_t;
 
 
-void rpl_event_set_callbacks(rpl_event_callbacks_t *callbacks);
+void rpl_event_set_callbacks(rpl_event_callbacks_t * callbacks);
 
 void rpl_event_packet(int packet_id);
-void rpl_event_node(di_node_t *node, rpl_event_type_e type);
-void rpl_event_dodag(di_dodag_t *dodag, rpl_event_type_e type);
-void rpl_event_link(di_link_t *link, rpl_event_type_e type);
-void rpl_event_rpl_instance(di_rpl_instance_t *rpl_instance, rpl_event_type_e type);
+void rpl_event_node(di_node_t * node, rpl_event_type_e type);
+void rpl_event_dodag(di_dodag_t * dodag, rpl_event_type_e type);
+void rpl_event_link(di_link_t * link, rpl_event_type_e type);
+void rpl_event_rpl_instance(di_rpl_instance_t * rpl_instance,
+                            rpl_event_type_e type);
 
 //create a WSN version if needed and return true if at least one object has changed
 bool rpl_event_commit_changed_objects(int packet_id, double timestamp);
@@ -81,6 +84,4 @@ void rpl_event_clear();
 #ifdef	__cplusplus
 }
 #endif
-
-#endif	/* RPL_EVENT_CALLBACKS_H */
-
+#endif                          /* RPL_EVENT_CALLBACKS_H */
