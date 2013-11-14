@@ -1,3 +1,16 @@
+/* ------------------------------------------------------------------------------
+ * This software is in the public domain, furnished "as is", without technical
+ * support, and with no warranty, express or implied, as to its usefulness for
+ * any purpose.
+ *
+ * pthread_spin_lock_shim.h
+ * A spinlock implementation
+ *
+ * Author: Majek (https://twitter.com/majek04)
+ *   https://idea.popcount.org/2012-09-12-reinventing-spinlocks/
+ *   https://github.com/majek/dump/blob/master/msqueue/pthread_spin_lock_shim.h
+ * ----------------------------------------------------------------------------*/
+
 #ifndef PTHREAD_SPIN_LOCK_SHIM
 #define PTHREAD_SPIN_LOCK_SHIM
 
