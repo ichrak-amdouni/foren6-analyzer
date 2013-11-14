@@ -190,6 +190,7 @@ interfacemgr_create_handle(const char *target)
     handle->last_packets = hash_create(sizeof(struct packet_data), NULL);
     handle->first_packet = true;
     handle->ethernet = false;
+    handle->fcs = true;
     handle->target = strdup(target);
 
     LL_PREPEND(interface_handles, handle);

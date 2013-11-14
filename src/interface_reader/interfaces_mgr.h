@@ -56,6 +56,7 @@ typedef struct ifinstance {
     hash_container_ptr last_packets;
     bool first_packet;
     bool ethernet;
+    bool fcs;
 
     //for lists
     struct ifinstance *next;
