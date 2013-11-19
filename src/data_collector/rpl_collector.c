@@ -162,10 +162,13 @@ rpl_collector_parse_dao(packet_info_t pkt_info,
 
         if(dodag_ref) {
             if(addr_compare_ip(&dao->dodagid, &dodag_ref->dodagid) == 0) {
+                //Removed as we don't know the dodag version here
+                /*
                 dodag =
                     rpldata_get_dodag(dodag_ref, HVM_FailIfNonExistant, NULL);
                 assert(dodag);
                 dodag_add_node(dodag, child);
+                */
             } else {
                 node_add_dodag_mismatch_error(child);
             }
