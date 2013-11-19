@@ -29,19 +29,11 @@
 #define	RPL_COLLECTOR_H
 
 #include "../sniffer_packet_parser.h"
+#include "../data_info/6lowpan_def.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-typedef struct packet_info {
-    addr_wpan_t src_wpan_address;
-    addr_wpan_t dst_wpan_address;
-    addr_ipv6_t src_ip_address;
-    addr_ipv6_t dst_ip_address;
-    double timestamp;
-    int hop_limit;
-} packet_info_t;
 
 void rpl_collector_parse_dio(packet_info_t pkt_info, rpl_dio_t * dio,
                              rpl_dio_opt_config_t * dodag_config,

@@ -39,6 +39,37 @@
 extern "C" {
 #endif
 
+typedef enum packet_type {
+    PT_None,
+    PT_ICMPv6_Unknown,
+    PT_PING_ECHO,
+    PT_PING_REPLY,
+    PT_NDP_RS,
+    PT_NDP_RA,
+    PT_NDP_NS,
+    PT_NDP_NA,
+    PT_NDP_Redirect,
+    PT_6ND_DAR,
+    PT_6ND_DAC,
+    PT_RPL_Unknown,
+    PT_DIS,
+    PT_DIO,
+    PT_DAO,
+    PT_UDP,
+    PT_TCP,
+    PT_IPv6_Unknown
+} packet_type_e;
+
+typedef struct packet_info {
+    addr_wpan_t src_wpan_address;
+    addr_wpan_t dst_wpan_address;
+    addr_ipv6_t src_ip_address;
+    addr_ipv6_t dst_ip_address;
+    double timestamp;
+    int hop_limit;
+    packet_type_e type;
+} packet_info_t;
+
 typedef struct sixlowpan_config {
     bool has_seen_local_address;
     bool is_custom_local_address;

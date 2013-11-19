@@ -32,6 +32,7 @@
 #include "../data_info/dodag.h"
 #include "../data_info/rpl_instance.h"
 #include "../data_info/link.h"
+#include "../data_info/6lowpan_def.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -50,14 +51,14 @@ typedef struct rpl_event_callbacks {
     void (*onLinkEvent) (di_link_t * link, rpl_event_type_e event_type);
     void (*onRplInstanceEvent) (di_rpl_instance_t * rpl_instance,
                                 rpl_event_type_e event_type);
-    void (*onPacketEvent) (int packet_id);
+    void (*onPacketEvent) (int packet_id, packet_info_t packet_info);
     void (*onClearEvent) ();
 } rpl_event_callbacks_t;
 
 
 void rpl_event_set_callbacks(rpl_event_callbacks_t * callbacks);
 
-void rpl_event_packet(int packet_id);
+void rpl_event_packet(int packet_id, packet_info_t const *pkt_info);
 void rpl_event_node(di_node_t * node, rpl_event_type_e type);
 void rpl_event_dodag(di_dodag_t * dodag, rpl_event_type_e type);
 void rpl_event_link(di_link_t * link, rpl_event_type_e type);

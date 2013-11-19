@@ -45,7 +45,24 @@
 
 #include "../data_info/metric.h"
 
+#define IPV6_TCP_TYPE 6
+#define IPV6_UDP_TYPE 17
+#define IPV6_ICMPV6_TYPE 58
+
+#define ICMPV6_PING_ECHO_TYPE 128
+#define ICMPV6_PING_REPLY_TYPE 129
+
+#define ICMPV6_NDP_RS_TYPE 133
+#define ICMPV6_NDP_RA_TYPE 134
+#define ICMPV6_NDP_NS_TYPE 135
+#define ICMPV6_NDP_NA_TYPE 136
+#define ICMPV6_NDP_REDIRECT_TYPE 137
+
 #define ICMPV6_RPL_TYPE 155
+
+#define ICMPV6_6ND_DAR_TYPE 157
+#define ICMPV6_6ND_DAC_TYPE 158
+
 #define ICMPV6_RPL_CODE_DIS     0x0
 #define ICMPV6_RPL_CODE_DIO     0x1
 #define ICMPV6_RPL_CODE_DAO     0x2
@@ -53,15 +70,6 @@
 #define ICMPV6_RPL_CODE_CC      0xA     //Only in secure mode
 #define ICMPV6_RPL_CODE_SECURE_MASK 0x80
 #define ICMPV6_RPL_CODE_MASK 0x0F
-
-typedef enum rpl_packet_type {
-    RPT_None,
-    RPT_RplUnknown,
-    RPT_DIS,
-    RPT_DIO,
-    RPT_DAO,
-    RPT_Data
-} rpl_packet_type_e;
 
 typedef struct rpl_packet_dis {
     bool has_info;
@@ -95,7 +103,6 @@ typedef struct rpl_packet_data {
 
 typedef struct rpl_packet_content {
     int packet_id;
-    rpl_packet_type_e type;
     bool is_bad;
     packet_info_t pkt_info;
     union {
@@ -154,7 +161,7 @@ static void
 rpl_parser_begin_packet()
 {
     memset(&current_packet, 0, sizeof(current_packet));
-    current_packet.type = RPT_None;
+    current_packet.pkt_info.type = PT_None;
 }
 
 static void
@@ -178,9 +185,10 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
     } else if(!strcmp(nameStr, "icmpv6.checksum_bad")
               && !strcmp(showStr, "1")) {
         current_packet.is_bad = true;
-    } else if(current_packet.type == RPT_None
-              || current_packet.type == RPT_RplUnknown
-              || current_packet.type == RPT_Data) {
+    } else if(current_packet.pkt_info.type == PT_None
+            || current_packet.pkt_info.type == PT_ICMPv6_Unknown
+              || current_packet.pkt_info.type == PT_RPL_Unknown
+              || current_packet.pkt_info.type == PT_IPv6_Unknown) {
         if(!strcmp(nameStr, "wpan.src64")) {
             uint64_t addr = strtoull(valueStr, NULL, 16);
 
@@ -196,33 +204,80 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
         } else if(!strcmp(nameStr, "ipv6.src")) {
             inet_pton(AF_INET6, showStr,
                       &current_packet.pkt_info.src_ip_address);
-            if(current_packet.type == RPT_None)
-                current_packet.type = RPT_Data;
+            if(current_packet.pkt_info.type == PT_None)
+                current_packet.pkt_info.type = PT_IPv6_Unknown;
         } else if(!strcmp(nameStr, "ipv6.dst")) {
             inet_pton(AF_INET6, showStr,
                       &current_packet.pkt_info.dst_ip_address);
-            if(current_packet.type == RPT_None)
-                current_packet.type = RPT_Data;
+            if(current_packet.pkt_info.type == PT_None)
+                current_packet.pkt_info.type = PT_IPv6_Unknown;
         } else if(!strcmp(nameStr, "ipv6.hlim")) {
             current_packet.pkt_info.hop_limit = valueInt;
-        } else if(!strcmp(nameStr, "icmpv6.type")
-                  && valueInt == ICMPV6_RPL_TYPE) {
-            current_packet.type = RPT_RplUnknown;
-        } else if(current_packet.type == RPT_RplUnknown
+        } else if(!strcmp(nameStr, "ipv6.nxt")) {
+            switch (valueInt) {
+            case IPV6_ICMPV6_TYPE:
+                current_packet.pkt_info.type = PT_ICMPv6_Unknown;
+                break;
+            case IPV6_TCP_TYPE:
+                current_packet.pkt_info.type = PT_TCP;
+                break;
+            case IPV6_UDP_TYPE:
+                current_packet.pkt_info.type = PT_UDP;
+                break;
+            default:
+                current_packet.pkt_info.type = PT_IPv6_Unknown;
+                break;
+            }
+        } else if(!strcmp(nameStr, "icmpv6.type")) {
+            switch (valueInt) {
+            case ICMPV6_PING_ECHO_TYPE:
+                current_packet.pkt_info.type = PT_PING_ECHO;
+                break;
+            case ICMPV6_PING_REPLY_TYPE:
+                current_packet.pkt_info.type = PT_PING_REPLY;
+                break;
+            case ICMPV6_NDP_RS_TYPE:
+                current_packet.pkt_info.type = PT_NDP_RS;
+                break;
+            case ICMPV6_NDP_RA_TYPE:
+                current_packet.pkt_info.type = PT_NDP_RA;
+                break;
+            case ICMPV6_NDP_NS_TYPE:
+                current_packet.pkt_info.type = PT_NDP_NS;
+                break;
+            case ICMPV6_NDP_NA_TYPE:
+                current_packet.pkt_info.type = PT_NDP_NA;
+                break;
+            case ICMPV6_NDP_REDIRECT_TYPE:
+                current_packet.pkt_info.type = PT_NDP_Redirect;
+                break;
+            case ICMPV6_6ND_DAR_TYPE:
+                current_packet.pkt_info.type = PT_6ND_DAR;
+                break;
+            case ICMPV6_6ND_DAC_TYPE:
+                current_packet.pkt_info.type = PT_6ND_DAC;
+                break;
+            case ICMPV6_RPL_TYPE:
+                current_packet.pkt_info.type = PT_RPL_Unknown;
+                break;
+            default:
+                current_packet.pkt_info.type = PT_ICMPv6_Unknown;
+            }
+        } else if(current_packet.pkt_info.type == PT_RPL_Unknown
                   && !strcmp(nameStr, "icmpv6.code")) {
             //We have a RPL packet, check its code
             //We do not support SECURE packet at this time, so we check for non secure packets and don't mask with ICMPV6_RPL_CODE_MASK
             switch (valueInt) {
             case ICMPV6_RPL_CODE_DIS:
-                current_packet.type = RPT_DIS;
+                current_packet.pkt_info.type = PT_DIS;
                 break;
 
             case ICMPV6_RPL_CODE_DIO:
-                current_packet.type = RPT_DIO;
+                current_packet.pkt_info.type = PT_DIO;
                 break;
 
             case ICMPV6_RPL_CODE_DAO:
-                current_packet.type = RPT_DAO;
+                current_packet.pkt_info.type = PT_DAO;
                 break;
 
             default:
@@ -232,12 +287,12 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
             }
         }
     }
-    if(current_packet.type != RPT_None
-       || current_packet.type != RPT_RplUnknown) {
+    if(current_packet.pkt_info.type != PT_None
+       || current_packet.pkt_info.type != PT_RPL_Unknown) {
         bool option_check;
 
-        switch (current_packet.type) {
-        case RPT_DIS:
+        switch (current_packet.pkt_info.type) {
+        case PT_DIS:
             if(current_packet.dis.has_info == false
                && strstr(nameStr, "icmpv6.rpl.opt.solicited"))
                 current_packet.dis.has_info = true;
@@ -257,7 +312,7 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
                 current_packet.dis.info.rpl_version = valueInt;
             break;
 
-        case RPT_DIO:
+        case PT_DIO:
             if(!strcmp(nameStr, "icmpv6.rpl.dio.instance"))
                 current_packet.dio.dio.rpl_instance_id = valueInt;
             else if(!strcmp(nameStr, "icmpv6.rpl.dio.version"))
@@ -352,7 +407,7 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
                 current_packet.dio.has_prefix = true;
             break;
 
-        case RPT_DAO:
+        case PT_DAO:
             if(!strcmp(nameStr, "icmpv6.rpl.dao.instance"))
                 current_packet.dao.dao.rpl_instance_id = valueInt;
             else if(!strcmp(nameStr, "icmpv6.rpl.dao.flag.k"))
@@ -396,7 +451,7 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
                 current_packet.dao.has_transit = true;
             break;
 
-        case RPT_Data:
+        default:
             //Transit option
             option_check = true;
             if(!strcmp(nameStr, "ipv6.opt.rpl.flag.f"))
@@ -415,9 +470,6 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
             if(option_check)
                 current_packet.data.has_hop_info = true;
             break;
-
-        default:
-            break;
         }
     }
 }
@@ -427,22 +479,22 @@ rpl_parser_end_packet()
 {
     /* Packet end, check if it's a valid RPL packet and call the appropriate function */
     if(current_packet.is_bad) {
-        //fprintf(stderr, "Bad packet %d\n", current_packet.type);
+        //fprintf(stderr, "Bad packet %d\n", current_packet.pkt_info.type);
         return;
     }
 
-    if(current_packet.type != RPT_None
-       && current_packet.type != RPT_RplUnknown) {
-        rpl_event_packet(current_packet.packet_id);
-        switch (current_packet.type) {
-        case RPT_DIS:
+    if(current_packet.pkt_info.type != PT_None
+       && current_packet.pkt_info.type != PT_RPL_Unknown) {
+        rpl_event_packet(current_packet.packet_id, &current_packet.pkt_info);
+        switch (current_packet.pkt_info.type) {
+        case PT_DIS:
             rpl_collector_parse_dis(current_packet.pkt_info,
                                     (current_packet.dis.
                                      has_info) ? &current_packet.dis.
                                     info : NULL);
             break;
 
-        case RPT_DIO:
+        case PT_DIO:
             rpl_collector_parse_dio(current_packet.pkt_info,
                                     &current_packet.dio.dio,
                                     (current_packet.dio.
@@ -459,7 +511,7 @@ rpl_parser_end_packet()
                                     route : NULL);
             break;
 
-        case RPT_DAO:
+        case PT_DAO:
             rpl_collector_parse_dao(current_packet.pkt_info,
                                     &current_packet.dao.dao,
                                     (current_packet.dao.
@@ -470,18 +522,18 @@ rpl_parser_end_packet()
                                     transit : NULL);
             break;
 
-        case RPT_Data:
+        case PT_RPL_Unknown:
+            fprintf(stderr, "Warning: invalid RPL packet\n");
+            break;
+
+        case PT_None:
+            break;
+
+        default:
             rpl_collector_parse_data(current_packet.pkt_info,
                                      (current_packet.data.
                                       has_hop_info) ? &current_packet.data.
                                      hop_info : NULL);
-            break;
-
-        case RPT_RplUnknown:
-            fprintf(stderr, "Warning: invalid RPL packet\n");
-            break;
-
-        case RPT_None:
             break;
         }
         rpl_event_commit_changed_objects(current_packet.packet_id,

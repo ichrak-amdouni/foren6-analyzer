@@ -48,8 +48,9 @@ typedef struct rpl_event_el {
         di_dodag_ref_t dodag_ref;
         di_rpl_instance_ref_t rpl_instance_ref;
         di_link_ref_t link_ref;
-        int packet_id;
+        packet_info_t packet_info;
     };
+    int packet_id;
     struct rpl_event_el *next;
     struct rpl_event_el *prev;
 } *rpl_event_list_t, rpl_event_el_t;
@@ -63,7 +64,7 @@ rpl_event_set_callbacks(rpl_event_callbacks_t * callbacks)
 }
 
 void
-rpl_event_packet(int packet_id)
+rpl_event_packet(int packet_id, packet_info_t const *pkt_info)
 {
     rpl_event_el_t *element =
         (rpl_event_el_t *) calloc(1, sizeof(rpl_event_el_t));
@@ -71,6 +72,7 @@ rpl_event_packet(int packet_id)
     element->type = RET_Created;
     element->object_type = ROT_Packet;
     element->packet_id = packet_id;
+    element->packet_info = *pkt_info;
 
     DL_APPEND(head, element);
 }
@@ -248,7 +250,8 @@ rpl_event_process_events(int wsn_version)
 
         case ROT_Packet:
             if(event_callbacks.onPacketEvent)
-                event_callbacks.onPacketEvent(event->packet_id);
+                event_callbacks.onPacketEvent(event->packet_id, event->packet_info);
+            break;
         }
         DL_DELETE(head, event);
     }
