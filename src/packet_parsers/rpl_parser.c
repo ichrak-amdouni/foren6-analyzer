@@ -228,6 +228,22 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
                 current_packet.pkt_info.type = PT_IPv6_Unknown;
                 break;
             }
+        } else if(current_packet.pkt_info.type == PT_IPv6_Unknown &&
+                !strncmp(showStr, "Next header:", 12)) {
+            switch (valueInt) {
+            case IPV6_ICMPV6_TYPE:
+                current_packet.pkt_info.type = PT_ICMPv6_Unknown;
+                break;
+            case IPV6_TCP_TYPE:
+                current_packet.pkt_info.type = PT_TCP;
+                break;
+            case IPV6_UDP_TYPE:
+                current_packet.pkt_info.type = PT_UDP;
+                break;
+            default:
+                current_packet.pkt_info.type = PT_IPv6_Unknown;
+                break;
+            }
         } else if(!strcmp(nameStr, "icmpv6.type")) {
             switch (valueInt) {
             case ICMPV6_PING_ECHO_TYPE:
