@@ -185,122 +185,116 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
     } else if(!strcmp(nameStr, "icmpv6.checksum_bad")
               && !strcmp(showStr, "1")) {
         current_packet.is_bad = true;
-    } else if(current_packet.pkt_info.type == PT_None
-            || current_packet.pkt_info.type == PT_ICMPv6_Unknown
-              || current_packet.pkt_info.type == PT_RPL_Unknown
-              || current_packet.pkt_info.type == PT_IPv6_Unknown) {
-        if(!strcmp(nameStr, "wpan.src64")) {
-            uint64_t addr = strtoull(valueStr, NULL, 16);
+    } else if(!strcmp(nameStr, "wpan.src64")) {
+        uint64_t addr = strtoull(valueStr, NULL, 16);
+        current_packet.pkt_info.src_wpan_address = htobe64(addr);
+    } else if(!strcmp(nameStr, "wpan.dst64")) {
+        uint64_t addr = strtoull(valueStr, NULL, 16);
 
-            current_packet.pkt_info.src_wpan_address = htobe64(addr);
-        } else if(!strcmp(nameStr, "wpan.dst64")) {
-            uint64_t addr = strtoull(valueStr, NULL, 16);
+        current_packet.pkt_info.dst_wpan_address = htobe64(addr);
+    } else if(!strcmp(nameStr, "wpan.dst_addr64")) {
+        uint64_t addr = strtoull(valueStr, NULL, 16);
 
-            current_packet.pkt_info.dst_wpan_address = htobe64(addr);
-        } else if(!strcmp(nameStr, "wpan.dst_addr64")) {
-            uint64_t addr = strtoull(valueStr, NULL, 16);
+        current_packet.pkt_info.dst_wpan_address = htobe64(addr);
+    } else if(!strcmp(nameStr, "ipv6.src")) {
+        inet_pton(AF_INET6, showStr,
+                  &current_packet.pkt_info.src_ip_address);
+        if(current_packet.pkt_info.type == PT_None)
+            current_packet.pkt_info.type = PT_IPv6_Unknown;
+    } else if(!strcmp(nameStr, "ipv6.dst")) {
+        inet_pton(AF_INET6, showStr,
+                  &current_packet.pkt_info.dst_ip_address);
+        if(current_packet.pkt_info.type == PT_None)
+            current_packet.pkt_info.type = PT_IPv6_Unknown;
+    } else if(!strcmp(nameStr, "ipv6.hlim")) {
+        current_packet.pkt_info.hop_limit = valueInt;
+    } else if(!strcmp(nameStr, "ipv6.nxt")) {
+        switch (valueInt) {
+        case IPV6_ICMPV6_TYPE:
+            current_packet.pkt_info.type = PT_ICMPv6_Unknown;
+            break;
+        case IPV6_TCP_TYPE:
+            current_packet.pkt_info.type = PT_TCP;
+            break;
+        case IPV6_UDP_TYPE:
+            current_packet.pkt_info.type = PT_UDP;
+            break;
+        default:
+            current_packet.pkt_info.type = PT_IPv6_Unknown;
+            break;
+        }
+    } else if(current_packet.pkt_info.type == PT_IPv6_Unknown &&
+            !strncmp(showStr, "Next header:", 12)) {
+        switch (valueInt) {
+        case IPV6_ICMPV6_TYPE:
+            current_packet.pkt_info.type = PT_ICMPv6_Unknown;
+            break;
+        case IPV6_TCP_TYPE:
+            current_packet.pkt_info.type = PT_TCP;
+            break;
+        case IPV6_UDP_TYPE:
+            current_packet.pkt_info.type = PT_UDP;
+            break;
+        default:
+            current_packet.pkt_info.type = PT_IPv6_Unknown;
+            break;
+        }
+    } else if(!strcmp(nameStr, "icmpv6.type")) {
+        switch (valueInt) {
+        case ICMPV6_PING_ECHO_TYPE:
+            current_packet.pkt_info.type = PT_PING_ECHO;
+            break;
+        case ICMPV6_PING_REPLY_TYPE:
+            current_packet.pkt_info.type = PT_PING_REPLY;
+            break;
+        case ICMPV6_NDP_RS_TYPE:
+            current_packet.pkt_info.type = PT_NDP_RS;
+            break;
+        case ICMPV6_NDP_RA_TYPE:
+            current_packet.pkt_info.type = PT_NDP_RA;
+            break;
+        case ICMPV6_NDP_NS_TYPE:
+            current_packet.pkt_info.type = PT_NDP_NS;
+            break;
+        case ICMPV6_NDP_NA_TYPE:
+            current_packet.pkt_info.type = PT_NDP_NA;
+            break;
+        case ICMPV6_NDP_REDIRECT_TYPE:
+            current_packet.pkt_info.type = PT_NDP_Redirect;
+            break;
+        case ICMPV6_6ND_DAR_TYPE:
+            current_packet.pkt_info.type = PT_6ND_DAR;
+            break;
+        case ICMPV6_6ND_DAC_TYPE:
+            current_packet.pkt_info.type = PT_6ND_DAC;
+            break;
+        case ICMPV6_RPL_TYPE:
+            current_packet.pkt_info.type = PT_RPL_Unknown;
+            break;
+        default:
+            current_packet.pkt_info.type = PT_ICMPv6_Unknown;
+        }
+    } else if(current_packet.pkt_info.type == PT_RPL_Unknown
+              && !strcmp(nameStr, "icmpv6.code")) {
+        //We have a RPL packet, check its code
+        //We do not support SECURE packet at this time, so we check for non secure packets and don't mask with ICMPV6_RPL_CODE_MASK
+        switch (valueInt) {
+        case ICMPV6_RPL_CODE_DIS:
+            current_packet.pkt_info.type = PT_DIS;
+            break;
 
-            current_packet.pkt_info.dst_wpan_address = htobe64(addr);
-        } else if(!strcmp(nameStr, "ipv6.src")) {
-            inet_pton(AF_INET6, showStr,
-                      &current_packet.pkt_info.src_ip_address);
-            if(current_packet.pkt_info.type == PT_None)
-                current_packet.pkt_info.type = PT_IPv6_Unknown;
-        } else if(!strcmp(nameStr, "ipv6.dst")) {
-            inet_pton(AF_INET6, showStr,
-                      &current_packet.pkt_info.dst_ip_address);
-            if(current_packet.pkt_info.type == PT_None)
-                current_packet.pkt_info.type = PT_IPv6_Unknown;
-        } else if(!strcmp(nameStr, "ipv6.hlim")) {
-            current_packet.pkt_info.hop_limit = valueInt;
-        } else if(!strcmp(nameStr, "ipv6.nxt")) {
-            switch (valueInt) {
-            case IPV6_ICMPV6_TYPE:
-                current_packet.pkt_info.type = PT_ICMPv6_Unknown;
-                break;
-            case IPV6_TCP_TYPE:
-                current_packet.pkt_info.type = PT_TCP;
-                break;
-            case IPV6_UDP_TYPE:
-                current_packet.pkt_info.type = PT_UDP;
-                break;
-            default:
-                current_packet.pkt_info.type = PT_IPv6_Unknown;
-                break;
-            }
-        } else if(current_packet.pkt_info.type == PT_IPv6_Unknown &&
-                !strncmp(showStr, "Next header:", 12)) {
-            switch (valueInt) {
-            case IPV6_ICMPV6_TYPE:
-                current_packet.pkt_info.type = PT_ICMPv6_Unknown;
-                break;
-            case IPV6_TCP_TYPE:
-                current_packet.pkt_info.type = PT_TCP;
-                break;
-            case IPV6_UDP_TYPE:
-                current_packet.pkt_info.type = PT_UDP;
-                break;
-            default:
-                current_packet.pkt_info.type = PT_IPv6_Unknown;
-                break;
-            }
-        } else if(!strcmp(nameStr, "icmpv6.type")) {
-            switch (valueInt) {
-            case ICMPV6_PING_ECHO_TYPE:
-                current_packet.pkt_info.type = PT_PING_ECHO;
-                break;
-            case ICMPV6_PING_REPLY_TYPE:
-                current_packet.pkt_info.type = PT_PING_REPLY;
-                break;
-            case ICMPV6_NDP_RS_TYPE:
-                current_packet.pkt_info.type = PT_NDP_RS;
-                break;
-            case ICMPV6_NDP_RA_TYPE:
-                current_packet.pkt_info.type = PT_NDP_RA;
-                break;
-            case ICMPV6_NDP_NS_TYPE:
-                current_packet.pkt_info.type = PT_NDP_NS;
-                break;
-            case ICMPV6_NDP_NA_TYPE:
-                current_packet.pkt_info.type = PT_NDP_NA;
-                break;
-            case ICMPV6_NDP_REDIRECT_TYPE:
-                current_packet.pkt_info.type = PT_NDP_Redirect;
-                break;
-            case ICMPV6_6ND_DAR_TYPE:
-                current_packet.pkt_info.type = PT_6ND_DAR;
-                break;
-            case ICMPV6_6ND_DAC_TYPE:
-                current_packet.pkt_info.type = PT_6ND_DAC;
-                break;
-            case ICMPV6_RPL_TYPE:
-                current_packet.pkt_info.type = PT_RPL_Unknown;
-                break;
-            default:
-                current_packet.pkt_info.type = PT_ICMPv6_Unknown;
-            }
-        } else if(current_packet.pkt_info.type == PT_RPL_Unknown
-                  && !strcmp(nameStr, "icmpv6.code")) {
-            //We have a RPL packet, check its code
-            //We do not support SECURE packet at this time, so we check for non secure packets and don't mask with ICMPV6_RPL_CODE_MASK
-            switch (valueInt) {
-            case ICMPV6_RPL_CODE_DIS:
-                current_packet.pkt_info.type = PT_DIS;
-                break;
+        case ICMPV6_RPL_CODE_DIO:
+            current_packet.pkt_info.type = PT_DIO;
+            break;
 
-            case ICMPV6_RPL_CODE_DIO:
-                current_packet.pkt_info.type = PT_DIO;
-                break;
+        case ICMPV6_RPL_CODE_DAO:
+            current_packet.pkt_info.type = PT_DAO;
+            break;
 
-            case ICMPV6_RPL_CODE_DAO:
-                current_packet.pkt_info.type = PT_DAO;
-                break;
-
-            default:
-                fprintf(stderr, "Unsupported RPL packet code: %lld\n",
-                        valueInt);
-                break;
-            }
+        default:
+            fprintf(stderr, "Unsupported RPL packet code: %lld\n",
+                    valueInt);
+            break;
         }
     }
     if(current_packet.pkt_info.type != PT_None
