@@ -676,6 +676,20 @@ node_update_dio_interval(di_node_t * node, double timestamp)
 }
 
 void
+node_add_rank_error(di_node_t * node)
+{
+    node->rpl_errors.rank_errors++;
+    node_set_changed(node);
+}
+
+void
+node_add_forward_error(di_node_t * node)
+{
+    node->rpl_errors.forward_errors++;
+    node_set_changed(node);
+}
+
+void
 node_add_upward_error(di_node_t * node)
 {
     node->rpl_errors.upward_rank_errors++;

@@ -270,6 +270,8 @@ typedef struct rpl_statistics_delta {
 } rpl_statistics_delta_t;
 
 typedef struct rpl_errors {
+    int rank_errors; //incremented when rank error flag is detected
+    int forward_errors; //incremented when forward error flag is detected
     int upward_rank_errors; //incremented when data trafic goes from a node to it's parent in the case of the parent has a greater rank than the child
     int downward_rank_errors;       //incremented when data trafic goes from a node to a child where the child have a smaller rank than the parent
     int route_loop_errors;  //incremented when a node choose a parent that is in it's routing table
@@ -283,6 +285,8 @@ typedef struct rpl_errors {
 typedef struct rpl_errors_delta {
     int has_changed;
 
+    int rank_errors;
+    int forward_errors;
     int upward_rank_errors;
     int downward_rank_errors;
     int route_loop_errors;

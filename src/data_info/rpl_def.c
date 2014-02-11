@@ -100,6 +100,8 @@ init_rpl_statistics(rpl_statistics_t * statistics)
 void
 init_rpl_errors(rpl_errors_t * errors)
 {
+    errors->rank_errors = 0;
+    errors->forward_errors = 0;
     errors->upward_rank_errors = 0;
     errors->downward_rank_errors = 0;
     errors->route_loop_errors = 0;
@@ -406,6 +408,8 @@ rpl_errors_delta(const rpl_errors_t * left, const rpl_errors_t * right,
     if(delta == NULL)
         return;
     if(left == NULL && right == NULL) {
+        delta->rank_errors = 0;
+        delta->forward_errors = 0;
         delta->upward_rank_errors = 0;
         delta->downward_rank_errors = 0;
         delta->route_loop_errors = 0;
@@ -416,6 +420,10 @@ rpl_errors_delta(const rpl_errors_t * left, const rpl_errors_t * right,
 
         delta->dodag_config_mismatch_errors = 0;
     } else if(left == NULL || right == NULL) {
+        delta->rank_errors =
+            right ? right->rank_errors : left->rank_errors;
+        delta->forward_errors =
+            right ? right->forward_errors : left->forward_errors;
         delta->upward_rank_errors =
             right ? right->upward_rank_errors : left->upward_rank_errors;
         delta->downward_rank_errors =
@@ -436,6 +444,10 @@ rpl_errors_delta(const rpl_errors_t * left, const rpl_errors_t * right,
             right ? right->dodag_config_mismatch_errors : left->
             dodag_config_mismatch_errors;
     } else {
+        delta->forward_errors =
+            right->forward_errors - left->forward_errors;
+        delta->rank_errors =
+            right->rank_errors - left->rank_errors;
         delta->upward_rank_errors =
             right->upward_rank_errors - left->upward_rank_errors;
         delta->downward_rank_errors =
@@ -457,6 +469,7 @@ rpl_errors_delta(const rpl_errors_t * left, const rpl_errors_t * right,
     }
 
     delta->has_changed =
+        delta->rank_errors + delta->forward_errors +
         delta->upward_rank_errors + delta->downward_rank_errors +
         delta->route_loop_errors + delta->ip_mismatch_errors +
         /*delta->dodag_version_decrease_errors + */

@@ -104,6 +104,8 @@ void node_add_packet_count(di_node_t * node, int count);
 void node_update_dao_interval(di_node_t * node, double timestamp);
 void node_update_dio_interval(di_node_t * node, double timestamp);
 
+void node_add_rank_error(di_node_t * node);
+void node_add_forward_error(di_node_t * node);
 void node_add_upward_error(di_node_t * node);
 void node_add_downward_error(di_node_t * node);
 void node_add_route_error(di_node_t * node);

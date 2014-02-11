@@ -302,6 +302,12 @@ rpl_collector_parse_data(packet_info_t pkt_info,
         /* Add the parent node to the parents list of the child node if not already done */
 
         if(rpl_info) {
+            if (rpl_info->rank_error) {
+                node_add_rank_error(src);
+            }
+            if (rpl_info->forwarding_error) {
+                node_add_forward_error(src);
+            }
             if(rpl_info->packet_toward_root) {
                 di_link_ref_t link_ref;
 
