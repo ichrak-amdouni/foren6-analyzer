@@ -43,6 +43,7 @@
 #include "../apple-endian.h"
 #endif
 
+#include "../rpl_packet_parser.h"
 #include "../data_info/metric.h"
 
 #define IPV6_TCP_TYPE 6
@@ -473,8 +474,12 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
             else if(!strcmp(nameStr, "ipv6.opt.rpl.instance_id"))
                 current_packet.data.hop_info.rpl_instance_id = valueInt;
             else if(!strcmp(nameStr, "ipv6.opt.rpl.sender_rank")) {
-                current_packet.data.hop_info.sender_rank =
-                    ((valueInt & 0xFF00) >> 8) | ((valueInt & 0xFF) << 8);
+                if (rpl_tool_get_analyser_config()->sender_rank_inverted) {
+                    current_packet.data.hop_info.sender_rank =
+                            ((valueInt & 0xFF00) >> 8) | ((valueInt & 0xFF) << 8);
+                } else {
+                    current_packet.data.hop_info.sender_rank = valueInt;
+                }
             } else
                 option_check = false;
             if(option_check)

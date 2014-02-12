@@ -45,6 +45,7 @@ typedef struct analyser_config {
     struct in6_addr context0;
     bool address_autconf_only;
     bool one_preferred_parent;
+    bool sender_rank_inverted;
 } analyser_config_t;
 
     /**

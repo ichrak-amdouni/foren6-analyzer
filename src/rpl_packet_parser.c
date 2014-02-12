@@ -56,6 +56,7 @@ rpl_tool_init()
     analyser_config.context0.s6_addr16[7] = 0;
     analyser_config.address_autconf_only = true;
     analyser_config.one_preferred_parent = true;
+    analyser_config.sender_rank_inverted = false;
 }
 
 void
