@@ -292,6 +292,7 @@ node_set_dodag(di_node_t * node, const di_dodag_ref_t * dodag_ref)
         node->has_rpl_dodag_prefix_info = false;
         if ( !node->sixlowpan_config.is_custom_global_address ) {
             init_ipv6_addr(&node->sixlowpan_config.global_address);
+            node->sixlowpan_config.has_seen_global_address = false;
         }
         node_set_changed(node);
     }
