@@ -94,6 +94,7 @@ typedef struct rpl_dio {
     uint8_t version_number;
     uint16_t rank;
     bool grounded;
+    uint8_t preference;
     di_rpl_mop_e mode_of_operation;
     uint8_t dtsn;
     struct in6_addr dodagid;
@@ -189,6 +190,7 @@ typedef struct rpl_instance_data {
 
     bool has_dio_data;
     bool grounded;
+    uint8_t preference;
     uint8_t dtsn;
 
     bool has_dao_data;
@@ -219,6 +221,7 @@ typedef struct rpl_instance_data_delta {
     int rank;
     bool has_dio_data;
     bool grounded;
+    bool preference;
     int dtsn;
     bool has_dao_data;
     uint8_t latest_dao_sequence;

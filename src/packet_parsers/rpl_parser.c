@@ -332,6 +332,8 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
                 current_packet.dio.dio.rank = valueInt;
             else if(!strcmp(nameStr, "icmpv6.rpl.dio.flag.g"))
                 current_packet.dio.dio.grounded = valueInt;
+            else if(!strcmp(nameStr, "icmpv6.rpl.dio.flag.preference"))
+                current_packet.dio.dio.preference = valueInt;
             else if(!strcmp(nameStr, "icmpv6.rpl.dio.flag.mop"))
                 current_packet.dio.dio.mode_of_operation = valueInt;
             else if(!strcmp(nameStr, "icmpv6.rpl.dio.dtsn"))

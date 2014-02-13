@@ -45,6 +45,7 @@ init_rpl_instance_data(rpl_instance_data_t * data)
     data->rpl_instance_id = 0;
     data->has_dio_data = false;
     data->grounded = false;
+    data->preference = 0;
     data->dtsn = 0;
     data->has_rank = false;
     data->rank = 0;
@@ -138,6 +139,7 @@ update_rpl_instance_data_from_dio(rpl_instance_data_t * data,
     data->rpl_instance_id = dio->rpl_instance_id;
     data->rank = dio->rank;
     data->grounded = dio->grounded;
+    data->preference = dio->preference;
     data->dtsn = dio->dtsn;
 }
 
@@ -239,6 +241,7 @@ rpl_instance_data_delta(const rpl_instance_data_t * left,
         delta->has_dio_data = false;
         delta->rank = 0;
         delta->grounded = false;
+        delta->preference = false;
         delta->dtsn = 0;
         delta->has_dao_data = false;
         delta->latest_dao_sequence = 0;
@@ -250,6 +253,7 @@ rpl_instance_data_delta(const rpl_instance_data_t * left,
         delta->rank = left ? left->rank : right->rank;
         delta->has_dio_data = left ? left->has_dio_data : right->has_dio_data;
         delta->grounded = true;
+        delta->preference = true;
         delta->dtsn = left ? left->dtsn : right->dtsn;
         delta->has_dao_data = left ? left->has_dao_data : right->has_dao_data;
         delta->latest_dao_sequence =
@@ -263,6 +267,7 @@ rpl_instance_data_delta(const rpl_instance_data_t * left,
         delta->rank = right->rank != left->rank;
         delta->has_dio_data = left->has_dio_data != right->has_dio_data;
         delta->grounded = right->grounded != left->grounded;
+        delta->preference = right->preference != left->preference;
         delta->dtsn = right->dtsn != left->dtsn;
         delta->has_dao_data = left->has_dao_data != right->has_dao_data;
         delta->latest_dao_sequence =
@@ -270,8 +275,8 @@ rpl_instance_data_delta(const rpl_instance_data_t * left,
     }
     delta->has_changed = delta->rpl_instance_id || delta->has_metric
         || delta->metric || delta->has_rank || delta->rank
-        || delta->has_dio_data || delta->grounded || delta->dtsn
-        || delta->has_dao_data || delta->latest_dao_sequence;
+        || delta->has_dio_data || delta->grounded || delta->preference
+        || delta->dtsn || delta->has_dao_data || delta->latest_dao_sequence;
 }
 
 void
