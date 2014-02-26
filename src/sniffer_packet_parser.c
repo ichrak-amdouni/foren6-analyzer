@@ -67,6 +67,7 @@ static pthread_mutex_t new_packet_mutex;
 
 static int packet_count;
 static int packet_input_count;
+static int embedded_proto;
 
 #define LAST_PACKET_NUMBER 100
 static hash_container_ptr last_packets;
@@ -204,7 +205,10 @@ parse_xml_start_element(void *data, const char *el, const char **attr)
     if(!strcmp(el, "packet")) {
         parser_begin_packet();
         packet_count++;
-    } else if(!strcmp(el, "field")) {
+        embedded_proto = 0;
+    } else if(!strcmp(el, "proto")) {
+        embedded_proto++;
+    } else if(!strcmp(el, "field") && embedded_proto == 1 ) {
         /* Parse packet fields */
         int i;
         const char *nameStr = NULL;
@@ -234,6 +238,8 @@ parse_xml_end_element(void *data, const char *el)
 {
     if(!strcmp(el, "packet"))
         parser_end_packet();
+    else if(!strcmp(el, "proto"))
+        embedded_proto--;
 }
 
 /*
