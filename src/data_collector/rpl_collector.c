@@ -187,8 +187,7 @@ rpl_collector_parse_dao(packet_info_t pkt_info,
         new_link =
             rpldata_get_link(&link_ref, HVM_CreateIfNonExistant,
                              &link_created);
-        if(link_created
-           && rpl_tool_get_analyser_config()->one_preferred_parent) {
+        if(rpl_tool_get_analyser_config()->one_preferred_parent) {
             links_deprecate_all_from(&link_ref);
         }
         link_update(new_link, time(NULL), 1);
@@ -319,8 +318,7 @@ rpl_collector_parse_data(packet_info_t pkt_info,
                 link =
                     rpldata_get_link(&link_ref, HVM_CreateIfNonExistant,
                                      &link_created);
-                if(link_created
-                   && rpl_tool_get_analyser_config()->one_preferred_parent) {
+                if(rpl_tool_get_analyser_config()->one_preferred_parent) {
                     links_deprecate_all_from(&link_ref);
                 }
                 link_update(link, time(NULL), 1);
