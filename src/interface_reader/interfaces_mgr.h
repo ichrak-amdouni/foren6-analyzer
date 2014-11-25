@@ -55,7 +55,7 @@ typedef struct ifinstance {
 typedef struct interface {
     const char *interface_name;
     void (*init) ();
-      ifreader_t(*open) (const char *target, int channel);
+      ifreader_t(*open) (const char *target, int channel, int baudrate);
       bool(*start) (ifreader_t handle);
     void (*stop) (ifreader_t handle);
     void (*close) (ifreader_t handle);
