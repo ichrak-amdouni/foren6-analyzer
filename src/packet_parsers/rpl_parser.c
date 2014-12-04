@@ -186,6 +186,10 @@ rpl_parser_parse_field(const char *nameStr, const char *showStr,
     } else if(!strcmp(nameStr, "icmpv6.checksum_bad")
               && !strcmp(showStr, "1")) {
         current_packet.is_bad = true;
+    } else if(!strcmp(nameStr, "wpan.src16") 
+             && current_packet.pkt_info.src_wpan_address == 0) {
+       long addr = strtoul(valueStr, NULL, 16);
+      current_packet.pkt_info.src_wpan_address = htons(addr);
     } else if(!strcmp(nameStr, "wpan.src64")) {
         uint64_t addr = strtoull(valueStr, NULL, 16);
         current_packet.pkt_info.src_wpan_address = htobe64(addr);
